@@ -431,14 +431,131 @@
 <script src="js/perfil.js"></script>
 
 <!-- MODAL PERFIL -->
+<style>
+#user-profile-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  backdrop-filter: blur(3px);
+  z-index: 9000;
+  align-items: center;
+  justify-content: center;
+}
+#user-profile-overlay.open { display: flex; }
+
+#user-profile-card {
+  background: #fff;
+  border-radius: 20px;
+  width: 320px;
+  overflow: hidden;
+  box-shadow: 0 24px 60px rgba(0,0,0,0.22);
+  animation: upcIn .18s ease;
+}
+@keyframes upcIn {
+  from { opacity:0; transform:scale(.93) translateY(10px); }
+  to   { opacity:1; transform:scale(1)  translateY(0); }
+}
+
+.upc-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 32px 24px 24px;
+  background: linear-gradient(135deg, #1a56db 0%, #0e3fa8 100%);
+  position: relative;
+}
+
+.upc-close-btn {
+  position: absolute;
+  top: 12px; right: 14px;
+  background: rgba(255,255,255,.15);
+  border: none;
+  color: #fff;
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  font-size: 16px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background .15s;
+}
+.upc-close-btn:hover { background: rgba(255,255,255,.28); }
+
+.upc-avatar-big {
+  width: 72px; height: 72px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 26px; font-weight: 800;
+  color: #fff;
+  border: 3px solid rgba(255,255,255,.4);
+  margin-bottom: 4px;
+  flex-shrink: 0;
+}
+
+.upc-name {
+  font-size: 20px; font-weight: 800;
+  color: #fff; font-family: Inter,sans-serif;
+}
+.upc-usuario {
+  font-size: 13px; color: rgba(255,255,255,.75);
+  font-family: Inter,sans-serif;
+}
+.upc-badge {
+  font-size: 11px; font-weight: 700;
+  padding: 3px 12px; border-radius: 20px;
+  color: #fff; margin-top: 2px;
+  font-family: Inter,sans-serif;
+  letter-spacing: .5px; text-transform: uppercase;
+}
+
+.upc-info {
+  padding: 20px 24px 8px;
+  display: flex; flex-direction: column; gap: 0;
+}
+.upc-info-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid #f3f4f6;
+  font-family: Inter,sans-serif;
+}
+.upc-info-row:last-child { border-bottom: none; }
+.upc-info-label { font-size: 13px; color: #6b7280; }
+.upc-info-value { font-size: 13px; font-weight: 700; color: #111; }
+
+.upc-footer {
+  padding: 16px 24px 24px;
+}
+.upc-logout-btn {
+  width: 100%;
+  padding: 12px;
+  background: #fef2f2;
+  border: 1.5px solid #fecaca;
+  border-radius: 10px;
+  color: #dc2626;
+  font-size: 14px; font-weight: 700;
+  font-family: Inter,sans-serif;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  transition: background .15s, border-color .15s;
+}
+.upc-logout-btn:hover {
+  background: #fee2e2;
+  border-color: #f87171;
+}
+</style>
+
 <div id="user-profile-overlay" onclick="closeUserProfile(event)">
   <div id="user-profile-card">
+
     <div class="upc-header">
-      <div class="upc-avatar" id="upc-avatar"></div>
-      <div class="upc-name"    id="upc-name">—</div>
+      <button class="upc-close-btn" onclick="closeUserProfile()" title="Fechar">×</button>
+      <div class="upc-avatar-big" id="upc-avatar">?</div>
+      <div class="upc-name" id="upc-name">—</div>
       <div class="upc-usuario" id="upc-usuario">—</div>
-      <div class="upc-badge"   id="upc-badge">—</div>
+      <div class="upc-badge" id="upc-badge">—</div>
     </div>
+
     <div class="upc-info">
       <div class="upc-info-row">
         <span class="upc-info-label">Setor</span>
@@ -449,17 +566,22 @@
         <span class="upc-info-value" id="upc-id">—</span>
       </div>
       <div class="upc-info-row">
-        <span class="upc-info-label">Acesso</span>
+        <span class="upc-info-label">Nível de Acesso</span>
         <span class="upc-info-value" id="upc-acesso">—</span>
       </div>
     </div>
-    <div class="upc-divider"></div>
+
     <div class="upc-footer">
       <button class="upc-logout-btn" onclick="closeUserProfile();doLogout()">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+          <polyline points="16 17 21 12 16 7"/>
+          <line x1="21" y1="12" x2="9" y2="12"/>
+        </svg>
         Sair do Sistema
       </button>
     </div>
+
   </div>
 </div>
 
