@@ -3,3 +3,4 @@ pypdf
 pandas
 qrcode[pil]
 reportlab
+flask
