@@ -156,8 +156,8 @@
             </filter>
           </defs>
 
-          <!-- ✅ CORRIGIDO: <image> em vez de <img> -->
-          <image href="Módulo de Produção/assets/svg_prensa.webp" x="0" y="0" width="500" height="500"
+          <!-- Cabeça de prensa — embedded base64 (evita problema de caminho) -->
+          <image href="assets/prensa.webp" x="0" y="0" width="500" height="500"
             preserveAspectRatio="xMidYMid meet"/>
 
           <text id="pr-castanha" x="260" y="102"
@@ -304,34 +304,104 @@
 
   <!-- MEDIDA DE CORTE -->
   <div class="screen" id="screen-medida-corte">
+    <style>
+      .mc-ac-wrap { position:relative; width:100%; }
+      .mc-ac-input {
+        width:100%; box-sizing:border-box;
+        padding:12px 16px; font-size:15px; font-weight:600;
+        font-family:Inter,sans-serif; color:var(--text,#111);
+        background:var(--white,#fff);
+        border:1.5px solid var(--border,#e5e7eb);
+        border-radius:10px; outline:none;
+        transition:border-color .15s;
+        text-transform:uppercase;
+      }
+      .mc-ac-input:focus { border-color:#1a56db; }
+      .mc-ac-input.selected { border-color:#059669; background:#f0fdf4; color:#065f46; }
+      .mc-ac-dropdown {
+        position:absolute; top:calc(100% + 4px); left:0; right:0;
+        background:#fff; border:1.5px solid #1a56db;
+        border-radius:10px; overflow:hidden;
+        box-shadow:0 8px 24px rgba(0,0,0,.12);
+        z-index:999; max-height:220px; overflow-y:auto;
+        display:none;
+      }
+      .mc-ac-dropdown.open { display:block; }
+      .mc-ac-item {
+        padding:10px 14px; font-size:13px; font-family:Inter,sans-serif;
+        cursor:pointer; display:flex; justify-content:space-between;
+        align-items:center; border-bottom:1px solid #f3f4f6;
+        transition:background .1s;
+      }
+      .mc-ac-item:last-child { border-bottom:none; }
+      .mc-ac-item:hover, .mc-ac-item.active { background:#eff6ff; }
+      .mc-ac-item .cod { font-weight:700; color:#111; letter-spacing:.3px; }
+      .mc-ac-item .med { font-size:12px; color:#6b7280; }
+      .mc-ac-item.sem-medida .cod { color:#94a3b8; }
+      .mc-ac-empty { padding:12px 14px; font-size:13px; color:#9ca3af; font-family:Inter,sans-serif; }
+      .mc-tag {
+        display:inline-flex; align-items:center; gap:6px;
+        background:#1a56db; color:#fff; border-radius:6px;
+        padding:4px 10px 4px 12px; font-size:13px; font-weight:700;
+        margin-bottom:4px;
+      }
+      .mc-tag button {
+        background:none; border:none; color:#fff; cursor:pointer;
+        font-size:14px; line-height:1; padding:0; opacity:.7;
+      }
+      .mc-tag button:hover { opacity:1; }
+    </style>
+
     <div class="mc-header">
       <div>
         <h2>Medida de Corte</h2>
-        <p>Cálculo automático da mangueira</p>
+        <p>Comprimento Final − Terminal A − Terminal B − 10</p>
       </div>
+      <button onclick="resetMedidaCorte()" style="background:rgba(74,144,255,.1);border:1px solid rgba(74,144,255,.35);color:#1a56db;cursor:pointer;font-size:12px;font-weight:600;padding:6px 16px;border-radius:6px;font-family:Inter,sans-serif;">↩ Limpar</button>
     </div>
+
     <div class="mc-container">
+
+      <!-- Comprimento -->
       <div class="mc-field">
         <label>Comprimento Final (mm)</label>
-        <input type="number" id="mc-comprimento" placeholder="Ex: 1500" oninput="calcularMedidaCorte()">
+        <input type="number" id="mc-comprimento" placeholder="Ex: 1500"
+          oninput="calcularMedidaCorte()"
+          style="font-size:22px;font-weight:700;text-align:center;letter-spacing:1px;">
       </div>
+
+      <!-- Terminal A -->
       <div class="mc-field">
         <label>Terminal A</label>
-        <select id="mc-terminal-a" onchange="calcularMedidaCorte()">
-          <option value="">Selecione...</option>
-        </select>
+        <div class="mc-ac-wrap" id="mc-wrap-a">
+          <input class="mc-ac-input" id="mc-input-a" placeholder="Digite o código do terminal..."
+            autocomplete="off" spellcheck="false"
+            oninput="mcAcInput('a')" onfocus="mcAcOpen('a')"
+            onkeydown="mcAcKey(event,'a')">
+          <div class="mc-ac-dropdown" id="mc-drop-a"></div>
+        </div>
       </div>
+
+      <!-- Terminal B -->
       <div class="mc-field">
         <label>Terminal B</label>
-        <select id="mc-terminal-b" onchange="calcularMedidaCorte()">
-          <option value="">Selecione...</option>
-        </select>
+        <div class="mc-ac-wrap" id="mc-wrap-b">
+          <input class="mc-ac-input" id="mc-input-b" placeholder="Digite o código do terminal..."
+            autocomplete="off" spellcheck="false"
+            oninput="mcAcInput('b')" onfocus="mcAcOpen('b')"
+            onkeydown="mcAcKey(event,'b')">
+          <div class="mc-ac-dropdown" id="mc-drop-b"></div>
+        </div>
       </div>
+
+      <!-- Resultado -->
       <div class="mc-result hidden" id="mc-result">
         <div class="mc-result-title">Medida de Corte</div>
-        <div class="mc-result-value" id="mc-result-value">0 mm</div>
+        <div class="mc-result-value" id="mc-result-value"
+          style="font-size:42px;font-weight:900;letter-spacing:2px;font-family:'Roboto',Inter,sans-serif;">0 mm</div>
         <div class="mc-formula" id="mc-formula"></div>
       </div>
+
     </div>
   </div>
 
