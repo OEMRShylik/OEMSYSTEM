@@ -38,21 +38,24 @@ async function init() {
 }
 
 function updateClock() {
-  const d = new Date();
-  const fmt = d.toLocaleDateString('pt-BR',{day:'numeric',month:'long',year:'numeric'});
-  document.getElementById('date-left').textContent = fmt;
+  const d   = new Date();
+  const dia = d.toLocaleDateString('pt-BR',{day:'numeric',month:'long',year:'numeric'});
+  const hms = d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  const el  = document.getElementById('date-left');
+  if (el) el.textContent = dia + ' · ' + hms;
 }
 
 // ══════════════════════════════════════════════════
 //  NAV
 // ══════════════════════════════════════════════════
 // Títulos das telas para o cabeçalho
+// Todas as telas sem título no topbar (só logo + hora)
 const SCREEN_TITLES = {
   pedidos:   '',
-  detalhe:   'Pedido',
-  prensagem: 'Crimpagem',
-  descasque: 'Descasque',
-  angulos:   'Ângulos de Montagem',
+  detalhe:   '',
+  prensagem: '',
+  descasque: '',
+  angulos:   '',
 };
 
 function navTo(name, el) {
