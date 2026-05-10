@@ -1,7 +1,7 @@
 """
 OEM RS — Backend Flask
 Processa PDF da OP: organiza, gera etiquetas de módulo e embalagem.
-Também serve o frontend (oem_rs.html + js/ + css/ + assets/) para acesso via celular.
+Também serve o frontend (index.html + js/ + css/ + assets/) para acesso via celular.
 """
 import base64
 import io
@@ -39,7 +39,7 @@ app.config["JSON_SORT_KEYS"] = False
 
 @app.route('/')
 def index():
-    return send_from_directory(BASE_DIR, 'oem_rs.html')
+    return send_from_directory(BASE_DIR, 'index.html')
 
 @app.route('/<path:filename>')
 def static_files(filename):
