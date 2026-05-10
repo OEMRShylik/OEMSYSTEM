@@ -1,7 +1,7 @@
 // ══════════════════════════════════════════════════
 init();
 window.addEventListener('resize', () => {
-  if (currentScreen === 'angulos') { resizeAngCanvas(); drawAngCanvas(angAnimCurrent); }
+  if (currentScreen === 'angulos') { _angDrawAll(); }
 });
 
 // ══ CALENDÁRIO / AGENDA ══
@@ -24,15 +24,12 @@ function renderCalendario() {
     if (!dataMap[p.entrega]) dataMap[p.entrega] = [];
     dataMap[p.entrega].push(p);
   });
-  // Ordernar pedidos de cada dia por horário (usando horário de entrega se existir, senão pelo id)
-  Object.values(dataMap).forEach(arr => arr.sort((a,b)=>(a.entrega||'').localeCompare(b.entrega||'')));
 
   const primeiroDia = new Date(calYear, calMonth, 1);
   const ultimoDia  = new Date(calYear, calMonth + 1, 0);
   const diasNoMes  = ultimoDia.getDate();
-  const inicioSemana = primeiroDia.getDay(); // 0=Dom
+  const inicioSemana = primeiroDia.getDay();
 
-  // Cabeçalho
   col.innerHTML = `
     <div class="cal-header">
       <div class="cal-header-btn-group">
@@ -63,20 +60,23 @@ function gerarGrade(year, month, inicioSemana, diasNoMes, dataMap, hoje) {
   const mesAnteriorDias = new Date(year, month, 0).getDate();
   const cells = [];
 
-  // Dias do mês anterior
   for (let i = inicioSemana - 1; i >= 0; i--) {
     cells.push({ day: mesAnteriorDias - i, currentMonth: false, date: null });
   }
-  // Dias do mês atual
   for (let d = 1; d <= diasNoMes; d++) {
     const dd = String(d).padStart(2,'0');
     const mm = String(month+1).padStart(2,'0');
     cells.push({ day: d, currentMonth: true, date: `${dd}/${mm}/${year}` });
   }
-  // Completar grade
   while (cells.length % 7 !== 0) {
     cells.push({ day: cells.length - (inicioSemana + diasNoMes) + 1, currentMonth: false, date: null });
   }
+
+  const feriados = {
+    '21/04':'Tiradentes','01/05':'Dia do Trabalho','07/09':'Independência',
+    '12/10':'N.Sra.Aparecida','02/11':'Finados','15/11':'Proclamação',
+    '25/12':'Natal','01/01':'Ano Novo',
+  };
 
   let html = '';
   for (let r = 0; r < cells.length; r += 7) {
@@ -89,17 +89,6 @@ function gerarGrade(year, month, inicioSemana, diasNoMes, dataMap, hoje) {
         year === hoje.getFullYear();
       const peds = cell.date ? (dataMap[cell.date] || []) : [];
 
-      // Feriados/datas especiais (adicione aqui conforme necessário)
-      const feriados = {
-        '21/04': 'Tiradentes',
-        '01/05': 'Dia do Trabalho',
-        '07/09': 'Independência',
-        '12/10': 'N.Sra.Aparecida',
-        '02/11': 'Finados',
-        '15/11': 'Proclamação',
-        '25/12': 'Natal',
-        '01/01': 'Ano Novo',
-      };
       const feriadoKey = cell.date ? cell.date.substring(0,5) : null;
       const feriado = feriadoKey ? feriados[feriadoKey] : null;
 
@@ -110,13 +99,14 @@ function gerarGrade(year, month, inicioSemana, diasNoMes, dataMap, hoje) {
         html += `<div class="cal-event-chip feriado">${feriado}</div>`;
       }
 
-      const MAX_VISIBLE = 4;
+      const MAX_VISIBLE = 3;
       peds.slice(0, MAX_VISIBLE).forEach(p => {
-        const nomeCurto = p.cliente ? p.cliente.split(' ').slice(0,2).join(' ').toUpperCase() : '—';
-        const idCurto = (p.id||'').replace('#','');
-        const cls = p.etapa === 'finalizado' ? 'finalizado' : (p.status||'');
-        html += `<div class="cal-event-chip ${cls}" title="${p.cliente} #${idCurto}" onclick="abrirPedido(${pedidos.indexOf(p)})">
-          <span class="chip-nome">#${idCurto} ${nomeCurto}</span>
+        // Mostra: CLIENTE completo (sem truncar no JS — o CSS faz ellipsis)
+        const nomeCliente = (p.cliente || '—').toUpperCase();
+        const idCurto = (p.id || '').replace('#','');
+        const cls = p.etapa === 'finalizado' ? 'finalizado' : (p.status || '');
+        html += `<div class="cal-event-chip ${cls}" title="#${idCurto} — ${nomeCliente}" onclick="abrirPedido(${pedidos.indexOf(p)})">
+          <span class="chip-nome">#${idCurto} ${nomeCliente}</span>
         </div>`;
       });
       if (peds.length > MAX_VISIBLE) {
@@ -145,8 +135,5 @@ function calIrHoje() {
 }
 
 function calVerDia(dateStr) {
-  // Futuro: abrir modal/popup com todos os pedidos do dia
   alert('Pedidos em ' + dateStr);
 }
-
-

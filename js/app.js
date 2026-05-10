@@ -3,12 +3,11 @@
 // ══════════════════════════════════════════════════
 let pedidos = [];
 
-let novoPDF = null;
 let currentPedidoIdx = null;
-let pdfDoc = null;
-let currentPage = 1;
-let currentZoom = 1.0;
 let currentScreen = 'pedidos';
+
+let calYear  = new Date().getFullYear();
+let calMonth = new Date().getMonth();
 
 // ══════════════════════════════════════════════════
 //  INIT
@@ -17,15 +16,25 @@ if (typeof pdfjsLib !== 'undefined') {
   pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 }
 
-function init() {
+async function init() {
   updateClock();
   setInterval(updateClock, 1000);
   setInterval(updatePrClock, 1000);
   updatePrClock();
-  renderKanban();
   buildPrMang();
   renderDescasque();
-  renderAngulos();
+  // Tenta carregar estado salvo
+  try {
+    const carregou = await carregarEstado();
+    if (carregou && pedidos.length > 0) {
+      _mostrarToast('📂 ' + pedidos.length + ' pedido(s) carregado(s)', '#1a56db');
+    }
+  } catch(e) {
+    console.warn('Erro ao carregar estado:', e);
+  }
+  renderKanban();
+  _updateTopbar('pedidos');
+  // Ângulos só renderiza quando a tela estiver ativa (evita problemas de tamanho)
 }
 
 function updateClock() {
@@ -37,31 +46,61 @@ function updateClock() {
 // ══════════════════════════════════════════════════
 //  NAV
 // ══════════════════════════════════════════════════
+// Títulos das telas para o cabeçalho
+const SCREEN_TITLES = {
+  pedidos:   '',
+  detalhe:   'Pedido',
+  prensagem: 'Crimpagem',
+  descasque: 'Descasque',
+  angulos:   'Ângulos de Montagem',
+};
+
 function navTo(name, el) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById('screen-' + name).classList.add('active');
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   el.classList.add('active');
   currentScreen = name;
+
+  // Atualiza cabeçalho
+  _updateTopbar(name);
+
   if (name === 'angulos') {
-    requestAnimationFrame(() => { resizeAngCanvas(); drawAngCanvas(angAnimCurrent); });
+    requestAnimationFrame(() => { _angDrawAll(); });
   }
+}
+
+function _updateTopbar(screen) {
+  const titleEl  = document.getElementById('topbar-screen-title');
+  const btnNovo  = document.getElementById('btn-novo-pedido-top');
+  const searchEl = document.getElementById('kanban-search-bar');
+
+  const isPedidos = (screen === 'pedidos');
+  const title = SCREEN_TITLES[screen] || '';
+
+  // Título da tela (oculto em pedidos, visível nas outras)
+  if (titleEl) {
+    titleEl.textContent = title;
+    titleEl.style.display = (title && !isPedidos) ? 'block' : 'none';
+  }
+  // Botão + Novo Pedido: só em pedidos
+  if (btnNovo) btnNovo.style.display = isPedidos ? '' : 'none';
+  // Barra de busca: só em pedidos
+  if (searchEl) searchEl.style.display = isPedidos ? '' : 'none';
 }
 
 // ══════════════════════════════════════════════════
 //  KANBAN
 // ══════════════════════════════════════════════════
 const ETAPAS = [
-  {key:'corte',label:'CORTE'},
-  {key:'prensagem',label:'PRENSAGEM'},
-  {key:'embalagem',label:'EMBALAGEM'},
+  {key:'corte',     label:'CORTE'},
+  {key:'prensagem', label:'PRENSAGEM'},
+  {key:'embalagem', label:'EMBALAGEM'},
   {key:'finalizado',label:'FINALIZADOS'},
 ];
 
-let _dragSrcIdx = -1;
+let _dragSrcIdx  = -1;
 let _dragPedidoId = '';
-let calYear = new Date().getFullYear();
-let calMonth = new Date().getMonth();
 
 function renderKanban(filter='') {
   const area = document.getElementById('kanban-area');
@@ -73,10 +112,9 @@ function renderKanban(filter='') {
     );
     const col = document.createElement('div');
     col.className = 'kanban-col';
-    col.dataset.etapa = etapa.key;
+    col.dataset.etapa    = etapa.key;
     col.dataset.etapaIdx = etapaIdx;
 
-    // Drop zone — aceita só da etapa anterior (usa variável global)
     col.addEventListener('dragover', e => {
       if (_dragSrcIdx === etapaIdx - 1) { e.preventDefault(); col.classList.add('drop-target'); }
     });
@@ -88,7 +126,7 @@ function renderKanban(filter='') {
       col.classList.remove('drop-target');
       if (_dragSrcIdx !== etapaIdx - 1) return;
       const p = pedidos.find(p => p.id === _dragPedidoId && p.etapa === ETAPAS[_dragSrcIdx].key);
-      if (p) { p.etapa = etapa.key; renderKanban(filter); }
+      if (p) { p.etapa = etapa.key; renderKanban(filter); salvarEstado(); }
     });
 
     col.innerHTML = `
@@ -101,25 +139,23 @@ function renderKanban(filter='') {
 
     col.querySelectorAll('.pedido-card[draggable="true"]').forEach(cardEl => {
       cardEl.addEventListener('dragstart', e => {
-        _dragSrcIdx = parseInt(cardEl.dataset.etapaIdx);
+        _dragSrcIdx   = parseInt(cardEl.dataset.etapaIdx);
         _dragPedidoId = cardEl.dataset.pedidoId;
         e.dataTransfer.effectAllowed = 'move';
         cardEl.classList.add('dragging');
       });
       cardEl.addEventListener('dragend', () => {
         cardEl.classList.remove('dragging');
-        document.querySelectorAll('.drop-target').forEach(c=>c.classList.remove('drop-target'));
+        document.querySelectorAll('.drop-target').forEach(c => c.classList.remove('drop-target'));
       });
     });
   });
 
-  // Chama o calendário após renderizar o kanban
   renderCalendario();
 }
 
 function renderCard(p, etapaIdx) {
-  const idxReal = pedidos.indexOf(p);
-  // Não arrasta finalizado nem processing
+  const idxReal  = pedidos.indexOf(p);
   const draggable = !p.processing && p.etapa !== 'finalizado';
 
   let topRight = '';
@@ -128,24 +164,12 @@ function renderCard(p, etapaIdx) {
   } else if (p.etapa === 'finalizado') {
     topRight = `<div class="status-finalizado">✅</div>`;
   } else {
-    const statusMap = {'em-dia':'status-em-dia','atrasado':'status-atrasado','pronto':'status-pronto'};
+    const statusMap   = {'em-dia':'status-em-dia','atrasado':'status-atrasado','pronto':'status-pronto'};
     const statusLabel = {'em-dia':'EM DIA','atrasado':'ATRASADO','pronto':'PRONTO'};
     topRight = `<div class="status-badge ${statusMap[p.status]||''}">${statusLabel[p.status]||p.status}</div>`;
   }
 
-  let annexesHtml = '';
-  if (p.anexos && (p.anexos.op || p.anexos.kits?.length || p.anexos.embalagem || p.anexos.corte)) {
-    const btns = [];
-    if (p.anexos.op) btns.push(`<button class="annex-btn annex-op" onclick="event.stopPropagation();downloadAnexo(${idxReal},'op')">📄 OP</button>`);
-    if (p.anexos.kits?.length) {
-      p.anexos.kits.forEach((k,ki) => {
-        btns.push(`<button class="annex-btn annex-kit" onclick="event.stopPropagation();downloadAnexo(${idxReal},'kit',${ki})">🏷️ ${k.filename.replace('KIT_','').replace('.pdf','').slice(0,12)}</button>`);
-      });
-    }
-    if (p.anexos.embalagem) btns.push(`<button class="annex-btn annex-emb" onclick="event.stopPropagation();downloadAnexo(${idxReal},'embalagem')">📦 Embalagem</button>`);
-    if (p.anexos.corte) btns.push(`<button class="annex-btn annex-crt" onclick="event.stopPropagation();downloadAnexo(${idxReal},'corte')">✂️ Corte</button>`);
-    annexesHtml = `<div class="pedido-annexes">${btns.join('')}</div>`;
-  }
+  let filesHtml = '';
 
   return `<div class="pedido-card ${p.processing?'processing':''}"
     draggable="${draggable}"
@@ -158,7 +182,7 @@ function renderCard(p, etapaIdx) {
     </div>
     <div class="pedido-cliente">${p.cliente}</div>
     <div class="pedido-entrega">${p.entrega ? 'Entrega: '+p.entrega : ''}</div>
-    ${annexesHtml}
+    ${filesHtml}
   </div>`;
 }
 
@@ -166,4 +190,3 @@ function searchPedidos() {
   const q = document.getElementById('search-input').value.toLowerCase();
   renderKanban(q);
 }
-
