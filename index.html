@@ -13,18 +13,45 @@
 #screen-angulos.active   { display:flex !important; }
 #screen-prensagem.active { display:flex !important; }
 #main { display:flex; flex-direction:column; flex:1; overflow:hidden; }
-/* Fundos brancos garantidos */
-#screen-angulos, #screen-descasque, #screen-prensagem, #screen-detalhe {
-  background: #ffffff !important;
+/* Fundo background.jpg em TODAS as telas */
+.screen {
+  background-image: url('assets/background.jpg') !important;
+  background-size: cover !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+  background-color: #e8edf2 !important;
 }
 
 /* Responsivo ângulos: mobile oculta painel 3D */
+/* Mobile: layout vertical empilhado — transferidor cima, 3D baixo */
 @media (max-width: 599px) {
-  #ang-3d-panel { display:none !important; }
-  #ang-left-panel { flex:1 !important; }
-  #ang-canvas { width:100% !important; height:100% !important; }
+  /* Container muda para coluna */
+  #screen-angulos .ang-panels {
+    flex-direction: column !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+  /* Painel esquerdo (transferidor): altura fixa */
+  #ang-left-panel {
+    flex: none !important;
+    height: 55vw !important;
+    min-height: 220px !important;
+    max-height: 320px !important;
+    width: 100% !important;
+  }
+  /* Painel 3D: visível embaixo, mesmo tamanho */
+  #ang-3d-panel {
+    display: flex !important;
+    flex: none !important;
+    height: 55vw !important;
+    min-height: 220px !important;
+    max-height: 320px !important;
+    width: 100% !important;
+    border-left: none !important;
+    border-top: 1px solid #e5e7eb !important;
+  }
 }
-/* Tablet e notebook: painel 3D visível */
+/* Tablet e notebook: layout horizontal */
 @media (min-width: 600px) {
   #ang-3d-panel { display:flex !important; }
 }
@@ -260,12 +287,10 @@
   </div>
 
   <!-- MEDIDAS PRENSAGEM -->
-  <div class="screen" id="screen-prensagem" style="background:#ffffff !important;overflow:hidden;position:relative;flex:1;">
+  <div class="screen" id="screen-prensagem" style="overflow:hidden;position:relative;flex:1;">
 
-    <div style="display:flex;align-items:center;gap:16px;padding:8px 20px;background:rgba(13,17,23,0.55);border-bottom:1px solid #1e2d40;flex-shrink:0;">
-      <div id="pr-clock" style="font-family:'JetBrains Mono','Inter',monospace;font-size:20px;font-weight:700;color:#4a90ff;letter-spacing:1px;min-width:90px;"></div>
-      <div style="font-size:17px;font-weight:700;color:#e8eaf0;">Medidas de Crimpagem</div>
-      <button onclick="prReset()" style="margin-left:auto;background:rgba(74,144,255,.1);border:1px solid rgba(74,144,255,.3);color:#4a90ff;cursor:pointer;font-size:12px;font-weight:600;padding:5px 14px;border-radius:6px;font-family:Inter,sans-serif;display:flex;align-items:center;gap:5px;">↩ Limpar</button>
+    <div style="display:flex;justify-content:flex-end;padding:8px 20px;flex-shrink:0;">
+      <button onclick="prReset()" style="background:rgba(74,144,255,.1);border:1px solid rgba(74,144,255,.3);color:#1a56db;cursor:pointer;font-size:12px;font-weight:600;padding:5px 14px;border-radius:6px;font-family:Inter,sans-serif;display:flex;align-items:center;gap:5px;">↩ Limpar</button>
     </div>
 
     <div style="display:flex;flex:1;overflow:hidden;min-height:0;">
@@ -387,8 +412,8 @@
   </div>
 
   <!-- DESCASQUE -->
-  <div class="screen" id="screen-descasque" style="background:#ffffff !important;">
-    <div class="section-title">Descasque</div>
+  <div class="screen" id="screen-descasque">
+    
     <div style="flex:1;overflow-y:auto;padding:16px 24px 24px">
       <div class="table-card" style="display:inline-block;min-width:0;">
         <table style="width:auto;border-collapse:collapse;">
@@ -406,7 +431,7 @@
   </div>
 
   <!-- ÂNGULOS -->
-  <div class="screen" id="screen-angulos" style="background:#ffffff !important;overflow:hidden;flex-direction:column;">
+  <div class="screen" id="screen-angulos" style="overflow:hidden;flex-direction:column;">
 
     <!-- Grau + subtitle -->
     <div style="text-align:center;padding:clamp(8px,2vw,14px) 0 4px;flex-shrink:0;">
@@ -415,7 +440,7 @@
     </div>
 
     <!-- Dois painéis lado a lado (3D oculto no mobile) -->
-    <div style="flex:1;display:flex;gap:0;min-height:0;overflow:hidden;">
+    <div class="ang-panels" style="flex:1;display:flex;gap:0;min-height:0;overflow:hidden;">
 
       <!-- Painel esquerdo: transferidor (sempre visível) -->
       <div id="ang-left-panel" style="flex:1;display:flex;align-items:center;justify-content:center;padding:clamp(4px,1vw,8px);min-width:0;">
@@ -492,13 +517,7 @@
       .mc-tag button:hover { opacity:1; }
     </style>
 
-    <div class="mc-header">
-      <div>
-        <h2>Medida de Corte</h2>
-        <p>Comprimento Final − Terminal A − Terminal B − 10</p>
-      </div>
-      <button onclick="resetMedidaCorte()" style="background:rgba(74,144,255,.1);border:1px solid rgba(74,144,255,.35);color:#1a56db;cursor:pointer;font-size:12px;font-weight:600;padding:6px 16px;border-radius:6px;font-family:Inter,sans-serif;">↩ Limpar</button>
-    </div>
+
 
     <div class="mc-container">
 
@@ -559,7 +578,8 @@
 <script src="js/novo_pedido.js"></script>
 <script src="js/medidas.js"></script>
 <script src="js/descasque.js"></script>
-<script src="js/angulos.js"></script>
+<script src="js/viewer3d.js"></script>
+  <script src="js/angulos.js"></script>
 <script src="js/calendario.js"></script>
 <script src="js/perfil.js"></script>
 

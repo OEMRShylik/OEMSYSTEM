@@ -4,7 +4,7 @@
 //  Fallback: localStorage
 // ══════════════════════════════════════════════════
 
-const STORAGE_KEY = 'oem_rs_estado';
+const STORAGE_KEY = 'index_estado';
 
 // ── Serializa pedido para salvar (converte ArrayBuffer para b64) ──
 function _serializarPedido(p) {

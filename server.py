@@ -14,6 +14,9 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent))
 
 from flask import Flask, jsonify, request, send_from_directory
+import mimetypes
+mimetypes.add_type('model/gltf-binary', '.glb')
+mimetypes.add_type('model/gltf+json', '.gltf')
 
 from label_corte import build_corte_document
 from label_generator_embalagem_final import build_embalagem_document

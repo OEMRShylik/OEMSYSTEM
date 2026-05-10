@@ -49,13 +49,13 @@ function updateClock() {
 //  NAV
 // ══════════════════════════════════════════════════
 // Títulos das telas para o cabeçalho
-// Todas as telas sem título no topbar (só logo + hora)
 const SCREEN_TITLES = {
-  pedidos:   '',
-  detalhe:   '',
-  prensagem: '',
-  descasque: '',
-  angulos:   '',
+  'pedidos':      'Gestão de Pedidos',
+  'detalhe':      'Pedido',
+  'prensagem':    'Medidas de Crimpagem',
+  'descasque':    'Descasque',
+  'angulos':      'Ângulos de Montagem',
+  'medida-corte': 'Medida de Corte',
 };
 
 function navTo(name, el) {
@@ -77,14 +77,13 @@ function _updateTopbar(screen) {
   const titleEl  = document.getElementById('topbar-screen-title');
   const btnNovo  = document.getElementById('btn-novo-pedido-top');
   const searchEl = document.getElementById('kanban-search-bar');
-
   const isPedidos = (screen === 'pedidos');
   const title = SCREEN_TITLES[screen] || '';
 
-  // Título da tela (oculto em pedidos, visível nas outras)
+  // Título sempre visível
   if (titleEl) {
     titleEl.textContent = title;
-    titleEl.style.display = (title && !isPedidos) ? 'block' : 'none';
+    titleEl.style.display = title ? 'block' : 'none';
   }
   // Botão + Novo Pedido: só em pedidos
   if (btnNovo) btnNovo.style.display = isPedidos ? '' : 'none';
