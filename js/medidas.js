@@ -4,7 +4,7 @@
 //  MEDIDAS PRENSAGEM — cascata
 // ══════════════════════════════════════════════════
 function buildPrMang() {
-  const mangs = [...new Set(CRIMP.map(r=>r.mang))].sort();
+  const mangs = [...new Set(CRIMP.map(r=>r.mangueira))].sort();
   const sel = document.getElementById('pr-mang');
   mangs.forEach(m => { const o=document.createElement('option'); o.value=m; o.textContent=m; sel.appendChild(o); });
 }
@@ -15,7 +15,7 @@ function prOnMang() {
   hide('pr-row-size'); hide('pr-row-capa'); hide('pr-results');
   if (!mang) return;
   // Para cada size único, pegar o primeiro cod correspondente para exibir como label
-  const rows = CRIMP.filter(r=>r.mang===mang);
+  const rows = CRIMP.filter(r=>r.mangueira===mang);
   const seen = new Map();
   rows.forEach(r => { if(!seen.has(r.size)) seen.set(r.size, r.cod); });
   const sel = document.getElementById('pr-size');
@@ -35,7 +35,7 @@ function prOnSize() {
   prClearResults();
   hide('pr-row-capa'); hide('pr-results');
   if (!size) return;
-  const capas = [...new Set(CRIMP.filter(r=>r.mang===mang&&r.size===size).map(r=>r.capa))];
+  const capas = [...new Set(CRIMP.filter(r=>r.mangueira===mang&&r.size===size).map(r=>r.capa))];
   const chips = document.getElementById('pr-capa-chips');
   chips.innerHTML = '';
   capas.forEach(c => {
@@ -63,7 +63,7 @@ function prSelectCapa(capa, btn) {
 
   const mang = document.getElementById('pr-mang').value;
   const size = document.getElementById('pr-size').value;
-  const row = CRIMP.find(r=>r.mang===mang&&r.size===size&&r.capa===capa);
+  const row = CRIMP.find(r=>r.mangueira===mang&&r.size===size&&r.capa===capa);
   if (!row) return;
 
   const cor = row.correcao;
@@ -220,4 +220,3 @@ function updatePrClock() {
 
 function show(id) { const el=document.getElementById(id); el.style.display=''; void el.offsetWidth; }
 function hide(id) { document.getElementById(id).style.display='none'; }
-
