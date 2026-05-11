@@ -11,9 +11,7 @@ import sys
 import traceback
 from pathlib import Path
 
-# Adiciona pasta py/ ao path para imports dos módulos locais
 sys.path.insert(0, str(Path(__file__).parent))
-sys.path.insert(0, str(Path(__file__).parent / 'py'))
 
 from flask import Flask, jsonify, request, send_from_directory
 import mimetypes

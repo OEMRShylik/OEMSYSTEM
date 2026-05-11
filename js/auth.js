@@ -28,7 +28,7 @@ function isPrimeiraSenha(usuario) {
 
 const USUARIOS = [
   // Gestão
-  { id:'U001', nome:'Giovane',   usuario:'GIOVANE',   get senha(){ return getSenha('GIOVANE');   }, setor:'Gestão',    cor:'sector-gestao',    initials:'GI', permissoes:{ pedidos:'total', prensagem:'total', descasque:'total', angulos:'total', gestao:true } },
+  { id:'U001', nome:'Giovane',   usuario:'GIOVANE',   get senha(){ return getSenha('GIOVANE');   }, setor:'Admin',     cor:'sector-admin',     initials:'GI', permissoes:{ pedidos:'total', prensagem:'total', descasque:'total', angulos:'total', gestao:true, all:true } },
   { id:'U002', nome:'Jeremias',  usuario:'JEREMIAS',  get senha(){ return getSenha('JEREMIAS');  }, setor:'Gestão',    cor:'sector-gestao',    initials:'JE', permissoes:{ pedidos:'total', prensagem:'total', descasque:'total', angulos:'total', gestao:true } },
   // Produção
   { id:'U003', nome:'Naiara',    usuario:'NAIARA',    get senha(){ return getSenha('NAIARA');    }, setor:'Produção',  cor:'sector-producao',  initials:'NA', permissoes:{ pedidos:'leitura', prensagem:'total', descasque:'total', angulos:'total', gestao:false } },
@@ -154,7 +154,7 @@ function finalizarLogin(u) {
 }
 
 function sectorColor(setor) {
-  const map = { 'Produção':'#1a56db', 'Comercial':'#059669', 'Expedição':'#d97706', 'Gestão':'#7c3aed' };
+  const map = { 'Admin':'#7c3aed', 'Produção':'#1a56db', 'Comercial':'#059669', 'Expedição':'#d97706', 'Gestão':'#6b7280' };
   return map[setor] || '#6b7280';
 }
 
@@ -171,8 +171,15 @@ function applyPermissions(u) {
   // Expedição: pedidos expedicao, resto leitura
   // Gestão: tudo total
 
+  const isAdmin = u.setor === 'Admin';
+
+  // Botão + Novo Pedido
   const btnNovo = document.querySelector('.btn-novo');
-  if (btnNovo) btnNovo.style.display = (p.pedidos === 'total' || p.gestao) ? '' : 'none';
+  if (btnNovo) btnNovo.style.display = (isAdmin || p.pedidos === 'total' || p.gestao) ? '' : 'none';
+
+  // Nav Pedidos: só Admin vê
+  const navPedidos = document.querySelector('.nav-item[onclick*=\"pedidos\"]');
+  if (navPedidos) navPedidos.style.display = isAdmin ? '' : 'none';
 
   // Disable drag for read-only pedidos
   window._pedidosDragEnabled = p.pedidos !== 'leitura';

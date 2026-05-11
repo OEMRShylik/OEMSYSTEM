@@ -28,7 +28,12 @@ function openUserProfile() {
   if (idEl) idEl.textContent = u.id;
 
   const acessoEl = document.getElementById('upc-acesso');
-  if (acessoEl) acessoEl.textContent = u.permissoes.gestao ? 'Total' : 'Restrito';
+  if (acessoEl) {
+    const setor = u.setor || '';
+    const isAdmin = setor === 'Admin';
+    acessoEl.textContent = isAdmin ? 'Total' : 'Restrito';
+    acessoEl.style.color = isAdmin ? '#059669' : '#6b7280';
+  }
 
   document.getElementById('user-profile-overlay').classList.add('open');
 }

@@ -1,0 +1,157 @@
+[
+  {
+    "capa": "HCP4R06",
+    "ext": 25.0,
+    "int": null
+  },
+  {
+    "capa": "HCP4R08",
+    "ext": 25.2,
+    "int": 24.0
+  },
+  {
+    "capa": "HCP4R10",
+    "ext": null,
+    "int": null
+  },
+  {
+    "capa": "HCP4R12",
+    "ext": 32.0,
+    "int": null
+  },
+  {
+    "capa": "HCP4R16",
+    "ext": 40.0,
+    "int": null
+  },
+  {
+    "capa": "HCP4R20",
+    "ext": 47.0,
+    "int": null
+  },
+  {
+    "capa": "HCP4R24",
+    "ext": 58.0,
+    "int": null
+  },
+  {
+    "capa": "HCP4R32",
+    "ext": 58.0,
+    "int": null
+  },
+  {
+    "capa": "HCP408",
+    "ext": null,
+    "int": null
+  },
+  {
+    "capa": "HCP410",
+    "ext": null,
+    "int": null
+  },
+  {
+    "capa": "HCP412",
+    "ext": 39.0,
+    "int": null
+  },
+  {
+    "capa": "HCP416",
+    "ext": 47.0,
+    "int": null
+  },
+  {
+    "capa": "HCP420",
+    "ext": 52.0,
+    "int": null
+  },
+  {
+    "capa": "HCP424",
+    "ext": 59.0,
+    "int": null
+  },
+  {
+    "capa": "HCP432",
+    "ext": 62.0,
+    "int": null
+  },
+  {
+    "capa": "HCP4I12",
+    "ext": null,
+    "int": null
+  },
+  {
+    "capa": "HCP4I16",
+    "ext": null,
+    "int": null
+  },
+  {
+    "capa": "HCP4I20",
+    "ext": 72.0,
+    "int": 16.0
+  },
+  {
+    "capa": "HCP4I24",
+    "ext": 86.0,
+    "int": 24.0
+  },
+  {
+    "capa": "HCP4I32",
+    "ext": 90.0,
+    "int": 25.0
+  },
+  {
+    "capa": "HCP608",
+    "ext": null,
+    "int": null
+  },
+  {
+    "capa": "HCP610",
+    "ext": null,
+    "int": null
+  },
+  {
+    "capa": "HCP612",
+    "ext": 42.0,
+    "int": 9.0
+  },
+  {
+    "capa": "HCP616",
+    "ext": 52.0,
+    "int": 13.0
+  },
+  {
+    "capa": "HCP620",
+    "ext": 71.0,
+    "int": 16.0
+  },
+  {
+    "capa": "HCP624",
+    "ext": 86.0,
+    "int": 25.0
+  },
+  {
+    "capa": "HCP632",
+    "ext": 90.0,
+    "int": 25.0
+  },
+  {
+    "capa": "HFJ901212H50",
+    "ext": 29.0,
+    "int": null
+  },
+  {
+    "capa": "HFJ901010H50",
+    "ext": 27.0,
+    "int": null
+  },
+  {
+    "capa": "HCP2L04",
+    "ext": 23.0,
+    "int": null
+  },
+  {
+    "capa": "HCP704",
+    "ext": 23.0,
+    "int": null
+  }
+]

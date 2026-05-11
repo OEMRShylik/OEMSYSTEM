@@ -72,7 +72,7 @@ async function salvarEstado() {
       body:    json,
     });
     if (resp.ok) {
-      _mostrarToast('💾 Salvo', '#059669');
+      // salvo silenciosamente
       return true;
     }
   } catch(e) {

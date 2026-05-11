@@ -34,6 +34,7 @@ async function init() {
   }
   renderKanban();
   _updateTopbar('pedidos');
+  _aplicarPermissoes();
   // Ângulos só renderiza quando a tela estiver ativa (evita problemas de tamanho)
 }
 
@@ -58,7 +59,31 @@ const SCREEN_TITLES = {
   'medida-corte': 'Medida de Corte',
 };
 
+// ── Controle de acesso por setor ──
+function _aplicarPermissoes() {
+  if (typeof currentUser === 'undefined' || !currentUser) return;
+  const perm = currentUser.permissoes || {};
+  const isAdmin = currentUser.setor === 'Admin';
+
+  // Nav item de Pedidos: só Admin vê
+  const navPedidos = document.querySelector('.nav-item[onclick*="pedidos"]');
+  if (navPedidos) navPedidos.style.display = isAdmin ? '' : 'none';
+
+  // Se não é Admin e está na tela de pedidos → redireciona para prensagem
+  if (!isAdmin && typeof currentScreen !== 'undefined' && currentScreen === 'pedidos') {
+    const navPr = document.querySelector('.nav-item[onclick*="prensagem"]');
+    if (navPr) navTo('prensagem', navPr);
+  }
+}
+
+// Sobrescreve navTo para verificar permissões
 function navTo(name, el) {
+  // Verifica permissão para tela de pedidos
+  if (name === 'pedidos' && typeof currentUser !== 'undefined' && currentUser) {
+    const perm = currentUser.permissoes || {};
+    const isAdmin = currentUser.setor === 'Admin' || perm.pedidos === true;
+    if (!isAdmin) return; // Bloqueia acesso
+  }
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById('screen-' + name).classList.add('active');
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));

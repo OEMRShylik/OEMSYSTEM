@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>OEM HYLIK SYSTEM</title>
+<title>OEM SYSTEM</title>
 <link rel="icon" type="image/png" href="https://encrypted-tbn2.gstatic.com/faviconV2?url=https://www.hylik.com.br&client=VFE&size=64&type=FAVICON&fallback_opts=TYPE,SIZE,URL&nfrp=2">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Roboto:wght@700;900&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
@@ -126,6 +126,7 @@
   font-weight: 700 !important;
 }
 </style>
+<script src="js/auth.js"></script>
 </head>
 <body>
 
@@ -134,7 +135,7 @@
   <div class="login-card">
     <div class="login-logo">
       <img src="https://encrypted-tbn2.gstatic.com/faviconV2?url=https://www.hylik.com.br&client=VFE&size=64&type=FAVICON&fallback_opts=TYPE,SIZE,URL&nfrp=2" alt="HYLIK">
-      <div class="login-logo-text">OEM HYLIK<br>SYSTEM</div>
+      <div class="login-logo-text">OEM<br>SYSTEM</div>
     </div>
     <div class="login-tabs">
       <div class="login-tab active" id="tab-qr" onclick="loginSwitchTab('qr')">📷 QR Code</div>
@@ -224,8 +225,12 @@
   <!-- TOPBAR GLOBAL -->
   <div id="app-topbar" style="display:flex;align-items:center;gap:10px;padding:10px 16px;background:var(--white);border-bottom:1px solid var(--border);flex-shrink:0;">
     <div style="display:flex;align-items:center;gap:10px;white-space:nowrap;">
-      <img src="https://www.hylik.com.br/wp-content/uploads/2022/11/logo_hylik.png" alt="HYLIK" style="height:28px;display:block;object-fit:contain;">
-      <span style="font-size:13px;font-weight:600;color:#6b7280;letter-spacing:.5px;">OEM HYLIK SYSTEM</span>
+      <!-- Logo HYLIK + OS -->
+      <div style="display:flex;align-items:center;gap:0;">
+        <img src="https://www.hylik.com.br/wp-content/uploads/2022/11/logo_hylik.png" alt="HYLIK" style="height:28px;display:block;object-fit:contain;">
+        <span style="font-size:14px;font-weight:800;color:#1a3a6b;letter-spacing:-0.5px;margin-left:2px;font-family:'Inter',sans-serif;">OS</span>
+      </div>
+      <span style="font-size:13px;font-weight:600;color:#6b7280;letter-spacing:.5px;">OEM SYSTEM</span>
     </div>
     <div style="width:1px;height:16px;background:var(--border);flex-shrink:0;"></div>
     <div id="topbar-screen-title" style="font-size:13px;font-weight:600;color:#374151;display:none;"></div>
@@ -470,6 +475,7 @@
   <!-- MEDIDA DE CORTE -->
   <div class="screen" id="screen-medida-corte">
     <style>
+      .hidden { display: none !important; }
       .mc-ac-wrap { position:relative; width:100%; }
       .mc-ac-input {
         width:100%; box-sizing:border-box;
@@ -564,6 +570,7 @@
     </div>
   </div>
 
+  <script src="js/dados.js"></script>
   <script src="js/medida_corte.js"></script>
 
 </div><!-- /main -->
@@ -571,8 +578,6 @@
 
 <!-- Scripts -->
 <script src="js/storage.js"></script>
-<script src="js/dados.js"></script>
-<script src="js/auth.js"></script>
 <script src="js/app.js"></script>
 <script src="js/pedidos.js"></script>
 <script src="js/novo_pedido.js"></script>
