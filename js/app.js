@@ -2,10 +2,8 @@
 //  STATE
 // ══════════════════════════════════════════════════
 let pedidos = [];
-
 let currentPedidoIdx = null;
 let currentScreen = 'pedidos';
-
 let calYear  = new Date().getFullYear();
 let calMonth = new Date().getMonth();
 
@@ -23,7 +21,6 @@ async function init() {
   updatePrClock();
   buildPrMang();
   renderDescasque();
-  // Tenta carregar estado salvo
   try {
     const carregou = await carregarEstado();
     if (carregou && pedidos.length > 0) {
@@ -35,7 +32,6 @@ async function init() {
   renderKanban();
   _updateTopbar('pedidos');
   _aplicarPermissoes();
-  // Ângulos só renderiza quando a tela estiver ativa (evita problemas de tamanho)
 }
 
 function updateClock() {
@@ -49,8 +45,8 @@ function updateClock() {
 // ══════════════════════════════════════════════════
 //  NAV
 // ══════════════════════════════════════════════════
-// Títulos das telas para o cabeçalho
 const SCREEN_TITLES = {
+  'dashboard':    'Dashboard de Produção',
   'pedidos':      'Gestão de Pedidos',
   'detalhe':      'Pedido',
   'prensagem':    'Medidas de Crimpagem',
@@ -59,40 +55,33 @@ const SCREEN_TITLES = {
   'medida-corte': 'Medida de Corte',
 };
 
-// ── Controle de acesso por setor ──
 function _aplicarPermissoes() {
   if (typeof currentUser === 'undefined' || !currentUser) return;
-  const perm = currentUser.permissoes || {};
   const isAdmin = currentUser.setor === 'Admin';
-
-  // Nav item de Pedidos: só Admin vê
   const navPedidos = document.querySelector('.nav-item[onclick*="pedidos"]');
   if (navPedidos) navPedidos.style.display = isAdmin ? '' : 'none';
-
-  // Se não é Admin e está na tela de pedidos → redireciona para prensagem
-  if (!isAdmin && typeof currentScreen !== 'undefined' && currentScreen === 'pedidos') {
+  if (!isAdmin && currentScreen === 'pedidos') {
     const navPr = document.querySelector('.nav-item[onclick*="prensagem"]');
     if (navPr) navTo('prensagem', navPr);
   }
 }
 
-// Sobrescreve navTo para verificar permissões
 function navTo(name, el) {
-  // Verifica permissão para tela de pedidos
   if (name === 'pedidos' && typeof currentUser !== 'undefined' && currentUser) {
     const perm = currentUser.permissoes || {};
     const isAdmin = currentUser.setor === 'Admin' || perm.pedidos === true;
-    if (!isAdmin) return; // Bloqueia acesso
+    if (!isAdmin) return;
   }
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById('screen-' + name).classList.add('active');
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   el.classList.add('active');
   currentScreen = name;
-
-  // Atualiza cabeçalho
   _updateTopbar(name);
 
+  if (name === 'dashboard') {
+    renderDashboard();
+  }
   if (name === 'angulos') {
     requestAnimationFrame(() => { _angDrawAll(); });
   }
@@ -104,15 +93,8 @@ function _updateTopbar(screen) {
   const searchEl = document.getElementById('kanban-search-bar');
   const isPedidos = (screen === 'pedidos');
   const title = SCREEN_TITLES[screen] || '';
-
-  // Título sempre visível
-  if (titleEl) {
-    titleEl.textContent = title;
-    titleEl.style.display = title ? 'block' : 'none';
-  }
-  // Botão + Novo Pedido: só em pedidos
+  if (titleEl) { titleEl.textContent = title; titleEl.style.display = title ? 'block' : 'none'; }
   if (btnNovo) btnNovo.style.display = isPedidos ? '' : 'none';
-  // Barra de busca: só em pedidos
   if (searchEl) searchEl.style.display = isPedidos ? '' : 'none';
 }
 
@@ -177,14 +159,12 @@ function renderKanban(filter='') {
       });
     });
   });
-
   renderCalendario();
 }
 
 function renderCard(p, etapaIdx) {
   const idxReal  = pedidos.indexOf(p);
   const draggable = !p.processing && p.etapa !== 'finalizado';
-
   let topRight = '';
   if (p.processing) {
     topRight = `<div class="pedido-processing"><span class="spinner"></span> Processando</div>`;
@@ -195,9 +175,6 @@ function renderCard(p, etapaIdx) {
     const statusLabel = {'em-dia':'EM DIA','atrasado':'ATRASADO','pronto':'PRONTO'};
     topRight = `<div class="status-badge ${statusMap[p.status]||''}">${statusLabel[p.status]||p.status}</div>`;
   }
-
-  let filesHtml = '';
-
   return `<div class="pedido-card ${p.processing?'processing':''}"
     draggable="${draggable}"
     data-pedido-id="${p.id}"
@@ -209,7 +186,6 @@ function renderCard(p, etapaIdx) {
     </div>
     <div class="pedido-cliente">${p.cliente}</div>
     <div class="pedido-entrega">${p.entrega ? 'Entrega: '+p.entrega : ''}</div>
-    ${filesHtml}
   </div>`;
 }
 

@@ -1,0 +1,66 @@
+<!-- ════════════════════════════════════════════════════════
+     PATCH 1 — Adicionar no <head>, após os outros <link>
+     ════════════════════════════════════════════════════════ -->
+<link rel="stylesheet" href="css/dashboard.css">
+
+
+<!-- ════════════════════════════════════════════════════════
+     PATCH 2 — Adicionar no <aside id="sidebar">, como
+     PRIMEIRO item de navegação (antes do item de Pedidos)
+     ════════════════════════════════════════════════════════ -->
+<div class="nav-item" onclick="navTo('dashboard',this)">
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="3" y="3" width="7" height="9" rx="1"/>
+    <rect x="14" y="3" width="7" height="5" rx="1"/>
+    <rect x="14" y="12" width="7" height="9" rx="1"/>
+    <rect x="3" y="16" width="7" height="5" rx="1"/>
+  </svg>
+  <span class="nav-tooltip">Dashboard</span>
+</div>
+
+
+<!-- ════════════════════════════════════════════════════════
+     PATCH 3 — Adicionar a tela do dashboard no <div id="main">,
+     ANTES da div screen-pedidos existente
+     ════════════════════════════════════════════════════════ -->
+<div class="screen" id="screen-dashboard">
+  <div id="dash-root"></div>
+</div>
+
+
+<!-- ════════════════════════════════════════════════════════
+     PATCH 4 — Adicionar o script dashboard.js antes do </body>
+     (após os outros <script src="js/...">)
+     ════════════════════════════════════════════════════════ -->
+<script src="js/dashboard.js"></script>
+
+
+<!-- ════════════════════════════════════════════════════════
+     PATCH 5 — Em js/app.js, adicionar 'dashboard' no
+     objeto SCREEN_TITLES:
+     ════════════════════════════════════════════════════════ -->
+const SCREEN_TITLES = {
+  'dashboard':    'Dashboard de Produção',   // ← ADICIONAR ESTA LINHA
+  'pedidos':      'Gestão de Pedidos',
+  'detalhe':      'Pedido',
+  'prensagem':    'Medidas de Crimpagem',
+  'descasque':    'Descasque',
+  'angulos':      'Ângulos de Montagem',
+  'medida-corte': 'Medida de Corte',
+};
+
+
+<!-- ════════════════════════════════════════════════════════
+     PATCH 6 — Em js/app.js, na função navTo(), adicionar
+     renderização do dashboard quando a tela for ativada.
+     Localizar o trecho:
+
+       if (name === 'angulos') {
+         requestAnimationFrame(() => { _angDrawAll(); });
+       }
+
+     e adicionar ANTES dele:
+     ════════════════════════════════════════════════════════ -->
+  if (name === 'dashboard') {
+    renderDashboard();
+  }

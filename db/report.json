@@ -1,0 +1,4506 @@
+{
+  "_meta": {
+    "descricao": "Relatório de pedidos OEM RS — base do Dashboard de Produção",
+    "campos": {
+      "pedido": "Número do pedido",
+      "cliente": "Nome do cliente",
+      "qtd": "Quantidade de mangueiras produzidas",
+      "fat": "Faturamento em R$ (null = não faturado ainda)",
+      "ano": "Ano de referência",
+      "mes": "Mês de referência (01-12)",
+      "mes_nome": "Nome do mês por extenso"
+    },
+    "instrucoes": [
+      "Para adicionar novos pedidos: inclua objetos no array \"pedidos\" com os mesmos campos.",
+      "Para atualizar faturamento: localize o pedido pelo campo \"pedido\" e altere \"fat\".",
+      "O dashboard lê este arquivo via fetch(\"/db/report.json\") a cada carregamento.",
+      "Manter ordem cronológica: ordenar por ano ASC, mes ASC, pedido ASC."
+    ],
+    "total_registros": 498,
+    "periodo": "Julho/2025 – Abril/2026"
+  },
+  "pedidos": [
+    {
+      "pedido": "000005",
+      "cliente": "METARO",
+      "qtd": 102,
+      "fat": 3096.12,
+      "ano": 2025,
+      "mes": "07",
+      "mes_nome": "Julho"
+    },
+    {
+      "pedido": "000015",
+      "cliente": "PHD",
+      "qtd": 58,
+      "fat": 3659.95,
+      "ano": 2025,
+      "mes": "07",
+      "mes_nome": "Julho"
+    },
+    {
+      "pedido": "000024",
+      "cliente": "GELGAS",
+      "qtd": 12,
+      "fat": 917.52,
+      "ano": 2025,
+      "mes": "07",
+      "mes_nome": "Julho"
+    },
+    {
+      "pedido": "000028",
+      "cliente": "METARO",
+      "qtd": 65,
+      "fat": 2186.39,
+      "ano": 2025,
+      "mes": "07",
+      "mes_nome": "Julho"
+    },
+    {
+      "pedido": "000047",
+      "cliente": "CONVICTA",
+      "qtd": 0,
+      "fat": 1534.0,
+      "ano": 2025,
+      "mes": "07",
+      "mes_nome": "Julho"
+    },
+    {
+      "pedido": "000040",
+      "cliente": "GAS FUTURO",
+      "qtd": 0,
+      "fat": 9323.5,
+      "ano": 2025,
+      "mes": "07",
+      "mes_nome": "Julho"
+    },
+    {
+      "pedido": "000041",
+      "cliente": "GAS FUTURO",
+      "qtd": 0,
+      "fat": 15732.75,
+      "ano": 2025,
+      "mes": "07",
+      "mes_nome": "Julho"
+    },
+    {
+      "pedido": "000066",
+      "cliente": "GELGAS",
+      "qtd": 16,
+      "fat": 1031.04,
+      "ano": 2025,
+      "mes": "07",
+      "mes_nome": "Julho"
+    },
+    {
+      "pedido": "000073",
+      "cliente": "MAURO GOMES",
+      "qtd": 10,
+      "fat": 1639.9,
+      "ano": 2025,
+      "mes": "07",
+      "mes_nome": "Julho"
+    },
+    {
+      "pedido": "000078",
+      "cliente": "GELGAS",
+      "qtd": 49,
+      "fat": 3352.3,
+      "ano": 2025,
+      "mes": "07",
+      "mes_nome": "Julho"
+    },
+    {
+      "pedido": "000094",
+      "cliente": "GTM",
+      "qtd": 160,
+      "fat": 3285.06,
+      "ano": 2025,
+      "mes": "07",
+      "mes_nome": "Julho"
+    },
+    {
+      "pedido": "000095",
+      "cliente": "GTM",
+      "qtd": 250,
+      "fat": 5947.3,
+      "ano": 2025,
+      "mes": "07",
+      "mes_nome": "Julho"
+    },
+    {
+      "pedido": "000096",
+      "cliente": "GTM",
+      "qtd": 315,
+      "fat": 8350.55,
+      "ano": 2025,
+      "mes": "07",
+      "mes_nome": "Julho"
+    },
+    {
+      "pedido": "000097",
+      "cliente": "GTM",
+      "qtd": 255,
+      "fat": 6408.7,
+      "ano": 2025,
+      "mes": "07",
+      "mes_nome": "Julho"
+    },
+    {
+      "pedido": "000098",
+      "cliente": "GTM",
+      "qtd": 190,
+      "fat": 3564.3,
+      "ano": 2025,
+      "mes": "07",
+      "mes_nome": "Julho"
+    },
+    {
+      "pedido": "000129",
+      "cliente": "WSA",
+      "qtd": 9,
+      "fat": 595.67,
+      "ano": 2025,
+      "mes": "07",
+      "mes_nome": "Julho"
+    },
+    {
+      "pedido": "000137",
+      "cliente": "GILGAB",
+      "qtd": 4,
+      "fat": 456.84,
+      "ano": 2025,
+      "mes": "07",
+      "mes_nome": "Julho"
+    },
+    {
+      "pedido": "000141",
+      "cliente": "PHD",
+      "qtd": 110,
+      "fat": 6257.45,
+      "ano": 2025,
+      "mes": "07",
+      "mes_nome": "Julho"
+    },
+    {
+      "pedido": "000144",
+      "cliente": "ING",
+      "qtd": 1,
+      "fat": 50.68,
+      "ano": 2025,
+      "mes": "07",
+      "mes_nome": "Julho"
+    },
+    {
+      "pedido": "000148",
+      "cliente": "METARO",
+      "qtd": 153,
+      "fat": 4008.02,
+      "ano": 2025,
+      "mes": "07",
+      "mes_nome": "Julho"
+    },
+    {
+      "pedido": "000158",
+      "cliente": "TEKSUL",
+      "qtd": 50,
+      "fat": 4000.0,
+      "ano": 2025,
+      "mes": "07",
+      "mes_nome": "Julho"
+    },
+    {
+      "pedido": "000161",
+      "cliente": "KAFABI",
+      "qtd": 70,
+      "fat": 7751.6,
+      "ano": 2025,
+      "mes": "07",
+      "mes_nome": "Julho"
+    },
+    {
+      "pedido": "000163",
+      "cliente": "ROSTER",
+      "qtd": 25,
+      "fat": 1359.54,
+      "ano": 2025,
+      "mes": "07",
+      "mes_nome": "Julho"
+    },
+    {
+      "pedido": "000170",
+      "cliente": "ING",
+      "qtd": 300,
+      "fat": 10668.25,
+      "ano": 2025,
+      "mes": "07",
+      "mes_nome": "Julho"
+    },
+    {
+      "pedido": "000196",
+      "cliente": "GELGAS",
+      "qtd": 32,
+      "fat": 1960.46,
+      "ano": 2025,
+      "mes": "07",
+      "mes_nome": "Julho"
+    },
+    {
+      "pedido": "000197",
+      "cliente": "GELGAS",
+      "qtd": 8,
+      "fat": 489.34,
+      "ano": 2025,
+      "mes": "07",
+      "mes_nome": "Julho"
+    },
+    {
+      "pedido": "000204",
+      "cliente": "GELGAS",
+      "qtd": 73,
+      "fat": 5088.82,
+      "ano": 2025,
+      "mes": "07",
+      "mes_nome": "Julho"
+    },
+    {
+      "pedido": "000216",
+      "cliente": "GELGAS",
+      "qtd": 110,
+      "fat": 7448.81,
+      "ano": 2025,
+      "mes": "07",
+      "mes_nome": "Julho"
+    },
+    {
+      "pedido": "000219",
+      "cliente": "METARO",
+      "qtd": 223,
+      "fat": 7319.14,
+      "ano": 2025,
+      "mes": "07",
+      "mes_nome": "Julho"
+    },
+    {
+      "pedido": "000099",
+      "cliente": "GTM",
+      "qtd": 90,
+      "fat": 3075.7,
+      "ano": 2025,
+      "mes": "08",
+      "mes_nome": "Agosto"
+    },
+    {
+      "pedido": "000100",
+      "cliente": "GTM",
+      "qtd": 20,
+      "fat": 551.2,
+      "ano": 2025,
+      "mes": "08",
+      "mes_nome": "Agosto"
+    },
+    {
+      "pedido": "000101",
+      "cliente": "GTM",
+      "qtd": 140,
+      "fat": 3725.25,
+      "ano": 2025,
+      "mes": "08",
+      "mes_nome": "Agosto"
+    },
+    {
+      "pedido": "000102",
+      "cliente": "GTM",
+      "qtd": 220,
+      "fat": 3676.4,
+      "ano": 2025,
+      "mes": "08",
+      "mes_nome": "Agosto"
+    },
+    {
+      "pedido": "000103",
+      "cliente": "GTM",
+      "qtd": 125,
+      "fat": 3384.35,
+      "ano": 2025,
+      "mes": "08",
+      "mes_nome": "Agosto"
+    },
+    {
+      "pedido": "000262",
+      "cliente": "GELGAS",
+      "qtd": 22,
+      "fat": 1520.65,
+      "ano": 2025,
+      "mes": "08",
+      "mes_nome": "Agosto"
+    },
+    {
+      "pedido": "000104",
+      "cliente": "GTM",
+      "qtd": 50,
+      "fat": 1761.8,
+      "ano": 2025,
+      "mes": "08",
+      "mes_nome": "Agosto"
+    },
+    {
+      "pedido": "000105",
+      "cliente": "GTM",
+      "qtd": 230,
+      "fat": 5790.75,
+      "ano": 2025,
+      "mes": "08",
+      "mes_nome": "Agosto"
+    },
+    {
+      "pedido": "000288",
+      "cliente": "ING",
+      "qtd": 200,
+      "fat": 4534.39,
+      "ano": 2025,
+      "mes": "08",
+      "mes_nome": "Agosto"
+    },
+    {
+      "pedido": "000289",
+      "cliente": "ING",
+      "qtd": 500,
+      "fat": 16194.25,
+      "ano": 2025,
+      "mes": "08",
+      "mes_nome": "Agosto"
+    },
+    {
+      "pedido": "000290",
+      "cliente": "PHD",
+      "qtd": 252,
+      "fat": 5986.0,
+      "ano": 2025,
+      "mes": "08",
+      "mes_nome": "Agosto"
+    },
+    {
+      "pedido": "000303",
+      "cliente": "GELGAS",
+      "qtd": 106,
+      "fat": 9159.1,
+      "ano": 2025,
+      "mes": "08",
+      "mes_nome": "Agosto"
+    },
+    {
+      "pedido": "000305",
+      "cliente": "METARO",
+      "qtd": 130,
+      "fat": 3360.02,
+      "ano": 2025,
+      "mes": "08",
+      "mes_nome": "Agosto"
+    },
+    {
+      "pedido": "000106",
+      "cliente": "GTM",
+      "qtd": 380,
+      "fat": 11080.75,
+      "ano": 2025,
+      "mes": "08",
+      "mes_nome": "Agosto"
+    },
+    {
+      "pedido": "000317",
+      "cliente": "GELGAS",
+      "qtd": 36,
+      "fat": 2781.49,
+      "ano": 2025,
+      "mes": "08",
+      "mes_nome": "Agosto"
+    },
+    {
+      "pedido": "000377",
+      "cliente": "GELGAS",
+      "qtd": 26,
+      "fat": 1705.63,
+      "ano": 2025,
+      "mes": "08",
+      "mes_nome": "Agosto"
+    },
+    {
+      "pedido": "000422",
+      "cliente": "METARO",
+      "qtd": 5,
+      "fat": 107.1,
+      "ano": 2025,
+      "mes": "08",
+      "mes_nome": "Agosto"
+    },
+    {
+      "pedido": "000445",
+      "cliente": "METARO",
+      "qtd": 1,
+      "fat": 26.82,
+      "ano": 2025,
+      "mes": "08",
+      "mes_nome": "Agosto"
+    },
+    {
+      "pedido": "000394",
+      "cliente": "GELGAS",
+      "qtd": 184,
+      "fat": 7939.57,
+      "ano": 2025,
+      "mes": "08",
+      "mes_nome": "Agosto"
+    },
+    {
+      "pedido": "000457",
+      "cliente": "METARO",
+      "qtd": 110,
+      "fat": 3164.01,
+      "ano": 2025,
+      "mes": "08",
+      "mes_nome": "Agosto"
+    },
+    {
+      "pedido": "000458",
+      "cliente": "GELGAS",
+      "qtd": 66,
+      "fat": 4482.08,
+      "ano": 2025,
+      "mes": "08",
+      "mes_nome": "Agosto"
+    },
+    {
+      "pedido": "000557",
+      "cliente": "METARO",
+      "qtd": 53,
+      "fat": 1522.21,
+      "ano": 2025,
+      "mes": "08",
+      "mes_nome": "Agosto"
+    },
+    {
+      "pedido": "000565",
+      "cliente": "WSA",
+      "qtd": 9,
+      "fat": 371.83,
+      "ano": 2025,
+      "mes": "08",
+      "mes_nome": "Agosto"
+    },
+    {
+      "pedido": "000566",
+      "cliente": "IBL",
+      "qtd": 6,
+      "fat": 615.86,
+      "ano": 2025,
+      "mes": "08",
+      "mes_nome": "Agosto"
+    },
+    {
+      "pedido": "000577",
+      "cliente": "RTMAQ",
+      "qtd": 50,
+      "fat": 2444.21,
+      "ano": 2025,
+      "mes": "08",
+      "mes_nome": "Agosto"
+    },
+    {
+      "pedido": "000582",
+      "cliente": "WSA",
+      "qtd": 16,
+      "fat": 2176.02,
+      "ano": 2025,
+      "mes": "08",
+      "mes_nome": "Agosto"
+    },
+    {
+      "pedido": "000107",
+      "cliente": "GTM",
+      "qtd": 150,
+      "fat": 3160.65,
+      "ano": 2025,
+      "mes": "08",
+      "mes_nome": "Agosto"
+    },
+    {
+      "pedido": "000108",
+      "cliente": "GTM",
+      "qtd": 190,
+      "fat": 5126.55,
+      "ano": 2025,
+      "mes": "08",
+      "mes_nome": "Agosto"
+    },
+    {
+      "pedido": "000109",
+      "cliente": "GTM",
+      "qtd": 150,
+      "fat": 3304.55,
+      "ano": 2025,
+      "mes": "09",
+      "mes_nome": "Setembro"
+    },
+    {
+      "pedido": "000110",
+      "cliente": "GTM",
+      "qtd": 180,
+      "fat": 4745.0,
+      "ano": 2025,
+      "mes": "09",
+      "mes_nome": "Setembro"
+    },
+    {
+      "pedido": "000600",
+      "cliente": "MARCHER",
+      "qtd": 6,
+      "fat": 121.53,
+      "ano": 2025,
+      "mes": "09",
+      "mes_nome": "Setembro"
+    },
+    {
+      "pedido": "000111",
+      "cliente": "GTM",
+      "qtd": 145,
+      "fat": 3658.0,
+      "ano": 2025,
+      "mes": "09",
+      "mes_nome": "Setembro"
+    },
+    {
+      "pedido": "000112",
+      "cliente": "GTM",
+      "qtd": 170,
+      "fat": 5699.25,
+      "ano": 2025,
+      "mes": "09",
+      "mes_nome": "Setembro"
+    },
+    {
+      "pedido": "000639",
+      "cliente": "METARO",
+      "qtd": 63,
+      "fat": 2468.59,
+      "ano": 2025,
+      "mes": "09",
+      "mes_nome": "Setembro"
+    },
+    {
+      "pedido": "000113",
+      "cliente": "GTM",
+      "qtd": 160,
+      "fat": 5662.65,
+      "ano": 2025,
+      "mes": "09",
+      "mes_nome": "Setembro"
+    },
+    {
+      "pedido": "000674",
+      "cliente": "PHD",
+      "qtd": 110,
+      "fat": 6257.45,
+      "ano": 2025,
+      "mes": "09",
+      "mes_nome": "Setembro"
+    },
+    {
+      "pedido": "000114",
+      "cliente": "GTM",
+      "qtd": 190,
+      "fat": 4690.45,
+      "ano": 2025,
+      "mes": "09",
+      "mes_nome": "Setembro"
+    },
+    {
+      "pedido": "000692",
+      "cliente": "PHD",
+      "qtd": 375,
+      "fat": 7397.95,
+      "ano": 2025,
+      "mes": "09",
+      "mes_nome": "Setembro"
+    },
+    {
+      "pedido": "000693",
+      "cliente": "ING",
+      "qtd": 300,
+      "fat": 9716.55,
+      "ano": 2025,
+      "mes": "09",
+      "mes_nome": "Setembro"
+    },
+    {
+      "pedido": "000706",
+      "cliente": "BNK",
+      "qtd": 35,
+      "fat": 2446.82,
+      "ano": 2025,
+      "mes": "09",
+      "mes_nome": "Setembro"
+    },
+    {
+      "pedido": "000711",
+      "cliente": "METARO",
+      "qtd": 57,
+      "fat": 1816.73,
+      "ano": 2025,
+      "mes": "09",
+      "mes_nome": "Setembro"
+    },
+    {
+      "pedido": "000717",
+      "cliente": "MONDO",
+      "qtd": 3,
+      "fat": 1991.25,
+      "ano": 2025,
+      "mes": "09",
+      "mes_nome": "Setembro"
+    },
+    {
+      "pedido": "000739",
+      "cliente": "ING",
+      "qtd": 360,
+      "fat": 11659.86,
+      "ano": 2025,
+      "mes": "09",
+      "mes_nome": "Setembro"
+    },
+    {
+      "pedido": "000741",
+      "cliente": "ING",
+      "qtd": 360,
+      "fat": 11659.86,
+      "ano": 2025,
+      "mes": "09",
+      "mes_nome": "Setembro"
+    },
+    {
+      "pedido": "000786",
+      "cliente": "METARO",
+      "qtd": 100,
+      "fat": 2946.0,
+      "ano": 2025,
+      "mes": "09",
+      "mes_nome": "Setembro"
+    },
+    {
+      "pedido": "000787",
+      "cliente": "METARO",
+      "qtd": 60,
+      "fat": 1831.0,
+      "ano": 2025,
+      "mes": "09",
+      "mes_nome": "Setembro"
+    },
+    {
+      "pedido": "000808",
+      "cliente": "METARO",
+      "qtd": 32,
+      "fat": 1341.12,
+      "ano": 2025,
+      "mes": "09",
+      "mes_nome": "Setembro"
+    },
+    {
+      "pedido": "000589",
+      "cliente": "GAS FUTURO",
+      "qtd": 24,
+      "fat": 3476.28,
+      "ano": 2025,
+      "mes": "09",
+      "mes_nome": "Setembro"
+    },
+    {
+      "pedido": "000833",
+      "cliente": "MARCHER",
+      "qtd": 66,
+      "fat": 1336.83,
+      "ano": 2025,
+      "mes": "09",
+      "mes_nome": "Setembro"
+    },
+    {
+      "pedido": "000838",
+      "cliente": "WSA",
+      "qtd": 21,
+      "fat": 2571.53,
+      "ano": 2025,
+      "mes": "09",
+      "mes_nome": "Setembro"
+    },
+    {
+      "pedido": "000839",
+      "cliente": "WSA",
+      "qtd": 21,
+      "fat": 2571.53,
+      "ano": 2025,
+      "mes": "09",
+      "mes_nome": "Setembro"
+    },
+    {
+      "pedido": "000115",
+      "cliente": "GTM",
+      "qtd": 195,
+      "fat": 5151.85,
+      "ano": 2025,
+      "mes": "09",
+      "mes_nome": "Setembro"
+    },
+    {
+      "pedido": "000740",
+      "cliente": "ING",
+      "qtd": 360,
+      "fat": 11659.86,
+      "ano": 2025,
+      "mes": "09",
+      "mes_nome": "Setembro"
+    },
+    {
+      "pedido": "000866",
+      "cliente": "GELGAS",
+      "qtd": 155,
+      "fat": 10213.05,
+      "ano": 2025,
+      "mes": "09",
+      "mes_nome": "Setembro"
+    },
+    {
+      "pedido": "000900",
+      "cliente": "METARO",
+      "qtd": 52,
+      "fat": 2179.32,
+      "ano": 2025,
+      "mes": "09",
+      "mes_nome": "Setembro"
+    },
+    {
+      "pedido": "000910",
+      "cliente": "BUDNY",
+      "qtd": 20,
+      "fat": 1084.0,
+      "ano": 2025,
+      "mes": "09",
+      "mes_nome": "Setembro"
+    },
+    {
+      "pedido": "000116",
+      "cliente": "GTM",
+      "qtd": 195,
+      "fat": 5095.6,
+      "ano": 2025,
+      "mes": "09",
+      "mes_nome": "Setembro"
+    },
+    {
+      "pedido": "000922",
+      "cliente": "GELGAS",
+      "qtd": 10,
+      "fat": 588.85,
+      "ano": 2025,
+      "mes": "09",
+      "mes_nome": "Setembro"
+    },
+    {
+      "pedido": "000919",
+      "cliente": "RTMAQ",
+      "qtd": 75,
+      "fat": 3350.0,
+      "ano": 2025,
+      "mes": "09",
+      "mes_nome": "Setembro"
+    },
+    {
+      "pedido": "000937",
+      "cliente": "METARO",
+      "qtd": 10,
+      "fat": 236.1,
+      "ano": 2025,
+      "mes": "09",
+      "mes_nome": "Setembro"
+    },
+    {
+      "pedido": "000117",
+      "cliente": "GTM",
+      "qtd": 180,
+      "fat": 4812.25,
+      "ano": 2025,
+      "mes": "10",
+      "mes_nome": "Outubro"
+    },
+    {
+      "pedido": "000878",
+      "cliente": "MADAL PALFINGER",
+      "qtd": 20,
+      "fat": 1623.8,
+      "ano": 2025,
+      "mes": "10",
+      "mes_nome": "Outubro"
+    },
+    {
+      "pedido": "000119",
+      "cliente": "GTM",
+      "qtd": 290,
+      "fat": 7264.3,
+      "ano": 2025,
+      "mes": "10",
+      "mes_nome": "Outubro"
+    },
+    {
+      "pedido": "000964",
+      "cliente": "METARO",
+      "qtd": 110,
+      "fat": 3339.77,
+      "ano": 2025,
+      "mes": "10",
+      "mes_nome": "Outubro"
+    },
+    {
+      "pedido": "000133",
+      "cliente": "BOZZA",
+      "qtd": 450,
+      "fat": 24400.5,
+      "ano": 2025,
+      "mes": "10",
+      "mes_nome": "Outubro"
+    },
+    {
+      "pedido": "000974",
+      "cliente": "BRITIM",
+      "qtd": 101,
+      "fat": 2305.0,
+      "ano": 2025,
+      "mes": "10",
+      "mes_nome": "Outubro"
+    },
+    {
+      "pedido": "000970",
+      "cliente": "METARO",
+      "qtd": 3,
+      "fat": 186.54,
+      "ano": 2025,
+      "mes": "10",
+      "mes_nome": "Outubro"
+    },
+    {
+      "pedido": "000855",
+      "cliente": "APLIK",
+      "qtd": 36,
+      "fat": 1222.77,
+      "ano": 2025,
+      "mes": "10",
+      "mes_nome": "Outubro"
+    },
+    {
+      "pedido": "000983",
+      "cliente": "BUDNY",
+      "qtd": 18,
+      "fat": 491.89,
+      "ano": 2025,
+      "mes": "10",
+      "mes_nome": "Outubro"
+    },
+    {
+      "pedido": "001001",
+      "cliente": "RTMAQ",
+      "qtd": 4,
+      "fat": 118.37,
+      "ano": 2025,
+      "mes": "10",
+      "mes_nome": "Outubro"
+    },
+    {
+      "pedido": "001015",
+      "cliente": "SUL EQUIPAMENTOS",
+      "qtd": 60,
+      "fat": 5343.3,
+      "ano": 2025,
+      "mes": "10",
+      "mes_nome": "Outubro"
+    },
+    {
+      "pedido": "001045",
+      "cliente": "RODOVALE",
+      "qtd": 10,
+      "fat": 630.25,
+      "ano": 2025,
+      "mes": "10",
+      "mes_nome": "Outubro"
+    },
+    {
+      "pedido": "000120",
+      "cliente": "GTM",
+      "qtd": 255,
+      "fat": 4363.55,
+      "ano": 2025,
+      "mes": "10",
+      "mes_nome": "Outubro"
+    },
+    {
+      "pedido": "001095",
+      "cliente": "METARO",
+      "qtd": 144,
+      "fat": 3649.72,
+      "ano": 2025,
+      "mes": "10",
+      "mes_nome": "Outubro"
+    },
+    {
+      "pedido": "001100",
+      "cliente": "RTMAQ",
+      "qtd": 5,
+      "fat": 148.8,
+      "ano": 2025,
+      "mes": "10",
+      "mes_nome": "Outubro"
+    },
+    {
+      "pedido": "001111",
+      "cliente": "PERINI EQUIP",
+      "qtd": 5,
+      "fat": 869.55,
+      "ano": 2025,
+      "mes": "10",
+      "mes_nome": "Outubro"
+    },
+    {
+      "pedido": "001104",
+      "cliente": "BUDNY",
+      "qtd": 9,
+      "fat": 255.0,
+      "ano": 2025,
+      "mes": "10",
+      "mes_nome": "Outubro"
+    },
+    {
+      "pedido": "REPOSIÇÃO",
+      "cliente": "RTMAQ",
+      "qtd": 8,
+      "fat": null,
+      "ano": 2025,
+      "mes": "10",
+      "mes_nome": "Outubro"
+    },
+    {
+      "pedido": "000121",
+      "cliente": "GTM",
+      "qtd": 210,
+      "fat": 3628.1,
+      "ano": 2025,
+      "mes": "10",
+      "mes_nome": "Outubro"
+    },
+    {
+      "pedido": "001122",
+      "cliente": "GELGAS",
+      "qtd": 156,
+      "fat": 16318.94,
+      "ano": 2025,
+      "mes": "10",
+      "mes_nome": "Outubro"
+    },
+    {
+      "pedido": "001127",
+      "cliente": "GELGAS",
+      "qtd": 58,
+      "fat": 3954.34,
+      "ano": 2025,
+      "mes": "10",
+      "mes_nome": "Outubro"
+    },
+    {
+      "pedido": "AMOSTRA",
+      "cliente": "MERCOPAR 2025",
+      "qtd": 2,
+      "fat": null,
+      "ano": 2025,
+      "mes": "10",
+      "mes_nome": "Outubro"
+    },
+    {
+      "pedido": "OP3270",
+      "cliente": "METARO",
+      "qtd": 100,
+      "fat": null,
+      "ano": 2025,
+      "mes": "10",
+      "mes_nome": "Outubro"
+    },
+    {
+      "pedido": "001168",
+      "cliente": "METARO",
+      "qtd": 121,
+      "fat": 5520.98,
+      "ano": 2025,
+      "mes": "10",
+      "mes_nome": "Outubro"
+    },
+    {
+      "pedido": "001186",
+      "cliente": "GELGAS",
+      "qtd": 32,
+      "fat": 1933.26,
+      "ano": 2025,
+      "mes": "10",
+      "mes_nome": "Outubro"
+    },
+    {
+      "pedido": "001199",
+      "cliente": "PHD",
+      "qtd": 100,
+      "fat": 2110.0,
+      "ano": 2025,
+      "mes": "10",
+      "mes_nome": "Outubro"
+    },
+    {
+      "pedido": "OPBA12",
+      "cliente": "REVENDA",
+      "qtd": 200,
+      "fat": null,
+      "ano": 2025,
+      "mes": "10",
+      "mes_nome": "Outubro"
+    },
+    {
+      "pedido": "001215",
+      "cliente": "PHD",
+      "qtd": 80,
+      "fat": 1616.4,
+      "ano": 2025,
+      "mes": "10",
+      "mes_nome": "Outubro"
+    },
+    {
+      "pedido": "001218",
+      "cliente": "NICOLA MANUTENÇÃO",
+      "qtd": 86,
+      "fat": 8369.9,
+      "ano": 2025,
+      "mes": "10",
+      "mes_nome": "Outubro"
+    },
+    {
+      "pedido": "001247",
+      "cliente": "WSA",
+      "qtd": 8,
+      "fat": 315.91,
+      "ano": 2025,
+      "mes": "10",
+      "mes_nome": "Outubro"
+    },
+    {
+      "pedido": "001253",
+      "cliente": "METARO",
+      "qtd": 149,
+      "fat": 4343.39,
+      "ano": 2025,
+      "mes": "10",
+      "mes_nome": "Outubro"
+    },
+    {
+      "pedido": "001278",
+      "cliente": "ING",
+      "qtd": 120,
+      "fat": 5756.25,
+      "ano": 2025,
+      "mes": "10",
+      "mes_nome": "Outubro"
+    },
+    {
+      "pedido": "001280",
+      "cliente": "ING",
+      "qtd": 200,
+      "fat": 9924.95,
+      "ano": 2025,
+      "mes": "10",
+      "mes_nome": "Outubro"
+    },
+    {
+      "pedido": "001303",
+      "cliente": "WSA",
+      "qtd": 10,
+      "fat": 1012.48,
+      "ano": 2025,
+      "mes": "10",
+      "mes_nome": "Outubro"
+    },
+    {
+      "pedido": "001259",
+      "cliente": "WSA",
+      "qtd": 32,
+      "fat": 2624.67,
+      "ano": 2025,
+      "mes": "10",
+      "mes_nome": "Outubro"
+    },
+    {
+      "pedido": "001311",
+      "cliente": "MONDO",
+      "qtd": 1,
+      "fat": 663.75,
+      "ano": 2025,
+      "mes": "10",
+      "mes_nome": "Outubro"
+    },
+    {
+      "pedido": "OPPHD1",
+      "cliente": "PHD",
+      "qtd": 100,
+      "fat": null,
+      "ano": 2025,
+      "mes": "10",
+      "mes_nome": "Outubro"
+    },
+    {
+      "pedido": "001253",
+      "cliente": "JANUARIO",
+      "qtd": 25,
+      "fat": 4343.39,
+      "ano": 2025,
+      "mes": "10",
+      "mes_nome": "Outubro"
+    },
+    {
+      "pedido": "OP8355",
+      "cliente": "METARO",
+      "qtd": 100,
+      "fat": null,
+      "ano": 2025,
+      "mes": "10",
+      "mes_nome": "Outubro"
+    },
+    {
+      "pedido": "001367",
+      "cliente": "GELGAS",
+      "qtd": 20,
+      "fat": 1231.01,
+      "ano": 2025,
+      "mes": "10",
+      "mes_nome": "Outubro"
+    },
+    {
+      "pedido": "001372",
+      "cliente": "METARO",
+      "qtd": 58,
+      "fat": 1431.72,
+      "ano": 2025,
+      "mes": "10",
+      "mes_nome": "Outubro"
+    },
+    {
+      "pedido": "001383",
+      "cliente": "GELGAS",
+      "qtd": 13,
+      "fat": 752.63,
+      "ano": 2025,
+      "mes": "10",
+      "mes_nome": "Outubro"
+    },
+    {
+      "pedido": "001384",
+      "cliente": "ROSTER",
+      "qtd": 15,
+      "fat": 649.13,
+      "ano": 2025,
+      "mes": "10",
+      "mes_nome": "Outubro"
+    },
+    {
+      "pedido": "001404",
+      "cliente": "GELGAS",
+      "qtd": 100,
+      "fat": 7587.15,
+      "ano": 2025,
+      "mes": "10",
+      "mes_nome": "Outubro"
+    },
+    {
+      "pedido": "001422",
+      "cliente": "NOMA",
+      "qtd": 1,
+      "fat": 43.54,
+      "ano": 2025,
+      "mes": "10",
+      "mes_nome": "Outubro"
+    },
+    {
+      "pedido": "001459",
+      "cliente": "WSA",
+      "qtd": 5,
+      "fat": 313.4,
+      "ano": 2025,
+      "mes": "10",
+      "mes_nome": "Outubro"
+    },
+    {
+      "pedido": "001458",
+      "cliente": "PHD",
+      "qtd": 3,
+      "fat": 525.19,
+      "ano": 2025,
+      "mes": "10",
+      "mes_nome": "Outubro"
+    },
+    {
+      "pedido": "001444",
+      "cliente": "METARO",
+      "qtd": 3,
+      "fat": 148.81,
+      "ano": 2025,
+      "mes": "10",
+      "mes_nome": "Outubro"
+    },
+    {
+      "pedido": "001453",
+      "cliente": "GELGAS",
+      "qtd": 1,
+      "fat": 39.66,
+      "ano": 2025,
+      "mes": "10",
+      "mes_nome": "Outubro"
+    },
+    {
+      "pedido": "001470",
+      "cliente": "ING",
+      "qtd": 24,
+      "fat": 1639.02,
+      "ano": 2025,
+      "mes": "11",
+      "mes_nome": "Novembro"
+    },
+    {
+      "pedido": "001473",
+      "cliente": "HYDROLUBZ",
+      "qtd": 102,
+      "fat": 5606.94,
+      "ano": 2025,
+      "mes": "11",
+      "mes_nome": "Novembro"
+    },
+    {
+      "pedido": "001479",
+      "cliente": "PIERINO GOTTI",
+      "qtd": 6,
+      "fat": 997.5,
+      "ano": 2025,
+      "mes": "11",
+      "mes_nome": "Novembro"
+    },
+    {
+      "pedido": "001484",
+      "cliente": "MONDO",
+      "qtd": 3,
+      "fat": 2035.6,
+      "ano": 2025,
+      "mes": "11",
+      "mes_nome": "Novembro"
+    },
+    {
+      "pedido": "001486",
+      "cliente": "IBL",
+      "qtd": 2,
+      "fat": 200.32,
+      "ano": 2025,
+      "mes": "11",
+      "mes_nome": "Novembro"
+    },
+    {
+      "pedido": "001492",
+      "cliente": "ING",
+      "qtd": 144,
+      "fat": 13073.64,
+      "ano": 2025,
+      "mes": "11",
+      "mes_nome": "Novembro"
+    },
+    {
+      "pedido": "001493",
+      "cliente": "ING",
+      "qtd": 72,
+      "fat": 6536.82,
+      "ano": 2025,
+      "mes": "11",
+      "mes_nome": "Novembro"
+    },
+    {
+      "pedido": "001494",
+      "cliente": "ING",
+      "qtd": 72,
+      "fat": 6536.82,
+      "ano": 2025,
+      "mes": "11",
+      "mes_nome": "Novembro"
+    },
+    {
+      "pedido": "001500",
+      "cliente": "INW",
+      "qtd": 30,
+      "fat": 3616.53,
+      "ano": 2025,
+      "mes": "11",
+      "mes_nome": "Novembro"
+    },
+    {
+      "pedido": "001514",
+      "cliente": "GELGAS",
+      "qtd": 4,
+      "fat": 326.74,
+      "ano": 2025,
+      "mes": "11",
+      "mes_nome": "Novembro"
+    },
+    {
+      "pedido": "001517",
+      "cliente": "ING",
+      "qtd": 24,
+      "fat": 1622.88,
+      "ano": 2025,
+      "mes": "11",
+      "mes_nome": "Novembro"
+    },
+    {
+      "pedido": "001521",
+      "cliente": "ING",
+      "qtd": 54,
+      "fat": 6759.42,
+      "ano": 2025,
+      "mes": "11",
+      "mes_nome": "Novembro"
+    },
+    {
+      "pedido": "001425",
+      "cliente": "PHD",
+      "qtd": 80,
+      "fat": 5220.14,
+      "ano": 2025,
+      "mes": "11",
+      "mes_nome": "Novembro"
+    },
+    {
+      "pedido": "001445",
+      "cliente": "RODOVALE",
+      "qtd": 115,
+      "fat": 6951.05,
+      "ano": 2025,
+      "mes": "11",
+      "mes_nome": "Novembro"
+    },
+    {
+      "pedido": "001455",
+      "cliente": "ROSTER",
+      "qtd": 16,
+      "fat": 666.11,
+      "ano": 2025,
+      "mes": "11",
+      "mes_nome": "Novembro"
+    },
+    {
+      "pedido": "001522",
+      "cliente": "PHD",
+      "qtd": 36,
+      "fat": 9200.0,
+      "ano": 2025,
+      "mes": "11",
+      "mes_nome": "Novembro"
+    },
+    {
+      "pedido": "001523",
+      "cliente": "PHD",
+      "qtd": 36,
+      "fat": 9200.0,
+      "ano": 2025,
+      "mes": "11",
+      "mes_nome": "Novembro"
+    },
+    {
+      "pedido": "001524",
+      "cliente": "PHD",
+      "qtd": 36,
+      "fat": 9200.0,
+      "ano": 2025,
+      "mes": "11",
+      "mes_nome": "Novembro"
+    },
+    {
+      "pedido": "001526",
+      "cliente": "PHD",
+      "qtd": 40,
+      "fat": 2844.8,
+      "ano": 2025,
+      "mes": "11",
+      "mes_nome": "Novembro"
+    },
+    {
+      "pedido": "001528",
+      "cliente": "WSA",
+      "qtd": 8,
+      "fat": 254.74,
+      "ano": 2025,
+      "mes": "11",
+      "mes_nome": "Novembro"
+    },
+    {
+      "pedido": "001529",
+      "cliente": "ING",
+      "qtd": 54,
+      "fat": 7693.62,
+      "ano": 2025,
+      "mes": "11",
+      "mes_nome": "Novembro"
+    },
+    {
+      "pedido": "001530",
+      "cliente": "ING",
+      "qtd": 54,
+      "fat": 7693.62,
+      "ano": 2025,
+      "mes": "11",
+      "mes_nome": "Novembro"
+    },
+    {
+      "pedido": "001539",
+      "cliente": "PHD",
+      "qtd": 3,
+      "fat": 150.97,
+      "ano": 2025,
+      "mes": "11",
+      "mes_nome": "Novembro"
+    },
+    {
+      "pedido": "001547",
+      "cliente": "GELGAS",
+      "qtd": 2,
+      "fat": 174.04,
+      "ano": 2025,
+      "mes": "11",
+      "mes_nome": "Novembro"
+    },
+    {
+      "pedido": "001553",
+      "cliente": "METARO",
+      "qtd": 42,
+      "fat": 2221.2,
+      "ano": 2025,
+      "mes": "11",
+      "mes_nome": "Novembro"
+    },
+    {
+      "pedido": "001572",
+      "cliente": "METARO",
+      "qtd": 3,
+      "fat": 98.16,
+      "ano": 2025,
+      "mes": "11",
+      "mes_nome": "Novembro"
+    },
+    {
+      "pedido": "001589",
+      "cliente": "GELGAS",
+      "qtd": 2,
+      "fat": 77.44,
+      "ano": 2025,
+      "mes": "11",
+      "mes_nome": "Novembro"
+    },
+    {
+      "pedido": "001605",
+      "cliente": "METARO",
+      "qtd": 142,
+      "fat": 7103.78,
+      "ano": 2025,
+      "mes": "11",
+      "mes_nome": "Novembro"
+    },
+    {
+      "pedido": "001569",
+      "cliente": "ING",
+      "qtd": 24,
+      "fat": 3805.7,
+      "ano": 2025,
+      "mes": "11",
+      "mes_nome": "Novembro"
+    },
+    {
+      "pedido": "001617",
+      "cliente": "WSA",
+      "qtd": 2,
+      "fat": 229.54,
+      "ano": 2025,
+      "mes": "11",
+      "mes_nome": "Novembro"
+    },
+    {
+      "pedido": "001620",
+      "cliente": "PHD",
+      "qtd": 111,
+      "fat": 9391.61,
+      "ano": 2025,
+      "mes": "11",
+      "mes_nome": "Novembro"
+    },
+    {
+      "pedido": "001624",
+      "cliente": "GELGAS",
+      "qtd": 100,
+      "fat": 5910.78,
+      "ano": 2025,
+      "mes": "11",
+      "mes_nome": "Novembro"
+    },
+    {
+      "pedido": "001663",
+      "cliente": "ING",
+      "qtd": 200,
+      "fat": 8750.0,
+      "ano": 2025,
+      "mes": "11",
+      "mes_nome": "Novembro"
+    },
+    {
+      "pedido": "001665",
+      "cliente": "ING",
+      "qtd": 600,
+      "fat": 26250.0,
+      "ano": 2025,
+      "mes": "11",
+      "mes_nome": "Novembro"
+    },
+    {
+      "pedido": "001666",
+      "cliente": "ING",
+      "qtd": 600,
+      "fat": 26250.0,
+      "ano": 2025,
+      "mes": "11",
+      "mes_nome": "Novembro"
+    },
+    {
+      "pedido": "001682",
+      "cliente": "GUERRA",
+      "qtd": 4,
+      "fat": 167.08,
+      "ano": 2025,
+      "mes": "11",
+      "mes_nome": "Novembro"
+    },
+    {
+      "pedido": "001695",
+      "cliente": "GELGAS",
+      "qtd": 2,
+      "fat": 170.16,
+      "ano": 2025,
+      "mes": "11",
+      "mes_nome": "Novembro"
+    },
+    {
+      "pedido": "001697",
+      "cliente": "ROSTER",
+      "qtd": 1,
+      "fat": 38.02,
+      "ano": 2025,
+      "mes": "11",
+      "mes_nome": "Novembro"
+    },
+    {
+      "pedido": "001712",
+      "cliente": "GELGAS",
+      "qtd": 75,
+      "fat": 15028.63,
+      "ano": 2025,
+      "mes": "11",
+      "mes_nome": "Novembro"
+    },
+    {
+      "pedido": "001756",
+      "cliente": "METARO",
+      "qtd": 4,
+      "fat": 183.52,
+      "ano": 2025,
+      "mes": "11",
+      "mes_nome": "Novembro"
+    },
+    {
+      "pedido": "001753",
+      "cliente": "GELGAS",
+      "qtd": 4,
+      "fat": 268.72,
+      "ano": 2025,
+      "mes": "11",
+      "mes_nome": "Novembro"
+    },
+    {
+      "pedido": "001621",
+      "cliente": "PHD",
+      "qtd": 60,
+      "fat": 8134.54,
+      "ano": 2025,
+      "mes": "11",
+      "mes_nome": "Novembro"
+    },
+    {
+      "pedido": "001525",
+      "cliente": "PHD",
+      "qtd": 288,
+      "fat": 14720.0,
+      "ano": 2025,
+      "mes": "11",
+      "mes_nome": "Novembro"
+    },
+    {
+      "pedido": "001785",
+      "cliente": "VERSATIL",
+      "qtd": 3,
+      "fat": 87.25,
+      "ano": 2025,
+      "mes": "11",
+      "mes_nome": "Novembro"
+    },
+    {
+      "pedido": "001786",
+      "cliente": "VERSATIL",
+      "qtd": 8,
+      "fat": 902.32,
+      "ano": 2025,
+      "mes": "11",
+      "mes_nome": "Novembro"
+    },
+    {
+      "pedido": "001789",
+      "cliente": "ING",
+      "qtd": 72,
+      "fat": 6536.82,
+      "ano": 2025,
+      "mes": "11",
+      "mes_nome": "Novembro"
+    },
+    {
+      "pedido": "001796",
+      "cliente": "SULPRESS",
+      "qtd": 10,
+      "fat": 998.0,
+      "ano": 2025,
+      "mes": "11",
+      "mes_nome": "Novembro"
+    },
+    {
+      "pedido": "001800",
+      "cliente": "GELGAS",
+      "qtd": 2,
+      "fat": 441.37,
+      "ano": 2025,
+      "mes": "11",
+      "mes_nome": "Novembro"
+    },
+    {
+      "pedido": "001803",
+      "cliente": "ROSTER",
+      "qtd": 1,
+      "fat": 38.02,
+      "ano": 2025,
+      "mes": "11",
+      "mes_nome": "Novembro"
+    },
+    {
+      "pedido": "001788",
+      "cliente": "ING",
+      "qtd": 104,
+      "fat": 11176.4,
+      "ano": 2025,
+      "mes": "11",
+      "mes_nome": "Novembro"
+    },
+    {
+      "pedido": "001790",
+      "cliente": "ING",
+      "qtd": 72,
+      "fat": 6536.82,
+      "ano": 2025,
+      "mes": "11",
+      "mes_nome": "Novembro"
+    },
+    {
+      "pedido": "001667",
+      "cliente": "ING",
+      "qtd": 600,
+      "fat": 26250.0,
+      "ano": 2025,
+      "mes": "11",
+      "mes_nome": "Novembro"
+    },
+    {
+      "pedido": "001809",
+      "cliente": "PHD",
+      "qtd": 54,
+      "fat": 3659.72,
+      "ano": 2025,
+      "mes": "11",
+      "mes_nome": "Novembro"
+    },
+    {
+      "pedido": "001831",
+      "cliente": "GELGAS",
+      "qtd": 96,
+      "fat": 6521.29,
+      "ano": 2025,
+      "mes": "11",
+      "mes_nome": "Novembro"
+    },
+    {
+      "pedido": "001847",
+      "cliente": "PHD",
+      "qtd": 120,
+      "fat": 2579.0,
+      "ano": 2025,
+      "mes": "11",
+      "mes_nome": "Novembro"
+    },
+    {
+      "pedido": "001845",
+      "cliente": "ESTRADA",
+      "qtd": 11,
+      "fat": 1356.32,
+      "ano": 2025,
+      "mes": "11",
+      "mes_nome": "Novembro"
+    },
+    {
+      "pedido": "001848",
+      "cliente": "METARO",
+      "qtd": 6,
+      "fat": 238.5,
+      "ano": 2025,
+      "mes": "11",
+      "mes_nome": "Novembro"
+    },
+    {
+      "pedido": "001866",
+      "cliente": "GUERRA",
+      "qtd": 10,
+      "fat": 417.7,
+      "ano": 2025,
+      "mes": "11",
+      "mes_nome": "Novembro"
+    },
+    {
+      "pedido": "001864",
+      "cliente": "VERSATIL",
+      "qtd": 14,
+      "fat": 983.4,
+      "ano": 2025,
+      "mes": "11",
+      "mes_nome": "Novembro"
+    },
+    {
+      "pedido": "001885",
+      "cliente": "PHD",
+      "qtd": 100,
+      "fat": 2204.0,
+      "ano": 2025,
+      "mes": "11",
+      "mes_nome": "Novembro"
+    },
+    {
+      "pedido": "001890",
+      "cliente": "PHD",
+      "qtd": 51,
+      "fat": 1513.07,
+      "ano": 2025,
+      "mes": "12",
+      "mes_nome": "Dezembro"
+    },
+    {
+      "pedido": "001891",
+      "cliente": "PHD",
+      "qtd": 51,
+      "fat": 3026.14,
+      "ano": 2025,
+      "mes": "12",
+      "mes_nome": "Dezembro"
+    },
+    {
+      "pedido": "001519",
+      "cliente": "RODOVALE",
+      "qtd": 10,
+      "fat": 2073.5,
+      "ano": 2025,
+      "mes": "12",
+      "mes_nome": "Dezembro"
+    },
+    {
+      "pedido": "001794",
+      "cliente": "ING",
+      "qtd": 72,
+      "fat": 4526.22,
+      "ano": 2025,
+      "mes": "12",
+      "mes_nome": "Dezembro"
+    },
+    {
+      "pedido": "001791",
+      "cliente": "ING",
+      "qtd": 144,
+      "fat": 13073.64,
+      "ano": 2025,
+      "mes": "12",
+      "mes_nome": "Dezembro"
+    },
+    {
+      "pedido": "001907",
+      "cliente": "VERSATIL",
+      "qtd": 12,
+      "fat": 443.58,
+      "ano": 2025,
+      "mes": "12",
+      "mes_nome": "Dezembro"
+    },
+    {
+      "pedido": "001903",
+      "cliente": "METARO",
+      "qtd": 17,
+      "fat": 458.68,
+      "ano": 2025,
+      "mes": "12",
+      "mes_nome": "Dezembro"
+    },
+    {
+      "pedido": "001921",
+      "cliente": "VERSATIL",
+      "qtd": 2,
+      "fat": 72.15,
+      "ano": 2025,
+      "mes": "12",
+      "mes_nome": "Dezembro"
+    },
+    {
+      "pedido": "001927",
+      "cliente": "METARO",
+      "qtd": 24,
+      "fat": 708.63,
+      "ano": 2025,
+      "mes": "12",
+      "mes_nome": "Dezembro"
+    },
+    {
+      "pedido": "001792",
+      "cliente": "ING",
+      "qtd": 144,
+      "fat": 13073.64,
+      "ano": 2025,
+      "mes": "12",
+      "mes_nome": "Dezembro"
+    },
+    {
+      "pedido": "001902",
+      "cliente": "RODOVALE",
+      "qtd": 10,
+      "fat": 566.31,
+      "ano": 2025,
+      "mes": "12",
+      "mes_nome": "Dezembro"
+    },
+    {
+      "pedido": "001956",
+      "cliente": "ING",
+      "qtd": 72,
+      "fat": 6707.22,
+      "ano": 2025,
+      "mes": "12",
+      "mes_nome": "Dezembro"
+    },
+    {
+      "pedido": "001668",
+      "cliente": "ING",
+      "qtd": 600,
+      "fat": 26250.0,
+      "ano": 2025,
+      "mes": "12",
+      "mes_nome": "Dezembro"
+    },
+    {
+      "pedido": "001991",
+      "cliente": "PHD",
+      "qtd": 22,
+      "fat": 1179.35,
+      "ano": 2025,
+      "mes": "12",
+      "mes_nome": "Dezembro"
+    },
+    {
+      "pedido": "001974",
+      "cliente": "VERSATIL",
+      "qtd": 40,
+      "fat": 1980.18,
+      "ano": 2025,
+      "mes": "12",
+      "mes_nome": "Dezembro"
+    },
+    {
+      "pedido": "002000",
+      "cliente": "GELGAS",
+      "qtd": 2,
+      "fat": 170.16,
+      "ano": 2025,
+      "mes": "12",
+      "mes_nome": "Dezembro"
+    },
+    {
+      "pedido": "002013",
+      "cliente": "WSA",
+      "qtd": 8,
+      "fat": 1282.81,
+      "ano": 2025,
+      "mes": "12",
+      "mes_nome": "Dezembro"
+    },
+    {
+      "pedido": "001904",
+      "cliente": "GELGAS",
+      "qtd": 136,
+      "fat": 12699.21,
+      "ano": 2025,
+      "mes": "12",
+      "mes_nome": "Dezembro"
+    },
+    {
+      "pedido": "002018",
+      "cliente": "RODOVALE",
+      "qtd": 20,
+      "fat": 3496.0,
+      "ano": 2025,
+      "mes": "12",
+      "mes_nome": "Dezembro"
+    },
+    {
+      "pedido": "002022",
+      "cliente": "WSA",
+      "qtd": 17,
+      "fat": 952.48,
+      "ano": 2025,
+      "mes": "12",
+      "mes_nome": "Dezembro"
+    },
+    {
+      "pedido": "002027",
+      "cliente": "BRITIM",
+      "qtd": 100,
+      "fat": 54500.0,
+      "ano": 2025,
+      "mes": "12",
+      "mes_nome": "Dezembro"
+    },
+    {
+      "pedido": "001446",
+      "cliente": "RODOVALE",
+      "qtd": 195,
+      "fat": 10278.25,
+      "ano": 2025,
+      "mes": "12",
+      "mes_nome": "Dezembro"
+    },
+    {
+      "pedido": "002046",
+      "cliente": "GELGAS",
+      "qtd": 84,
+      "fat": 5828.58,
+      "ano": 2025,
+      "mes": "12",
+      "mes_nome": "Dezembro"
+    },
+    {
+      "pedido": "002081",
+      "cliente": "METARO",
+      "qtd": 39,
+      "fat": 1392.65,
+      "ano": 2025,
+      "mes": "12",
+      "mes_nome": "Dezembro"
+    },
+    {
+      "pedido": "002089",
+      "cliente": "METARO",
+      "qtd": 223,
+      "fat": 7328.69,
+      "ano": 2025,
+      "mes": "12",
+      "mes_nome": "Dezembro"
+    },
+    {
+      "pedido": "002133",
+      "cliente": "IBL",
+      "qtd": 112,
+      "fat": 13647.5,
+      "ano": 2025,
+      "mes": "12",
+      "mes_nome": "Dezembro"
+    },
+    {
+      "pedido": "002158",
+      "cliente": "NOMA",
+      "qtd": 25,
+      "fat": 913.32,
+      "ano": 2025,
+      "mes": "12",
+      "mes_nome": "Dezembro"
+    },
+    {
+      "pedido": "002174",
+      "cliente": "NOMA",
+      "qtd": 6,
+      "fat": 224.61,
+      "ano": 2025,
+      "mes": "12",
+      "mes_nome": "Dezembro"
+    },
+    {
+      "pedido": "001669",
+      "cliente": "ING",
+      "qtd": 600,
+      "fat": 26250.0,
+      "ano": 2026,
+      "mes": "01",
+      "mes_nome": "Janeiro"
+    },
+    {
+      "pedido": "002162",
+      "cliente": "INDUSTRIAL BUSSE",
+      "qtd": 106,
+      "fat": 8646.19,
+      "ano": 2026,
+      "mes": "01",
+      "mes_nome": "Janeiro"
+    },
+    {
+      "pedido": "002188",
+      "cliente": "RODOVALE",
+      "qtd": 60,
+      "fat": 1323.6,
+      "ano": 2026,
+      "mes": "01",
+      "mes_nome": "Janeiro"
+    },
+    {
+      "pedido": "002190",
+      "cliente": "GELGAS",
+      "qtd": 200,
+      "fat": 14621.79,
+      "ano": 2026,
+      "mes": "01",
+      "mes_nome": "Janeiro"
+    },
+    {
+      "pedido": "001670",
+      "cliente": "ING",
+      "qtd": 600,
+      "fat": 26250.0,
+      "ano": 2026,
+      "mes": "01",
+      "mes_nome": "Janeiro"
+    },
+    {
+      "pedido": "001728",
+      "cliente": "RODOVALE",
+      "qtd": 180,
+      "fat": 4937.4,
+      "ano": 2026,
+      "mes": "01",
+      "mes_nome": "Janeiro"
+    },
+    {
+      "pedido": "002243",
+      "cliente": "WSA",
+      "qtd": 16,
+      "fat": 1311.28,
+      "ano": 2026,
+      "mes": "01",
+      "mes_nome": "Janeiro"
+    },
+    {
+      "pedido": "002245",
+      "cliente": "INDUSTRIAL BUSSE",
+      "qtd": 3,
+      "fat": 300.48,
+      "ano": 2026,
+      "mes": "01",
+      "mes_nome": "Janeiro"
+    },
+    {
+      "pedido": "002246",
+      "cliente": "ING",
+      "qtd": 84,
+      "fat": 4984.68,
+      "ano": 2026,
+      "mes": "01",
+      "mes_nome": "Janeiro"
+    },
+    {
+      "pedido": "002256",
+      "cliente": "METARO",
+      "qtd": 145,
+      "fat": 4147.34,
+      "ano": 2026,
+      "mes": "01",
+      "mes_nome": "Janeiro"
+    },
+    {
+      "pedido": "001716",
+      "cliente": "RODOVALE",
+      "qtd": 54,
+      "fat": 5672.25,
+      "ano": 2026,
+      "mes": "01",
+      "mes_nome": "Janeiro"
+    },
+    {
+      "pedido": "002284",
+      "cliente": "GELGAS",
+      "qtd": 4,
+      "fat": 592.92,
+      "ano": 2026,
+      "mes": "01",
+      "mes_nome": "Janeiro"
+    },
+    {
+      "pedido": "002289",
+      "cliente": "ING",
+      "qtd": 216,
+      "fat": 17599.86,
+      "ano": 2026,
+      "mes": "01",
+      "mes_nome": "Janeiro"
+    },
+    {
+      "pedido": "002286",
+      "cliente": "BUDNY",
+      "qtd": 18,
+      "fat": 410.06,
+      "ano": 2026,
+      "mes": "01",
+      "mes_nome": "Janeiro"
+    },
+    {
+      "pedido": "002309",
+      "cliente": "METARO",
+      "qtd": 1,
+      "fat": 98.46,
+      "ano": 2026,
+      "mes": "01",
+      "mes_nome": "Janeiro"
+    },
+    {
+      "pedido": "002310",
+      "cliente": "METARO",
+      "qtd": 2,
+      "fat": 52.54,
+      "ano": 2026,
+      "mes": "01",
+      "mes_nome": "Janeiro"
+    },
+    {
+      "pedido": "002312",
+      "cliente": "METARO",
+      "qtd": 100,
+      "fat": 3100.0,
+      "ano": 2026,
+      "mes": "01",
+      "mes_nome": "Janeiro"
+    },
+    {
+      "pedido": "002316",
+      "cliente": "GUERRA",
+      "qtd": 10,
+      "fat": 390.1,
+      "ano": 2026,
+      "mes": "01",
+      "mes_nome": "Janeiro"
+    },
+    {
+      "pedido": "001447",
+      "cliente": "RODOVALE",
+      "qtd": 220,
+      "fat": 12209.4,
+      "ano": 2026,
+      "mes": "01",
+      "mes_nome": "Janeiro"
+    },
+    {
+      "pedido": "001727",
+      "cliente": "RODOVALE",
+      "qtd": 10,
+      "fat": 630.25,
+      "ano": 2026,
+      "mes": "01",
+      "mes_nome": "Janeiro"
+    },
+    {
+      "pedido": "002283",
+      "cliente": "RODOVALE",
+      "qtd": 20,
+      "fat": 3496.0,
+      "ano": 2026,
+      "mes": "01",
+      "mes_nome": "Janeiro"
+    },
+    {
+      "pedido": "002323",
+      "cliente": "GELGAS",
+      "qtd": 116,
+      "fat": 9241.26,
+      "ano": 2026,
+      "mes": "01",
+      "mes_nome": "Janeiro"
+    },
+    {
+      "pedido": "002402",
+      "cliente": "GELGAS",
+      "qtd": 10,
+      "fat": 847.66,
+      "ano": 2026,
+      "mes": "01",
+      "mes_nome": "Janeiro"
+    },
+    {
+      "pedido": "002401",
+      "cliente": "WSA",
+      "qtd": 2,
+      "fat": 547.75,
+      "ano": 2026,
+      "mes": "01",
+      "mes_nome": "Janeiro"
+    },
+    {
+      "pedido": "002406",
+      "cliente": "RODOVALE",
+      "qtd": 1,
+      "fat": 18.2,
+      "ano": 2026,
+      "mes": "01",
+      "mes_nome": "Janeiro"
+    },
+    {
+      "pedido": "002413",
+      "cliente": "PHD",
+      "qtd": 160,
+      "fat": 3304.4,
+      "ano": 2026,
+      "mes": "01",
+      "mes_nome": "Janeiro"
+    },
+    {
+      "pedido": "002420",
+      "cliente": "WSA",
+      "qtd": 6,
+      "fat": 407.51,
+      "ano": 2026,
+      "mes": "01",
+      "mes_nome": "Janeiro"
+    },
+    {
+      "pedido": "002412",
+      "cliente": "PHD",
+      "qtd": 66,
+      "fat": 3530.05,
+      "ano": 2026,
+      "mes": "01",
+      "mes_nome": "Janeiro"
+    },
+    {
+      "pedido": "002427",
+      "cliente": "ING",
+      "qtd": 360,
+      "fat": 15750.0,
+      "ano": 2026,
+      "mes": "01",
+      "mes_nome": "Janeiro"
+    },
+    {
+      "pedido": "002414",
+      "cliente": "ING",
+      "qtd": 72,
+      "fat": 6536.82,
+      "ano": 2026,
+      "mes": "01",
+      "mes_nome": "Janeiro"
+    },
+    {
+      "pedido": "002440",
+      "cliente": "ESTRADA",
+      "qtd": 32,
+      "fat": 3754.52,
+      "ano": 2026,
+      "mes": "01",
+      "mes_nome": "Janeiro"
+    },
+    {
+      "pedido": "002446",
+      "cliente": "GELGAS",
+      "qtd": 2,
+      "fat": 181.65,
+      "ano": 2026,
+      "mes": "01",
+      "mes_nome": "Janeiro"
+    },
+    {
+      "pedido": "002415",
+      "cliente": "GELGAS",
+      "qtd": 226,
+      "fat": 18163.17,
+      "ano": 2026,
+      "mes": "01",
+      "mes_nome": "Janeiro"
+    },
+    {
+      "pedido": "002436",
+      "cliente": "GELGAS",
+      "qtd": 8,
+      "fat": 954.2,
+      "ano": 2026,
+      "mes": "01",
+      "mes_nome": "Janeiro"
+    },
+    {
+      "pedido": "002470",
+      "cliente": "GELGAS",
+      "qtd": 2,
+      "fat": 15750.0,
+      "ano": 2026,
+      "mes": "01",
+      "mes_nome": "Janeiro"
+    },
+    {
+      "pedido": "002497",
+      "cliente": "ING",
+      "qtd": 48,
+      "fat": 313.2,
+      "ano": 2026,
+      "mes": "01",
+      "mes_nome": "Janeiro"
+    },
+    {
+      "pedido": "002499",
+      "cliente": "GELGAS",
+      "qtd": 2,
+      "fat": 15750.0,
+      "ano": 2026,
+      "mes": "01",
+      "mes_nome": "Janeiro"
+    },
+    {
+      "pedido": "002491",
+      "cliente": "ING",
+      "qtd": 160,
+      "fat": 6840.36,
+      "ano": 2026,
+      "mes": "01",
+      "mes_nome": "Janeiro"
+    },
+    {
+      "pedido": "002540",
+      "cliente": "ING",
+      "qtd": 1,
+      "fat": 281.52,
+      "ano": 2026,
+      "mes": "01",
+      "mes_nome": "Janeiro"
+    },
+    {
+      "pedido": "002541",
+      "cliente": "GELGAS",
+      "qtd": 75,
+      "fat": 8337.4,
+      "ano": 2026,
+      "mes": "01",
+      "mes_nome": "Janeiro"
+    },
+    {
+      "pedido": "002544",
+      "cliente": "RODOVALE",
+      "qtd": 1,
+      "fat": 98.56,
+      "ano": 2026,
+      "mes": "01",
+      "mes_nome": "Janeiro"
+    },
+    {
+      "pedido": "002546",
+      "cliente": "METARO",
+      "qtd": 146,
+      "fat": 6164.68,
+      "ano": 2026,
+      "mes": "01",
+      "mes_nome": "Janeiro"
+    },
+    {
+      "pedido": "002566",
+      "cliente": "GELGAS",
+      "qtd": 8,
+      "fat": 48.85,
+      "ano": 2026,
+      "mes": "01",
+      "mes_nome": "Janeiro"
+    },
+    {
+      "pedido": "002569",
+      "cliente": "VERSATIL",
+      "qtd": 54,
+      "fat": 5132.0,
+      "ano": 2026,
+      "mes": "01",
+      "mes_nome": "Janeiro"
+    },
+    {
+      "pedido": "002585",
+      "cliente": "ESTRADA",
+      "qtd": 1,
+      "fat": 850.0,
+      "ano": 2026,
+      "mes": "01",
+      "mes_nome": "Janeiro"
+    },
+    {
+      "pedido": "002590",
+      "cliente": "GELGAS",
+      "qtd": 360,
+      "fat": 5055.04,
+      "ano": 2026,
+      "mes": "01",
+      "mes_nome": "Janeiro"
+    },
+    {
+      "pedido": "002601",
+      "cliente": "METARO",
+      "qtd": 39,
+      "fat": 19.84,
+      "ano": 2026,
+      "mes": "01",
+      "mes_nome": "Janeiro"
+    },
+    {
+      "pedido": "002429",
+      "cliente": "ING",
+      "qtd": 360,
+      "fat": 29520.2,
+      "ano": 2026,
+      "mes": "01",
+      "mes_nome": "Janeiro"
+    },
+    {
+      "pedido": "002614",
+      "cliente": "ING",
+      "qtd": 51,
+      "fat": 1209.29,
+      "ano": 2026,
+      "mes": "01",
+      "mes_nome": "Janeiro"
+    },
+    {
+      "pedido": "002621",
+      "cliente": "INDUSTRIAL BUSSE",
+      "qtd": 10,
+      "fat": 4888.45,
+      "ano": 2026,
+      "mes": "01",
+      "mes_nome": "Janeiro"
+    },
+    {
+      "pedido": "002430",
+      "cliente": "ING",
+      "qtd": 360,
+      "fat": 1088.5,
+      "ano": 2026,
+      "mes": "01",
+      "mes_nome": "Janeiro"
+    },
+    {
+      "pedido": "002649",
+      "cliente": "MD ACESSORIOS",
+      "qtd": 2,
+      "fat": 25.98,
+      "ano": 2026,
+      "mes": "01",
+      "mes_nome": "Janeiro"
+    },
+    {
+      "pedido": "002664",
+      "cliente": "ESTRADA",
+      "qtd": 55,
+      "fat": 6781.6,
+      "ano": 2026,
+      "mes": "01",
+      "mes_nome": "Janeiro"
+    },
+    {
+      "pedido": "002667",
+      "cliente": "METARO",
+      "qtd": 4,
+      "fat": 183.52,
+      "ano": 2026,
+      "mes": "01",
+      "mes_nome": "Janeiro"
+    },
+    {
+      "pedido": "002689",
+      "cliente": "HIDRA MASTER",
+      "qtd": 3,
+      "fat": 325.28,
+      "ano": 2026,
+      "mes": "01",
+      "mes_nome": "Janeiro"
+    },
+    {
+      "pedido": "002733",
+      "cliente": "INDUSTRIAL BUSSE",
+      "qtd": 2,
+      "fat": 125.72,
+      "ano": 2026,
+      "mes": "01",
+      "mes_nome": "Janeiro"
+    },
+    {
+      "pedido": "002389",
+      "cliente": "INDUSTRIAL BUSSE",
+      "qtd": 129,
+      "fat": 10892.34,
+      "ano": 2026,
+      "mes": "01",
+      "mes_nome": "Janeiro"
+    },
+    {
+      "pedido": "002613",
+      "cliente": "ING",
+      "qtd": 39,
+      "fat": 4191.15,
+      "ano": 2026,
+      "mes": "01",
+      "mes_nome": "Janeiro"
+    },
+    {
+      "pedido": "002448",
+      "cliente": "ESTRADA",
+      "qtd": 44,
+      "fat": 5425.28,
+      "ano": 2026,
+      "mes": "02",
+      "mes_nome": "Fevereiro"
+    },
+    {
+      "pedido": "002616",
+      "cliente": "TRIEL",
+      "qtd": 6,
+      "fat": 1042.64,
+      "ano": 2026,
+      "mes": "02",
+      "mes_nome": "Fevereiro"
+    },
+    {
+      "pedido": "002421",
+      "cliente": "ING",
+      "qtd": 360,
+      "fat": 15750.0,
+      "ano": 2026,
+      "mes": "02",
+      "mes_nome": "Fevereiro"
+    },
+    {
+      "pedido": "002682",
+      "cliente": "ING",
+      "qtd": 168,
+      "fat": 6814.62,
+      "ano": 2026,
+      "mes": "02",
+      "mes_nome": "Fevereiro"
+    },
+    {
+      "pedido": "002721",
+      "cliente": "MARCHER",
+      "qtd": 54,
+      "fat": 1093.77,
+      "ano": 2026,
+      "mes": "02",
+      "mes_nome": "Fevereiro"
+    },
+    {
+      "pedido": "002702",
+      "cliente": "WSA",
+      "qtd": 24,
+      "fat": 1849.13,
+      "ano": 2026,
+      "mes": "02",
+      "mes_nome": "Fevereiro"
+    },
+    {
+      "pedido": "002720",
+      "cliente": "ING",
+      "qtd": 4,
+      "fat": 270.48,
+      "ano": 2026,
+      "mes": "02",
+      "mes_nome": "Fevereiro"
+    },
+    {
+      "pedido": "002747",
+      "cliente": "INDUSTRIAL BUSSE",
+      "qtd": 10,
+      "fat": 1001.6,
+      "ano": 2026,
+      "mes": "02",
+      "mes_nome": "Fevereiro"
+    },
+    {
+      "pedido": "002751",
+      "cliente": "GELGAS",
+      "qtd": 302,
+      "fat": 26140.03,
+      "ano": 2026,
+      "mes": "02",
+      "mes_nome": "Fevereiro"
+    },
+    {
+      "pedido": "002638",
+      "cliente": "ING",
+      "qtd": 72,
+      "fat": 4526.22,
+      "ano": 2026,
+      "mes": "02",
+      "mes_nome": "Fevereiro"
+    },
+    {
+      "pedido": "002641",
+      "cliente": "ING",
+      "qtd": 72,
+      "fat": 6536.82,
+      "ano": 2026,
+      "mes": "02",
+      "mes_nome": "Fevereiro"
+    },
+    {
+      "pedido": "002716",
+      "cliente": "METARO",
+      "qtd": 21,
+      "fat": 566.44,
+      "ano": 2026,
+      "mes": "02",
+      "mes_nome": "Fevereiro"
+    },
+    {
+      "pedido": "002790",
+      "cliente": "METARO",
+      "qtd": 218,
+      "fat": 7016.9,
+      "ano": 2026,
+      "mes": "02",
+      "mes_nome": "Fevereiro"
+    },
+    {
+      "pedido": "002794",
+      "cliente": "PHD",
+      "qtd": 30,
+      "fat": 3707.07,
+      "ano": 2026,
+      "mes": "02",
+      "mes_nome": "Fevereiro"
+    },
+    {
+      "pedido": "002637",
+      "cliente": "ING",
+      "qtd": 74,
+      "fat": 9332.64,
+      "ano": 2026,
+      "mes": "02",
+      "mes_nome": "Fevereiro"
+    },
+    {
+      "pedido": "002817",
+      "cliente": "HLEMMAN SP",
+      "qtd": 100,
+      "fat": 100.0,
+      "ano": 2026,
+      "mes": "02",
+      "mes_nome": "Fevereiro"
+    },
+    {
+      "pedido": "002820",
+      "cliente": "GELGAS",
+      "qtd": 6,
+      "fat": 458.94,
+      "ano": 2026,
+      "mes": "02",
+      "mes_nome": "Fevereiro"
+    },
+    {
+      "pedido": "002859",
+      "cliente": "GELGAS",
+      "qtd": 32,
+      "fat": 2347.11,
+      "ano": 2026,
+      "mes": "02",
+      "mes_nome": "Fevereiro"
+    },
+    {
+      "pedido": "002868",
+      "cliente": "MONDO",
+      "qtd": 3,
+      "fat": 2035.6,
+      "ano": 2026,
+      "mes": "02",
+      "mes_nome": "Fevereiro"
+    },
+    {
+      "pedido": "002830",
+      "cliente": "ING",
+      "qtd": 72,
+      "fat": 4526.22,
+      "ano": 2026,
+      "mes": "02",
+      "mes_nome": "Fevereiro"
+    },
+    {
+      "pedido": "002447",
+      "cliente": "ESTRADA",
+      "qtd": 40,
+      "fat": 5425.28,
+      "ano": 2026,
+      "mes": "02",
+      "mes_nome": "Fevereiro"
+    },
+    {
+      "pedido": "002897",
+      "cliente": "GUERRA",
+      "qtd": 78,
+      "fat": 4168.16,
+      "ano": 2026,
+      "mes": "02",
+      "mes_nome": "Fevereiro"
+    },
+    {
+      "pedido": "002909",
+      "cliente": "WSA",
+      "qtd": 2,
+      "fat": 520.91,
+      "ano": 2026,
+      "mes": "02",
+      "mes_nome": "Fevereiro"
+    },
+    {
+      "pedido": "002492",
+      "cliente": "ING",
+      "qtd": 80,
+      "fat": 3175.1,
+      "ano": 2026,
+      "mes": "02",
+      "mes_nome": "Fevereiro"
+    },
+    {
+      "pedido": "002893",
+      "cliente": "ING",
+      "qtd": 72,
+      "fat": 6536.82,
+      "ano": 2026,
+      "mes": "02",
+      "mes_nome": "Fevereiro"
+    },
+    {
+      "pedido": "002422",
+      "cliente": "ING",
+      "qtd": 360,
+      "fat": 15750.0,
+      "ano": 2026,
+      "mes": "02",
+      "mes_nome": "Fevereiro"
+    },
+    {
+      "pedido": "002493",
+      "cliente": "ING",
+      "qtd": 160,
+      "fat": 8337.4,
+      "ano": 2026,
+      "mes": "02",
+      "mes_nome": "Fevereiro"
+    },
+    {
+      "pedido": "002805",
+      "cliente": "RODOVALE",
+      "qtd": 25,
+      "fat": 4370.0,
+      "ano": 2026,
+      "mes": "02",
+      "mes_nome": "Fevereiro"
+    },
+    {
+      "pedido": "002932",
+      "cliente": "METARO",
+      "qtd": 34,
+      "fat": 1236.3,
+      "ano": 2026,
+      "mes": "02",
+      "mes_nome": "Fevereiro"
+    },
+    {
+      "pedido": "002921",
+      "cliente": "ESTRADA",
+      "qtd": 110,
+      "fat": 13563.2,
+      "ano": 2026,
+      "mes": "02",
+      "mes_nome": "Fevereiro"
+    },
+    {
+      "pedido": "002942",
+      "cliente": "INDUSTRIAL BUSSE",
+      "qtd": 2,
+      "fat": 152.3,
+      "ano": 2026,
+      "mes": "02",
+      "mes_nome": "Fevereiro"
+    },
+    {
+      "pedido": "002945",
+      "cliente": "JANUARIO",
+      "qtd": 36,
+      "fat": 2440.48,
+      "ano": 2026,
+      "mes": "02",
+      "mes_nome": "Fevereiro"
+    },
+    {
+      "pedido": "002969",
+      "cliente": "ING",
+      "qtd": 72,
+      "fat": 6536.82,
+      "ano": 2026,
+      "mes": "02",
+      "mes_nome": "Fevereiro"
+    },
+    {
+      "pedido": "002901",
+      "cliente": "RODOVALE",
+      "qtd": 30,
+      "fat": 2163.3,
+      "ano": 2026,
+      "mes": "02",
+      "mes_nome": "Fevereiro"
+    },
+    {
+      "pedido": "002980",
+      "cliente": "MD ACESSORIOS",
+      "qtd": 100,
+      "fat": 1626.5,
+      "ano": 2026,
+      "mes": "02",
+      "mes_nome": "Fevereiro"
+    },
+    {
+      "pedido": "002989",
+      "cliente": "GELGAS",
+      "qtd": 118,
+      "fat": 11372.52,
+      "ano": 2026,
+      "mes": "02",
+      "mes_nome": "Fevereiro"
+    },
+    {
+      "pedido": "002999",
+      "cliente": "ESTRADA",
+      "qtd": 2,
+      "fat": 31.5,
+      "ano": 2026,
+      "mes": "02",
+      "mes_nome": "Fevereiro"
+    },
+    {
+      "pedido": "003016",
+      "cliente": "GELGAS",
+      "qtd": 155,
+      "fat": 11227.0,
+      "ano": 2026,
+      "mes": "02",
+      "mes_nome": "Fevereiro"
+    },
+    {
+      "pedido": "002423",
+      "cliente": "ING",
+      "qtd": 360,
+      "fat": 15750.0,
+      "ano": 2026,
+      "mes": "02",
+      "mes_nome": "Fevereiro"
+    },
+    {
+      "pedido": "002953",
+      "cliente": "BUDNY",
+      "qtd": 20,
+      "fat": 1323.4,
+      "ano": 2026,
+      "mes": "02",
+      "mes_nome": "Fevereiro"
+    },
+    {
+      "pedido": "003017",
+      "cliente": "INDUSTRIAL BUSSE",
+      "qtd": 5,
+      "fat": 355.55,
+      "ano": 2026,
+      "mes": "02",
+      "mes_nome": "Fevereiro"
+    },
+    {
+      "pedido": "003018",
+      "cliente": "GUERRA",
+      "qtd": 10,
+      "fat": 390.1,
+      "ano": 2026,
+      "mes": "02",
+      "mes_nome": "Fevereiro"
+    },
+    {
+      "pedido": "002910",
+      "cliente": "GUERRA",
+      "qtd": 16,
+      "fat": 640.72,
+      "ano": 2026,
+      "mes": "02",
+      "mes_nome": "Fevereiro"
+    },
+    {
+      "pedido": "002424",
+      "cliente": "ING",
+      "qtd": 360,
+      "fat": 15750.0,
+      "ano": 2026,
+      "mes": "02",
+      "mes_nome": "Fevereiro"
+    },
+    {
+      "pedido": "003021",
+      "cliente": "ESTRADA",
+      "qtd": 4,
+      "fat": 63.0,
+      "ano": 2026,
+      "mes": "02",
+      "mes_nome": "Fevereiro"
+    },
+    {
+      "pedido": "003002",
+      "cliente": "RODOVALE",
+      "qtd": 10,
+      "fat": 128.1,
+      "ano": 2026,
+      "mes": "02",
+      "mes_nome": "Fevereiro"
+    },
+    {
+      "pedido": "002550",
+      "cliente": "RODOVALE",
+      "qtd": 90,
+      "fat": 5096.79,
+      "ano": 2026,
+      "mes": "02",
+      "mes_nome": "Fevereiro"
+    },
+    {
+      "pedido": "003034",
+      "cliente": "ING",
+      "qtd": 72,
+      "fat": 4526.22,
+      "ano": 2026,
+      "mes": "02",
+      "mes_nome": "Fevereiro"
+    },
+    {
+      "pedido": "003044",
+      "cliente": "ING",
+      "qtd": 54,
+      "fat": 7693.62,
+      "ano": 2026,
+      "mes": "02",
+      "mes_nome": "Fevereiro"
+    },
+    {
+      "pedido": "003036",
+      "cliente": "METARO",
+      "qtd": 23,
+      "fat": 1029.27,
+      "ano": 2026,
+      "mes": "02",
+      "mes_nome": "Fevereiro"
+    },
+    {
+      "pedido": "003089",
+      "cliente": "GELGAS",
+      "qtd": 4,
+      "fat": 273.25,
+      "ano": 2026,
+      "mes": "02",
+      "mes_nome": "Fevereiro"
+    },
+    {
+      "pedido": "003092",
+      "cliente": "GELGAS",
+      "qtd": 2,
+      "fat": 111.78,
+      "ano": 2026,
+      "mes": "02",
+      "mes_nome": "Fevereiro"
+    },
+    {
+      "pedido": "003083",
+      "cliente": "PHD",
+      "qtd": 66,
+      "fat": 3538.05,
+      "ano": 2026,
+      "mes": "02",
+      "mes_nome": "Fevereiro"
+    },
+    {
+      "pedido": "003105",
+      "cliente": "GELGAS",
+      "qtd": 1,
+      "fat": 60.14,
+      "ano": 2026,
+      "mes": "02",
+      "mes_nome": "Fevereiro"
+    },
+    {
+      "pedido": "003110",
+      "cliente": "HIDRA MASTER",
+      "qtd": 50,
+      "fat": 7380.5,
+      "ano": 2026,
+      "mes": "02",
+      "mes_nome": "Fevereiro"
+    },
+    {
+      "pedido": "003119",
+      "cliente": "GELGAS",
+      "qtd": 139,
+      "fat": 11542.32,
+      "ano": 2026,
+      "mes": "02",
+      "mes_nome": "Fevereiro"
+    },
+    {
+      "pedido": "003123",
+      "cliente": "GELGAS",
+      "qtd": 351,
+      "fat": 18448.44,
+      "ano": 2026,
+      "mes": "02",
+      "mes_nome": "Fevereiro"
+    },
+    {
+      "pedido": "003148",
+      "cliente": "GELGAS",
+      "qtd": 48,
+      "fat": 1163.79,
+      "ano": 2026,
+      "mes": "02",
+      "mes_nome": "Fevereiro"
+    },
+    {
+      "pedido": "003153",
+      "cliente": "GUERRA",
+      "qtd": 1,
+      "fat": 76.89,
+      "ano": 2026,
+      "mes": "02",
+      "mes_nome": "Fevereiro"
+    },
+    {
+      "pedido": "003143",
+      "cliente": "WSA",
+      "qtd": 9,
+      "fat": 410.83,
+      "ano": 2026,
+      "mes": "02",
+      "mes_nome": "Fevereiro"
+    },
+    {
+      "pedido": "003174",
+      "cliente": "PHD",
+      "qtd": 12,
+      "fat": 1824.75,
+      "ano": 2026,
+      "mes": "02",
+      "mes_nome": "Fevereiro"
+    },
+    {
+      "pedido": "003175",
+      "cliente": "TORTUGA",
+      "qtd": 1,
+      "fat": 46.17,
+      "ano": 2026,
+      "mes": "02",
+      "mes_nome": "Fevereiro"
+    },
+    {
+      "pedido": "003176",
+      "cliente": "WSA",
+      "qtd": 23,
+      "fat": 1711.46,
+      "ano": 2026,
+      "mes": "02",
+      "mes_nome": "Fevereiro"
+    },
+    {
+      "pedido": "003200",
+      "cliente": "GUERRA",
+      "qtd": 29,
+      "fat": 2229.81,
+      "ano": 2026,
+      "mes": "02",
+      "mes_nome": "Fevereiro"
+    },
+    {
+      "pedido": "003232",
+      "cliente": "GELGAS",
+      "qtd": 1,
+      "fat": 60.14,
+      "ano": 2026,
+      "mes": "02",
+      "mes_nome": "Fevereiro"
+    },
+    {
+      "pedido": "003235",
+      "cliente": "GELGAS",
+      "qtd": 2,
+      "fat": 193.64,
+      "ano": 2026,
+      "mes": "02",
+      "mes_nome": "Fevereiro"
+    },
+    {
+      "pedido": "003210",
+      "cliente": "KUHN DO BRASIL",
+      "qtd": 8,
+      "fat": 226.16,
+      "ano": 2026,
+      "mes": "02",
+      "mes_nome": "Fevereiro"
+    },
+    {
+      "pedido": "003247",
+      "cliente": "WSA",
+      "qtd": 4,
+      "fat": 107.42,
+      "ano": 2026,
+      "mes": "02",
+      "mes_nome": "Fevereiro"
+    },
+    {
+      "pedido": "002948",
+      "cliente": "INDUSTRIAL BUSSE",
+      "qtd": 22,
+      "fat": 1897.62,
+      "ano": 2026,
+      "mes": "03",
+      "mes_nome": "Março"
+    },
+    {
+      "pedido": "003197",
+      "cliente": "PHD",
+      "qtd": 100,
+      "fat": 2157.0,
+      "ano": 2026,
+      "mes": "03",
+      "mes_nome": "Março"
+    },
+    {
+      "pedido": "003189",
+      "cliente": "ING",
+      "qtd": 144,
+      "fat": 13073.64,
+      "ano": 2026,
+      "mes": "03",
+      "mes_nome": "Março"
+    },
+    {
+      "pedido": "003241",
+      "cliente": "BUDNY",
+      "qtd": 5,
+      "fat": 316.1,
+      "ano": 2026,
+      "mes": "03",
+      "mes_nome": "Março"
+    },
+    {
+      "pedido": "003254",
+      "cliente": "GELGAS",
+      "qtd": 256,
+      "fat": 20882.13,
+      "ano": 2026,
+      "mes": "03",
+      "mes_nome": "Março"
+    },
+    {
+      "pedido": "003266",
+      "cliente": "GELGAS",
+      "qtd": 10,
+      "fat": 726.72,
+      "ano": 2026,
+      "mes": "03",
+      "mes_nome": "Março"
+    },
+    {
+      "pedido": "002425",
+      "cliente": "ING",
+      "qtd": 360,
+      "fat": 15750.0,
+      "ano": 2026,
+      "mes": "03",
+      "mes_nome": "Março"
+    },
+    {
+      "pedido": "003274",
+      "cliente": "BUDNY",
+      "qtd": 3,
+      "fat": 119.03,
+      "ano": 2026,
+      "mes": "03",
+      "mes_nome": "Março"
+    },
+    {
+      "pedido": "003295",
+      "cliente": "RODOVALE",
+      "qtd": 10,
+      "fat": 2073.5,
+      "ano": 2026,
+      "mes": "03",
+      "mes_nome": "Março"
+    },
+    {
+      "pedido": "003064",
+      "cliente": "ROSTER",
+      "qtd": 9,
+      "fat": 477.71,
+      "ano": 2026,
+      "mes": "03",
+      "mes_nome": "Março"
+    },
+    {
+      "pedido": "003321",
+      "cliente": "AGROSS",
+      "qtd": 12,
+      "fat": 1906.64,
+      "ano": 2026,
+      "mes": "03",
+      "mes_nome": "Março"
+    },
+    {
+      "pedido": "003339",
+      "cliente": "RODOVALE",
+      "qtd": 23,
+      "fat": 1007.82,
+      "ano": 2026,
+      "mes": "03",
+      "mes_nome": "Março"
+    },
+    {
+      "pedido": "003352",
+      "cliente": "PASTRE",
+      "qtd": 100,
+      "fat": 3290.0,
+      "ano": 2026,
+      "mes": "03",
+      "mes_nome": "Março"
+    },
+    {
+      "pedido": "003340",
+      "cliente": "ING",
+      "qtd": 72,
+      "fat": 4526.22,
+      "ano": 2026,
+      "mes": "03",
+      "mes_nome": "Março"
+    },
+    {
+      "pedido": "003315",
+      "cliente": "METARO",
+      "qtd": 160,
+      "fat": 4520.9,
+      "ano": 2026,
+      "mes": "03",
+      "mes_nome": "Março"
+    },
+    {
+      "pedido": "003190",
+      "cliente": "ING",
+      "qtd": 72,
+      "fat": 6534.0,
+      "ano": 2026,
+      "mes": "03",
+      "mes_nome": "Março"
+    },
+    {
+      "pedido": "003291",
+      "cliente": "ING",
+      "qtd": 72,
+      "fat": 6536.82,
+      "ano": 2026,
+      "mes": "03",
+      "mes_nome": "Março"
+    },
+    {
+      "pedido": "003243",
+      "cliente": "ING",
+      "qtd": 27,
+      "fat": 3379.71,
+      "ano": 2026,
+      "mes": "03",
+      "mes_nome": "Março"
+    },
+    {
+      "pedido": "003320",
+      "cliente": "WSA",
+      "qtd": 26,
+      "fat": 2454.27,
+      "ano": 2026,
+      "mes": "03",
+      "mes_nome": "Março"
+    },
+    {
+      "pedido": "003402",
+      "cliente": "METARO",
+      "qtd": 12,
+      "fat": 511.92,
+      "ano": 2026,
+      "mes": "03",
+      "mes_nome": "Março"
+    },
+    {
+      "pedido": "003376",
+      "cliente": "SUL TORQUE",
+      "qtd": 7,
+      "fat": 480.89,
+      "ano": 2026,
+      "mes": "03",
+      "mes_nome": "Março"
+    },
+    {
+      "pedido": "003342",
+      "cliente": "ING",
+      "qtd": 80,
+      "fat": 3175.1,
+      "ano": 2026,
+      "mes": "03",
+      "mes_nome": "Março"
+    },
+    {
+      "pedido": "003398",
+      "cliente": "BUDNY",
+      "qtd": 1,
+      "fat": 140.95,
+      "ano": 2026,
+      "mes": "03",
+      "mes_nome": "Março"
+    },
+    {
+      "pedido": "003244",
+      "cliente": "ING",
+      "qtd": 80,
+      "fat": 5431.12,
+      "ano": 2026,
+      "mes": "03",
+      "mes_nome": "Março"
+    },
+    {
+      "pedido": "003421",
+      "cliente": "GELGAS",
+      "qtd": 15,
+      "fat": 1209.2,
+      "ano": 2026,
+      "mes": "03",
+      "mes_nome": "Março"
+    },
+    {
+      "pedido": "003410",
+      "cliente": "GELGAS",
+      "qtd": 11,
+      "fat": 1478.83,
+      "ano": 2026,
+      "mes": "03",
+      "mes_nome": "Março"
+    },
+    {
+      "pedido": "003425",
+      "cliente": "PIERINO GOTTI",
+      "qtd": 14,
+      "fat": 1968.59,
+      "ano": 2026,
+      "mes": "03",
+      "mes_nome": "Março"
+    },
+    {
+      "pedido": "003386",
+      "cliente": "ING",
+      "qtd": 18,
+      "fat": 2237.1,
+      "ano": 2026,
+      "mes": "03",
+      "mes_nome": "Março"
+    },
+    {
+      "pedido": "003268",
+      "cliente": "GELGAS",
+      "qtd": 246,
+      "fat": 16395.33,
+      "ano": 2026,
+      "mes": "03",
+      "mes_nome": "Março"
+    },
+    {
+      "pedido": "003163",
+      "cliente": "GUERRA",
+      "qtd": 5,
+      "fat": 195.05,
+      "ano": 2026,
+      "mes": "03",
+      "mes_nome": "Março"
+    },
+    {
+      "pedido": "003377",
+      "cliente": "ING",
+      "qtd": 27,
+      "fat": 3379.71,
+      "ano": 2026,
+      "mes": "03",
+      "mes_nome": "Março"
+    },
+    {
+      "pedido": "003467",
+      "cliente": "INDUSTRIAL BUSSE",
+      "qtd": 2,
+      "fat": 129.14,
+      "ano": 2026,
+      "mes": "03",
+      "mes_nome": "Março"
+    },
+    {
+      "pedido": "003476",
+      "cliente": "WSA",
+      "qtd": 1,
+      "fat": 75.61,
+      "ano": 2026,
+      "mes": "03",
+      "mes_nome": "Março"
+    },
+    {
+      "pedido": "003289",
+      "cliente": "ING",
+      "qtd": 72,
+      "fat": 6536.82,
+      "ano": 2026,
+      "mes": "03",
+      "mes_nome": "Março"
+    },
+    {
+      "pedido": "003478",
+      "cliente": "PIERINO GOTTI",
+      "qtd": 3,
+      "fat": 370.84,
+      "ano": 2026,
+      "mes": "03",
+      "mes_nome": "Março"
+    },
+    {
+      "pedido": "003449",
+      "cliente": "METARO",
+      "qtd": 91,
+      "fat": 2870.29,
+      "ano": 2026,
+      "mes": "03",
+      "mes_nome": "Março"
+    },
+    {
+      "pedido": "003353",
+      "cliente": "RODOVALE",
+      "qtd": 20,
+      "fat": 4397.4,
+      "ano": 2026,
+      "mes": "03",
+      "mes_nome": "Março"
+    },
+    {
+      "pedido": "003514",
+      "cliente": "SCHEMAQ",
+      "qtd": 12,
+      "fat": 1390.08,
+      "ano": 2026,
+      "mes": "03",
+      "mes_nome": "Março"
+    },
+    {
+      "pedido": "002426",
+      "cliente": "ING",
+      "qtd": 360,
+      "fat": 15750.0,
+      "ano": 2026,
+      "mes": "03",
+      "mes_nome": "Março"
+    },
+    {
+      "pedido": "003347",
+      "cliente": "ING",
+      "qtd": 200,
+      "fat": 8337.4,
+      "ano": 2026,
+      "mes": "03",
+      "mes_nome": "Março"
+    },
+    {
+      "pedido": "002938",
+      "cliente": "INDUSTRIAL BUSSE",
+      "qtd": 16,
+      "fat": 1413.42,
+      "ano": 2026,
+      "mes": "03",
+      "mes_nome": "Março"
+    },
+    {
+      "pedido": "003503",
+      "cliente": "KUHN DO BRASIL",
+      "qtd": 14,
+      "fat": 397.82,
+      "ano": 2026,
+      "mes": "03",
+      "mes_nome": "Março"
+    },
+    {
+      "pedido": "003495",
+      "cliente": "KUHN DO BRASIL",
+      "qtd": 16,
+      "fat": 455.04,
+      "ano": 2026,
+      "mes": "03",
+      "mes_nome": "Março"
+    },
+    {
+      "pedido": "003509",
+      "cliente": "WSA",
+      "qtd": 24,
+      "fat": 1849.13,
+      "ano": 2026,
+      "mes": "03",
+      "mes_nome": "Março"
+    },
+    {
+      "pedido": "003304",
+      "cliente": "GUERRA",
+      "qtd": 5,
+      "fat": 195.05,
+      "ano": 2026,
+      "mes": "03",
+      "mes_nome": "Março"
+    },
+    {
+      "pedido": "003357",
+      "cliente": "ING",
+      "qtd": 80,
+      "fat": 3175.1,
+      "ano": 2026,
+      "mes": "03",
+      "mes_nome": "Março"
+    },
+    {
+      "pedido": "003209",
+      "cliente": "ESTRADA",
+      "qtd": 100,
+      "fat": 13559.4,
+      "ano": 2026,
+      "mes": "03",
+      "mes_nome": "Março"
+    },
+    {
+      "pedido": "003433",
+      "cliente": "PRESSURE",
+      "qtd": 1,
+      "fat": 19.72,
+      "ano": 2026,
+      "mes": "03",
+      "mes_nome": "Março"
+    },
+    {
+      "pedido": "003446",
+      "cliente": "TER BRASIL",
+      "qtd": 4,
+      "fat": 269.55,
+      "ano": 2026,
+      "mes": "03",
+      "mes_nome": "Março"
+    },
+    {
+      "pedido": "003534",
+      "cliente": "METARO",
+      "qtd": 50,
+      "fat": 2095.5,
+      "ano": 2026,
+      "mes": "03",
+      "mes_nome": "Março"
+    },
+    {
+      "pedido": "003288",
+      "cliente": "ING",
+      "qtd": 72,
+      "fat": 6536.82,
+      "ano": 2026,
+      "mes": "03",
+      "mes_nome": "Março"
+    },
+    {
+      "pedido": "003440",
+      "cliente": "BUDNY",
+      "qtd": 15,
+      "fat": 676.45,
+      "ano": 2026,
+      "mes": "03",
+      "mes_nome": "Março"
+    },
+    {
+      "pedido": "003556",
+      "cliente": "RTMAQ",
+      "qtd": 26,
+      "fat": 999.92,
+      "ano": 2026,
+      "mes": "03",
+      "mes_nome": "Março"
+    },
+    {
+      "pedido": "003549",
+      "cliente": "CAVEMAQ",
+      "qtd": 4,
+      "fat": 275.93,
+      "ano": 2026,
+      "mes": "03",
+      "mes_nome": "Março"
+    },
+    {
+      "pedido": "003532",
+      "cliente": "ING",
+      "qtd": 72,
+      "fat": 4526.22,
+      "ano": 2026,
+      "mes": "03",
+      "mes_nome": "Março"
+    },
+    {
+      "pedido": "003404",
+      "cliente": "RODOVALE",
+      "qtd": 40,
+      "fat": 1366.6,
+      "ano": 2026,
+      "mes": "03",
+      "mes_nome": "Março"
+    },
+    {
+      "pedido": "003337",
+      "cliente": "ING",
+      "qtd": 520,
+      "fat": 24087.4,
+      "ano": 2026,
+      "mes": "03",
+      "mes_nome": "Março"
+    },
+    {
+      "pedido": "003523",
+      "cliente": "KAMPAG",
+      "qtd": 8,
+      "fat": 822.24,
+      "ano": 2026,
+      "mes": "03",
+      "mes_nome": "Março"
+    },
+    {
+      "pedido": "003424",
+      "cliente": "PIERINO GOTTI",
+      "qtd": 42,
+      "fat": 5905.77,
+      "ano": 2026,
+      "mes": "03",
+      "mes_nome": "Março"
+    },
+    {
+      "pedido": "003558",
+      "cliente": "TEKSUL",
+      "qtd": 6,
+      "fat": 1466.76,
+      "ano": 2026,
+      "mes": "03",
+      "mes_nome": "Março"
+    },
+    {
+      "pedido": "003350",
+      "cliente": "ING",
+      "qtd": 360,
+      "fat": 15750.0,
+      "ano": 2026,
+      "mes": "03",
+      "mes_nome": "Março"
+    },
+    {
+      "pedido": "003567",
+      "cliente": "RTMAQ",
+      "qtd": 39,
+      "fat": 1499.88,
+      "ano": 2026,
+      "mes": "03",
+      "mes_nome": "Março"
+    },
+    {
+      "pedido": "003574",
+      "cliente": "RODOVALE",
+      "qtd": 30,
+      "fat": 777.6,
+      "ano": 2026,
+      "mes": "03",
+      "mes_nome": "Março"
+    },
+    {
+      "pedido": "003581",
+      "cliente": "MD ACESSORIOS",
+      "qtd": 100,
+      "fat": 1626.5,
+      "ano": 2026,
+      "mes": "03",
+      "mes_nome": "Março"
+    },
+    {
+      "pedido": "003597",
+      "cliente": "ING",
+      "qtd": 72,
+      "fat": 6534.0,
+      "ano": 2026,
+      "mes": "03",
+      "mes_nome": "Março"
+    },
+    {
+      "pedido": "003606",
+      "cliente": "GELGAS",
+      "qtd": 224,
+      "fat": 17675.02,
+      "ano": 2026,
+      "mes": "03",
+      "mes_nome": "Março"
+    },
+    {
+      "pedido": "003611",
+      "cliente": "INDUSTRIAL BUSSE",
+      "qtd": 16,
+      "fat": 1002.56,
+      "ano": 2026,
+      "mes": "03",
+      "mes_nome": "Março"
+    },
+    {
+      "pedido": "003598",
+      "cliente": "ING",
+      "qtd": 144,
+      "fat": 11063.04,
+      "ano": 2026,
+      "mes": "03",
+      "mes_nome": "Março"
+    },
+    {
+      "pedido": "003599",
+      "cliente": "ING",
+      "qtd": 72,
+      "fat": 4526.22,
+      "ano": 2026,
+      "mes": "03",
+      "mes_nome": "Março"
+    },
+    {
+      "pedido": "003661",
+      "cliente": "GELGAS",
+      "qtd": 3,
+      "fat": 263.55,
+      "ano": 2026,
+      "mes": "03",
+      "mes_nome": "Março"
+    },
+    {
+      "pedido": "003649",
+      "cliente": "GELGAS",
+      "qtd": 99,
+      "fat": 8547.17,
+      "ano": 2026,
+      "mes": "03",
+      "mes_nome": "Março"
+    },
+    {
+      "pedido": "003676",
+      "cliente": "GELGAS",
+      "qtd": 1,
+      "fat": 87.85,
+      "ano": 2026,
+      "mes": "03",
+      "mes_nome": "Março"
+    },
+    {
+      "pedido": "003682",
+      "cliente": "RTMAQ",
+      "qtd": 3,
+      "fat": 89.28,
+      "ano": 2026,
+      "mes": "03",
+      "mes_nome": "Março"
+    },
+    {
+      "pedido": "003701",
+      "cliente": "RODOVALE",
+      "qtd": 5,
+      "fat": 91.0,
+      "ano": 2026,
+      "mes": "03",
+      "mes_nome": "Março"
+    },
+    {
+      "pedido": "003702",
+      "cliente": "GELGAS",
+      "qtd": 1,
+      "fat": 79.18,
+      "ano": 2026,
+      "mes": "03",
+      "mes_nome": "Março"
+    },
+    {
+      "pedido": "003773",
+      "cliente": "ING",
+      "qtd": 12,
+      "fat": 5366.46,
+      "ano": 2026,
+      "mes": "03",
+      "mes_nome": "Março"
+    },
+    {
+      "pedido": "003777",
+      "cliente": "INDUSTRIAL BUSSE",
+      "qtd": 2,
+      "fat": 203.42,
+      "ano": 2026,
+      "mes": "03",
+      "mes_nome": "Março"
+    },
+    {
+      "pedido": "003782",
+      "cliente": "METARO",
+      "qtd": 60,
+      "fat": 1792.3,
+      "ano": 2026,
+      "mes": "03",
+      "mes_nome": "Março"
+    },
+    {
+      "pedido": "003786",
+      "cliente": "BUDNY",
+      "qtd": 12,
+      "fat": 216.54,
+      "ano": 2026,
+      "mes": "03",
+      "mes_nome": "Março"
+    },
+    {
+      "pedido": "003814",
+      "cliente": "ELITE TECH",
+      "qtd": 75,
+      "fat": 8250.0,
+      "ano": 2026,
+      "mes": "03",
+      "mes_nome": "Março"
+    },
+    {
+      "pedido": "003816",
+      "cliente": "WSA",
+      "qtd": 3,
+      "fat": 238.14,
+      "ano": 2026,
+      "mes": "03",
+      "mes_nome": "Março"
+    },
+    {
+      "pedido": "003822",
+      "cliente": "PASTRE",
+      "qtd": 150,
+      "fat": 4935.0,
+      "ano": 2026,
+      "mes": "03",
+      "mes_nome": "Março"
+    },
+    {
+      "pedido": "003827",
+      "cliente": "RTMAQ",
+      "qtd": 2,
+      "fat": 59.52,
+      "ano": 2026,
+      "mes": "03",
+      "mes_nome": "Março"
+    },
+    {
+      "pedido": "003828",
+      "cliente": "MENCI",
+      "qtd": 3,
+      "fat": 148.87,
+      "ano": 2026,
+      "mes": "03",
+      "mes_nome": "Março"
+    },
+    {
+      "pedido": "003835",
+      "cliente": "FABRIMAQ",
+      "qtd": 2,
+      "fat": 697.18,
+      "ano": 2026,
+      "mes": "03",
+      "mes_nome": "Março"
+    },
+    {
+      "pedido": "003863",
+      "cliente": "PERINI EQUIP",
+      "qtd": 5,
+      "fat": 869.55,
+      "ano": 2026,
+      "mes": "03",
+      "mes_nome": "Março"
+    },
+    {
+      "pedido": "003887",
+      "cliente": "PHD",
+      "qtd": 66,
+      "fat": 3538.05,
+      "ano": 2026,
+      "mes": "03",
+      "mes_nome": "Março"
+    },
+    {
+      "pedido": "003346",
+      "cliente": "ING",
+      "qtd": 160,
+      "fat": 8337.4,
+      "ano": 2026,
+      "mes": "04",
+      "mes_nome": "Abril"
+    },
+    {
+      "pedido": "003562",
+      "cliente": "AGROSS",
+      "qtd": 3,
+      "fat": 460.18,
+      "ano": 2026,
+      "mes": "04",
+      "mes_nome": "Abril"
+    },
+    {
+      "pedido": "003643",
+      "cliente": "METARO",
+      "qtd": 226,
+      "fat": 7352.86,
+      "ano": 2026,
+      "mes": "04",
+      "mes_nome": "Abril"
+    },
+    {
+      "pedido": "003720",
+      "cliente": "RODOVALE",
+      "qtd": 30,
+      "fat": 2163.3,
+      "ano": 2026,
+      "mes": "04",
+      "mes_nome": "Abril"
+    },
+    {
+      "pedido": "003694",
+      "cliente": "GELGAS",
+      "qtd": 312,
+      "fat": 23884.75,
+      "ano": 2026,
+      "mes": "04",
+      "mes_nome": "Abril"
+    },
+    {
+      "pedido": "003650",
+      "cliente": "AGROSS",
+      "qtd": 3,
+      "fat": 525.22,
+      "ano": 2026,
+      "mes": "04",
+      "mes_nome": "Abril"
+    },
+    {
+      "pedido": "003806",
+      "cliente": "AGROSS",
+      "qtd": 3,
+      "fat": 436.16,
+      "ano": 2026,
+      "mes": "04",
+      "mes_nome": "Abril"
+    },
+    {
+      "pedido": "003726",
+      "cliente": "GUERRA",
+      "qtd": 4,
+      "fat": 156.04,
+      "ano": 2026,
+      "mes": "04",
+      "mes_nome": "Abril"
+    },
+    {
+      "pedido": "003335",
+      "cliente": "ING",
+      "qtd": 360,
+      "fat": 15750.0,
+      "ano": 2026,
+      "mes": "04",
+      "mes_nome": "Abril"
+    },
+    {
+      "pedido": "003785",
+      "cliente": "MARCHER",
+      "qtd": 24,
+      "fat": 486.12,
+      "ano": 2026,
+      "mes": "04",
+      "mes_nome": "Abril"
+    },
+    {
+      "pedido": "003823",
+      "cliente": "PASTRE",
+      "qtd": 150,
+      "fat": 4935.0,
+      "ano": 2026,
+      "mes": "04",
+      "mes_nome": "Abril"
+    },
+    {
+      "pedido": "003559",
+      "cliente": "AGROSS",
+      "qtd": 3,
+      "fat": 476.66,
+      "ano": 2026,
+      "mes": "04",
+      "mes_nome": "Abril"
+    },
+    {
+      "pedido": "003853",
+      "cliente": "RODOVALE",
+      "qtd": 20,
+      "fat": 3496.0,
+      "ano": 2026,
+      "mes": "04",
+      "mes_nome": "Abril"
+    },
+    {
+      "pedido": "003944",
+      "cliente": "INDUSTRIAL BUSSE",
+      "qtd": 30,
+      "fat": 1941.26,
+      "ano": 2026,
+      "mes": "04",
+      "mes_nome": "Abril"
+    },
+    {
+      "pedido": "003932",
+      "cliente": "RODOVALE",
+      "qtd": 20,
+      "fat": 4397.4,
+      "ano": 2026,
+      "mes": "04",
+      "mes_nome": "Abril"
+    },
+    {
+      "pedido": "003955",
+      "cliente": "INDUSTRIAL BUSSE",
+      "qtd": 36,
+      "fat": 2550.88,
+      "ano": 2026,
+      "mes": "04",
+      "mes_nome": "Abril"
+    },
+    {
+      "pedido": "003974",
+      "cliente": "PHD",
+      "qtd": 150,
+      "fat": 3212.0,
+      "ano": 2026,
+      "mes": "04",
+      "mes_nome": "Abril"
+    },
+    {
+      "pedido": "003600",
+      "cliente": "AGROSS",
+      "qtd": 18,
+      "fat": 2761.08,
+      "ano": 2026,
+      "mes": "04",
+      "mes_nome": "Abril"
+    },
+    {
+      "pedido": "003981",
+      "cliente": "GELGAS",
+      "qtd": 258,
+      "fat": null,
+      "ano": 2026,
+      "mes": "04",
+      "mes_nome": "Abril"
+    },
+    {
+      "pedido": "003990",
+      "cliente": "GELGAS",
+      "qtd": 4,
+      "fat": null,
+      "ano": 2026,
+      "mes": "04",
+      "mes_nome": "Abril"
+    },
+    {
+      "pedido": "003991",
+      "cliente": "AGROSS",
+      "qtd": 9,
+      "fat": null,
+      "ano": 2026,
+      "mes": "04",
+      "mes_nome": "Abril"
+    },
+    {
+      "pedido": "004009",
+      "cliente": "GUERRA",
+      "qtd": 2,
+      "fat": null,
+      "ano": 2026,
+      "mes": "04",
+      "mes_nome": "Abril"
+    },
+    {
+      "pedido": "004021",
+      "cliente": "HIAB",
+      "qtd": 42,
+      "fat": null,
+      "ano": 2026,
+      "mes": "04",
+      "mes_nome": "Abril"
+    },
+    {
+      "pedido": "004029",
+      "cliente": "AGROSS",
+      "qtd": 4,
+      "fat": null,
+      "ano": 2026,
+      "mes": "04",
+      "mes_nome": "Abril"
+    },
+    {
+      "pedido": "003332",
+      "cliente": "ING",
+      "qtd": 360,
+      "fat": null,
+      "ano": 2026,
+      "mes": "04",
+      "mes_nome": "Abril"
+    },
+    {
+      "pedido": "004012",
+      "cliente": "GUERRA",
+      "qtd": 4,
+      "fat": null,
+      "ano": 2026,
+      "mes": "04",
+      "mes_nome": "Abril"
+    },
+    {
+      "pedido": "004011",
+      "cliente": "GUERRA",
+      "qtd": 4,
+      "fat": null,
+      "ano": 2026,
+      "mes": "04",
+      "mes_nome": "Abril"
+    },
+    {
+      "pedido": "004053",
+      "cliente": "INDUSTRIAL BUSSE",
+      "qtd": 30,
+      "fat": null,
+      "ano": 2026,
+      "mes": "04",
+      "mes_nome": "Abril"
+    },
+    {
+      "pedido": "004059",
+      "cliente": "METARO",
+      "qtd": 153,
+      "fat": null,
+      "ano": 2026,
+      "mes": "04",
+      "mes_nome": "Abril"
+    },
+    {
+      "pedido": "003996",
+      "cliente": "ING",
+      "qtd": 72,
+      "fat": null,
+      "ano": 2026,
+      "mes": "04",
+      "mes_nome": "Abril"
+    },
+    {
+      "pedido": "004068",
+      "cliente": "BOMAG",
+      "qtd": 1,
+      "fat": null,
+      "ano": 2026,
+      "mes": "04",
+      "mes_nome": "Abril"
+    },
+    {
+      "pedido": "003725",
+      "cliente": "GUERRA",
+      "qtd": 4,
+      "fat": null,
+      "ano": 2026,
+      "mes": "04",
+      "mes_nome": "Abril"
+    },
+    {
+      "pedido": "003883",
+      "cliente": "FEZER",
+      "qtd": 87,
+      "fat": null,
+      "ano": 2026,
+      "mes": "04",
+      "mes_nome": "Abril"
+    },
+    {
+      "pedido": "003972",
+      "cliente": "RODOVALE",
+      "qtd": 30,
+      "fat": null,
+      "ano": 2026,
+      "mes": "04",
+      "mes_nome": "Abril"
+    },
+    {
+      "pedido": "003997",
+      "cliente": "ING",
+      "qtd": 72,
+      "fat": null,
+      "ano": 2026,
+      "mes": "04",
+      "mes_nome": "Abril"
+    },
+    {
+      "pedido": "004083",
+      "cliente": "AGROSS",
+      "qtd": 22,
+      "fat": null,
+      "ano": 2026,
+      "mes": "04",
+      "mes_nome": "Abril"
+    },
+    {
+      "pedido": "004090",
+      "cliente": "AGROSS",
+      "qtd": 44,
+      "fat": null,
+      "ano": 2026,
+      "mes": "04",
+      "mes_nome": "Abril"
+    },
+    {
+      "pedido": "004080",
+      "cliente": "FEZER",
+      "qtd": 83,
+      "fat": null,
+      "ano": 2026,
+      "mes": "04",
+      "mes_nome": "Abril"
+    },
+    {
+      "pedido": "004066",
+      "cliente": "RODOVALE",
+      "qtd": 120,
+      "fat": null,
+      "ano": 2026,
+      "mes": "04",
+      "mes_nome": "Abril"
+    },
+    {
+      "pedido": "003810",
+      "cliente": "AGROSS",
+      "qtd": 15,
+      "fat": null,
+      "ano": 2026,
+      "mes": "04",
+      "mes_nome": "Abril"
+    },
+    {
+      "pedido": "004081",
+      "cliente": "FEZER",
+      "qtd": 87,
+      "fat": null,
+      "ano": 2026,
+      "mes": "04",
+      "mes_nome": "Abril"
+    },
+    {
+      "pedido": "003934",
+      "cliente": "ING",
+      "qtd": 160,
+      "fat": null,
+      "ano": 2026,
+      "mes": "04",
+      "mes_nome": "Abril"
+    },
+    {
+      "pedido": "004141",
+      "cliente": "INDUSTRIAL BUSSE",
+      "qtd": 36,
+      "fat": null,
+      "ano": 2026,
+      "mes": "04",
+      "mes_nome": "Abril"
+    },
+    {
+      "pedido": "004162",
+      "cliente": "AGROSS",
+      "qtd": 3,
+      "fat": null,
+      "ano": 2026,
+      "mes": "04",
+      "mes_nome": "Abril"
+    },
+    {
+      "pedido": "003998",
+      "cliente": "ING",
+      "qtd": 144,
+      "fat": null,
+      "ano": 2026,
+      "mes": "04",
+      "mes_nome": "Abril"
+    },
+    {
+      "pedido": "003345",
+      "cliente": "ING",
+      "qtd": 360,
+      "fat": null,
+      "ano": 2026,
+      "mes": "04",
+      "mes_nome": "Abril"
+    },
+    {
+      "pedido": "004000",
+      "cliente": "ING",
+      "qtd": 126,
+      "fat": null,
+      "ano": 2026,
+      "mes": "04",
+      "mes_nome": "Abril"
+    },
+    {
+      "pedido": "003999",
+      "cliente": "ING",
+      "qtd": 72,
+      "fat": null,
+      "ano": 2026,
+      "mes": "04",
+      "mes_nome": "Abril"
+    },
+    {
+      "pedido": "004005",
+      "cliente": "ING",
+      "qtd": 126,
+      "fat": null,
+      "ano": 2026,
+      "mes": "04",
+      "mes_nome": "Abril"
+    },
+    {
+      "pedido": "004110",
+      "cliente": "RODOVALE",
+      "qtd": 10,
+      "fat": null,
+      "ano": 2026,
+      "mes": "04",
+      "mes_nome": "Abril"
+    },
+    {
+      "pedido": "004148",
+      "cliente": "RODOVALE",
+      "qtd": 30,
+      "fat": null,
+      "ano": 2026,
+      "mes": "04",
+      "mes_nome": "Abril"
+    },
+    {
+      "pedido": "004218",
+      "cliente": "WSA",
+      "qtd": 4,
+      "fat": null,
+      "ano": 2026,
+      "mes": "04",
+      "mes_nome": "Abril"
+    },
+    {
+      "pedido": "004220",
+      "cliente": "METARO",
+      "qtd": 177,
+      "fat": null,
+      "ano": 2026,
+      "mes": "04",
+      "mes_nome": "Abril"
+    },
+    {
+      "pedido": "003630",
+      "cliente": "AGROSS",
+      "qtd": 13,
+      "fat": null,
+      "ano": 2026,
+      "mes": "04",
+      "mes_nome": "Abril"
+    },
+    {
+      "pedido": "004251",
+      "cliente": "GUERRA",
+      "qtd": 4,
+      "fat": null,
+      "ano": 2026,
+      "mes": "04",
+      "mes_nome": "Abril"
+    },
+    {
+      "pedido": "004228",
+      "cliente": "INDUSTRIAL BUSSE",
+      "qtd": 4,
+      "fat": null,
+      "ano": 2026,
+      "mes": "04",
+      "mes_nome": "Abril"
+    },
+    {
+      "pedido": "004213",
+      "cliente": "RODOVALE",
+      "qtd": 30,
+      "fat": null,
+      "ano": 2026,
+      "mes": "04",
+      "mes_nome": "Abril"
+    },
+    {
+      "pedido": "003933",
+      "cliente": "ING",
+      "qtd": 272,
+      "fat": null,
+      "ano": 2026,
+      "mes": "04",
+      "mes_nome": "Abril"
+    },
+    {
+      "pedido": "004249",
+      "cliente": "FEZER",
+      "qtd": 87,
+      "fat": null,
+      "ano": 2026,
+      "mes": "04",
+      "mes_nome": "Abril"
+    }
+  ]
+}

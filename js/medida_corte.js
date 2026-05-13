@@ -3,7 +3,6 @@
 //  Fórmula: Comprimento Final - Terminal A - Terminal B - 10
 // ══════════════════════════════════════════════════
 
-// TERMINAIS carregados de dados.js
 const TERMINAIS = window.TERMINAIS || [];
 
 // ── Estado ──
@@ -13,7 +12,7 @@ const _mcState = { a: null, b: null, activeIdx: { a: -1, b: -1 } };
 
 function mcAcInput(lado) {
   const q = document.getElementById('mc-input-' + lado).value.toUpperCase().trim();
-  _mcState[lado] = null;                    // limpa seleção ao editar
+  _mcState[lado] = null;
   document.getElementById('mc-input-' + lado).classList.remove('selected');
   _mcShowDrop(lado, q);
   calcularMedidaCorte();
@@ -21,7 +20,6 @@ function mcAcInput(lado) {
 
 function mcAcOpen(lado) {
   const inp = document.getElementById('mc-input-' + lado);
-  // Se já tem seleção, limpa o campo para digitar novo
   if (_mcState[lado]) {
     inp.value = '';
     inp.classList.remove('selected');
@@ -33,15 +31,12 @@ function mcAcOpen(lado) {
 }
 
 function _mcGetBitola(cod) {
-  // HFJ[traço][bitola][sufixo] — pega os 2 últimos dígitos antes de letras finais
-  // HFJ0606→"06", HFJ0616→"16", HFJ0606SS→"06", HFJ0808SD→"08"
   const m = cod && cod.match(/(\d{2})[A-Z]*$/);
   return m ? m[1] : null;
 }
 
 function _mcShowDrop(lado, q) {
   const drop = document.getElementById('mc-drop-' + lado);
-  // Terminal B: filtra apenas terminais com mesma bitola do A
   let base = TERMINAIS;
   if (lado === 'b' && _mcState.a) {
     const bitA = _mcGetBitola(_mcState.a.cod);
@@ -57,9 +52,8 @@ function _mcShowDrop(lado, q) {
     drop.innerHTML = resultados.map((t, i) => {
       const medStr = t.medida != null ? `${t.medida} mm` : 'sem medida';
       const semCls = t.medida == null ? ' sem-medida' : '';
-      // destaca o trecho digitado
       const destaque = q
-        ? t.cod.replace(q, `<strong>${q}</strong>`)
+        ? t.cod.replace(new RegExp(q, 'i'), m => `<strong>${m}</strong>`)
         : t.cod;
       return `<div class="mc-ac-item${semCls}" data-idx="${i}" data-cod="${t.cod}"
                 onmousedown="mcAcSelect('${lado}','${t.cod}')">
@@ -78,23 +72,22 @@ function mcAcSelect(lado, cod) {
   if (!t) return;
   _mcState[lado] = t;
 
-  // Preenche o input
   const inp = document.getElementById('mc-input-' + lado);
   const medStr = t.medida != null ? '  (' + t.medida + ' mm)' : '  (sem medida)';
   inp.value = t.cod + medStr;
   inp.classList.add('selected');
 
-  // Fecha o dropdown atual
   const drop = document.getElementById('mc-drop-' + lado);
   if (drop) drop.classList.remove('open');
 
-  // Se selecionou Terminal A → desbloqueia e limpa Terminal B
+  // Se selecionou Terminal A → habilita e limpa Terminal B
   if (lado === 'a') {
     const inpB = document.getElementById('mc-input-b');
     if (inpB) {
       inpB.disabled = false;
       inpB.style.opacity = '1';
       inpB.style.cursor = 'text';
+      inpB.style.background = '';
       inpB.placeholder = 'Digite o código do terminal...';
       inpB.value = '';
       inpB.classList.remove('selected');
@@ -136,44 +129,27 @@ function mcAcKey(e, lado) {
   if (items[idx]) items[idx].scrollIntoView({ block: 'nearest' });
 }
 
-function _mcRenderTag(lado) {
-  // mantido por compatibilidade — lógica migrada para mcAcSelect
-}
-
-function mcAcClear(lado) {
-  _mcState[lado] = null;
-  const inp = document.getElementById('mc-input-' + lado);
-  inp.value = '';
-  inp.classList.remove('selected');
-
-}
-
-// Fecha dropdown ao clicar fora
-document.addEventListener('click', e => {
-  ['a','b'].forEach(lado => {
-    const wrap = document.getElementById('mc-wrap-' + lado);
-    if (wrap && !wrap.contains(e.target)) {
-      document.getElementById('mc-drop-' + lado)?.classList.remove('open');
-    }
-  });
-});
-
 // ── Cálculo ──
 function calcularMedidaCorte() {
-  const comp = parseFloat(document.getElementById('mc-comprimento')?.value);
-  const tA = _mcState.a;
-  const tB = _mcState.b;
+  const compEl = document.getElementById('mc-comprimento');
   const resultBox   = document.getElementById('mc-result');
   const resultValue = document.getElementById('mc-result-value');
   const formula     = document.getElementById('mc-formula');
 
+  const comp = compEl ? parseFloat(compEl.value) : NaN;
+  const tA = _mcState.a;
+  const tB = _mcState.b;
+
+  // Esconde resultado se dados incompletos
   if (!tA || !tB || isNaN(comp) || comp <= 0) {
-    resultBox?.classList.add('hidden');
+    if (resultBox) resultBox.classList.add('hidden');
     return;
   }
 
+  // Mostra resultado mesmo sem medida cadastrada
+  if (resultBox) resultBox.classList.remove('hidden');
+
   if (tA.medida == null || tB.medida == null) {
-    resultBox?.classList.remove('hidden');
     resultValue.textContent = '— mm';
     resultValue.style.color = '#ef4444';
     formula.textContent = 'Terminal sem medida cadastrada';
@@ -182,46 +158,89 @@ function calcularMedidaCorte() {
 
   const resultado = comp - tA.medida - tB.medida - 10;
 
-  // Formato: vírgula como separador de milhar (ex: 2,940 mm)
   function fmtMm(val) {
-    const intPart = Math.floor(Math.abs(val));
-    const decPart = Math.abs(val) % 1;
-    const sign = val < 0 ? '-' : '';
-    // formata inteiro com vírgula a cada 3 dígitos
+    const neg = val < 0;
+    const abs = Math.abs(val);
+    const intPart = Math.floor(abs);
+    const dec = (abs - intPart);
     const intFmt = intPart.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-    if (decPart === 0) return sign + intFmt;
-    const decStr = decPart.toFixed(1).slice(1); // ".X"
-    return sign + intFmt + decStr;
+    if (Math.round(dec * 10) === 0) return (neg ? '-' : '') + intFmt;
+    return (neg ? '-' : '') + intFmt + (dec.toFixed(1).slice(1));
   }
+
   const fmt = fmtMm(resultado);
 
   resultValue.textContent = fmt + ' mm';
-  resultValue.style.color = resultado > 0 ? '#ffffff' : '#ef4444';
+  resultValue.style.color = resultado > 0 ? '' : '#ef4444';
   formula.textContent = `${comp} − ${tA.medida} − ${tB.medida} − 10 = ${fmt} mm`;
-  resultBox?.classList.remove('hidden');
 }
 
-function _mcInitLockB() {
-  const inpB = document.getElementById('mc-input-b');
-  if (!inpB) return;
-  inpB.disabled = true;
-  inpB.style.opacity = '0.4';
-  inpB.style.cursor = 'not-allowed';
-  inpB.placeholder = 'Selecione Terminal A primeiro...';
-}
+// Fecha dropdown ao clicar fora
+document.addEventListener('click', e => {
+  ['a','b'].forEach(lado => {
+    const wrap = document.getElementById('mc-wrap-' + lado);
+    if (wrap && !wrap.contains(e.target)) {
+      const drop = document.getElementById('mc-drop-' + lado);
+      if (drop) drop.classList.remove('open');
+    }
+  });
+});
 
 function resetMedidaCorte() {
   ['a','b'].forEach(lado => {
     _mcState[lado] = null;
     const inp = document.getElementById('mc-input-' + lado);
-    if (inp) { inp.value = ''; inp.classList.remove('selected'); inp.placeholder = 'Digite o código do terminal...'; }
-    document.getElementById('mc-drop-' + lado)?.classList.remove('open');
+    if (inp) {
+      inp.value = '';
+      inp.classList.remove('selected');
+      inp.disabled = false;
+      inp.style.opacity = '1';
+      inp.style.cursor = 'text';
+      inp.style.background = '';
+      inp.placeholder = 'Digite o código do terminal...';
+    }
+    const drop = document.getElementById('mc-drop-' + lado);
+    if (drop) drop.classList.remove('open');
   });
-  _mcInitLockB(); // Re-trava campo B
   const c = document.getElementById('mc-comprimento');
   if (c) c.value = '';
-  document.getElementById('mc-result')?.classList.add('hidden');
+  const r = document.getElementById('mc-result');
+  if (r) r.classList.add('hidden');
 }
 
-// Inicializa trava do campo B
-setTimeout(() => { if (typeof _mcInitLockB === 'function') _mcInitLockB(); }, 100);
+// ── Inicializa: campo B começa visualmente desabilitado mas NÃO com disabled ──
+// (disabled impede onmousedown no dropdown, quebrando a seleção)
+(function _initMC() {
+  function tryInit() {
+    const inpB = document.getElementById('mc-input-b');
+    if (!inpB) { setTimeout(tryInit, 100); return; }
+    // Aparência de desabilitado via CSS, sem usar disabled
+    inpB.style.opacity = '0.45';
+    inpB.style.cursor = 'not-allowed';
+    inpB.style.pointerEvents = 'none';
+    inpB.placeholder = 'Selecione Terminal A primeiro...';
+    // Quando Terminal A for selecionado, mcAcSelect('a',...) remove essas propriedades
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', tryInit);
+  } else {
+    tryInit();
+  }
+})();
+
+// Sobrescreve mcAcSelect para habilitar B via pointer-events (não disabled)
+const _origSelect = mcAcSelect;
+// Patch: ao selecionar A, restaura pointer-events do B
+const _patchedSelect = function(lado, cod) {
+  _origSelect(lado, cod);
+  if (lado === 'a') {
+    const inpB = document.getElementById('mc-input-b');
+    if (inpB) {
+      inpB.style.pointerEvents = '';
+      inpB.style.opacity = '1';
+      inpB.style.cursor = 'text';
+    }
+  }
+};
+// Substitui a função global
+if (typeof window !== 'undefined') window.mcAcSelect = _patchedSelect;

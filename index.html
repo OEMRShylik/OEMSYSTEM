@@ -7,11 +7,13 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Roboto:wght@700;900&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <link rel="stylesheet" href="css/styles.css">
+<link rel="stylesheet" href="css/dashboard.css">
 <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
 <style>
 #screen-detalhe.active   { display:flex !important; }
 #screen-angulos.active   { display:flex !important; }
 #screen-prensagem.active { display:flex !important; }
+#screen-dashboard.active { display:flex !important; }
 #main { display:flex; flex-direction:column; flex:1; overflow:hidden; }
 /* Fundo background.jpg em TODAS as telas */
 .screen {
@@ -180,6 +182,17 @@
     <div id="user-sector-badge"></div>
   </div>
 
+  <!-- DASHBOARD — primeiro item do menu -->
+  <div class="nav-item" onclick="navTo('dashboard',this)">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="3" y="3" width="7" height="9" rx="1"/>
+      <rect x="14" y="3" width="7" height="5" rx="1"/>
+      <rect x="14" y="12" width="7" height="9" rx="1"/>
+      <rect x="3" y="16" width="7" height="5" rx="1"/>
+    </svg>
+    <span class="nav-tooltip">Dashboard</span>
+  </div>
+
   <div class="nav-item active" onclick="navTo('pedidos',this)">
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
     <span class="nav-tooltip">Pedidos</span>
@@ -239,6 +252,11 @@
     <div style="width:1px;height:16px;background:var(--border);flex-shrink:0;"></div>
     <button id="btn-novo-pedido-top" class="btn-novo" style="padding:8px 16px;font-size:13px;" onclick="document.getElementById('upload-pdf-novo').click()">+ Novo Pedido</button>
     <input type="file" id="upload-pdf-novo" accept=".pdf" style="display:none" onchange="handleNovoPedidoPDF(event)">
+  </div>
+
+  <!-- DASHBOARD -->
+  <div class="screen" id="screen-dashboard" style="flex-direction:column;overflow:hidden;">
+    <div id="dash-root" style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;"></div>
   </div>
 
   <!-- PEDIDOS -->
@@ -310,7 +328,6 @@
             </filter>
           </defs>
 
-          <!-- Cabeça de prensa — embedded base64 (evita problema de caminho) -->
           <image href="assets/prensa.webp" x="0" y="0" width="500" height="500"
             preserveAspectRatio="xMidYMid meet"/>
 
@@ -444,15 +461,13 @@
       <div style="font-size:clamp(9px,1.2vw,11px);font-weight:600;color:#888;letter-spacing:3px;text-transform:uppercase;margin-top:2px;">Ângulo de Montagem</div>
     </div>
 
-    <!-- Dois painéis lado a lado (3D oculto no mobile) -->
+    <!-- Dois painéis lado a lado -->
     <div class="ang-panels" style="flex:1;display:flex;gap:0;min-height:0;overflow:hidden;">
 
-      <!-- Painel esquerdo: transferidor (sempre visível) -->
       <div id="ang-left-panel" style="flex:1;display:flex;align-items:center;justify-content:center;padding:clamp(4px,1vw,8px);min-width:0;">
         <canvas id="ang-canvas" style="display:block;cursor:grab;max-width:100%;max-height:100%;"></canvas>
       </div>
 
-      <!-- Painel direito: modelo 3D (oculto em mobile <600px) -->
       <div id="ang-3d-panel" style="flex:1;display:flex;flex-direction:column;min-width:0;border-left:1px solid #e5e7eb;">
         <div style="font-size:10px;font-weight:700;color:#888;letter-spacing:2px;text-transform:uppercase;text-align:center;padding:8px 0 4px;flex-shrink:0;">VISUALIZAÇÃO 3D</div>
         <div id="ang-hose-3d" style="flex:1;min-height:0;"></div>
@@ -523,8 +538,6 @@
       .mc-tag button:hover { opacity:1; }
     </style>
 
-
-
     <div class="mc-container">
 
       <!-- Comprimento -->
@@ -584,9 +597,10 @@
 <script src="js/medidas.js"></script>
 <script src="js/descasque.js"></script>
 <script src="js/viewer3d.js"></script>
-  <script src="js/angulos.js"></script>
+<script src="js/angulos.js"></script>
 <script src="js/calendario.js"></script>
 <script src="js/perfil.js"></script>
+<script src="js/dashboard.js"></script>
 
 <!-- MODAL PERFIL -->
 <style>

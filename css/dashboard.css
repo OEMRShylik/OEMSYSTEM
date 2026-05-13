@@ -1,0 +1,133 @@
+/* ══════════════════════════════════════════════════
+   DASHBOARD — OEM RS  |  css/dashboard.css
+   ══════════════════════════════════════════════════ */
+
+#screen-dashboard.active { display:flex !important; }
+#dash-root { flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; }
+
+.dash-wrap {
+  padding: 16px;
+  display: flex; flex-direction: column; gap: 14px;
+  max-width: 1400px; margin: 0 auto;
+}
+
+/* HEADER */
+.dash-header   { display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px; }
+.dash-title    { font-size:18px;font-weight:800;color:var(--text,#111);font-family:Inter,sans-serif;letter-spacing:-.5px; }
+.dash-subtitle { font-size:12px;color:var(--text2,#6b7280);font-family:Inter,sans-serif;margin-top:2px; }
+.dash-year-tabs{ display:flex;gap:4px;background:var(--white,#fff);border:1px solid var(--border,#e5e7eb);border-radius:8px;padding:3px; }
+.dash-ytab     { padding:5px 14px;border:none;border-radius:6px;font-size:12px;font-weight:700;font-family:Inter,sans-serif;cursor:pointer;background:transparent;color:var(--text2,#6b7280);transition:all .15s; }
+.dash-ytab.active { background:#1a56db;color:#fff; }
+
+/* KPIs */
+.dash-kpis { display:grid;grid-template-columns:repeat(4,1fr);gap:10px; }
+@media(max-width:900px){ .dash-kpis{grid-template-columns:repeat(2,1fr);} }
+@media(max-width:480px){ .dash-kpis{grid-template-columns:1fr;} }
+
+.dash-kpi       { background:var(--white,#fff);border:1px solid var(--border,#e5e7eb);border-radius:12px;padding:12px 14px;display:flex;align-items:flex-start;gap:10px;transition:box-shadow .15s; }
+.dash-kpi:hover { box-shadow:0 4px 16px rgba(0,0,0,.08); }
+.dash-kpi.kpi-ok    { border-left:3px solid #10b981; }
+.dash-kpi.kpi-amber { border-left:3px solid #f59e0b; }
+.dash-kpi.kpi-warn  { border-left:3px solid #ef4444; }
+.dash-kpi-icon  { font-size:20px;margin-top:1px;flex-shrink:0; }
+.dash-kpi-body  { flex:1;min-width:0; }
+.dash-kpi-label { font-size:10px;font-weight:600;color:var(--text2,#6b7280);text-transform:uppercase;letter-spacing:.8px;font-family:Inter,sans-serif; }
+.dash-kpi-val   { font-size:19px;font-weight:800;color:var(--text,#111);font-family:'Roboto',Inter,sans-serif;line-height:1.15;margin:2px 0;letter-spacing:-.5px; }
+.dash-kpi-sub   { font-size:11px;color:var(--text2,#9ca3af);font-family:Inter,sans-serif; }
+
+/* CARDS */
+.dash-card      { background:var(--white,#fff);border:1px solid var(--border,#e5e7eb);border-radius:12px;padding:16px; }
+.dash-card-full { }
+.dash-card-sm   { }
+.dash-card-title{ font-size:13px;font-weight:700;color:var(--text,#111);font-family:Inter,sans-serif;margin-bottom:14px;display:flex;align-items:center;gap:8px;flex-wrap:wrap; }
+.dash-badge     { font-size:10px;font-weight:700;background:#dbeafe;color:#1e40af;padding:2px 7px;border-radius:10px; }
+
+/* CHARTS ROW */
+.dash-charts-row { display:grid;grid-template-columns:1fr 280px;gap:14px; }
+@media(max-width:800px){ .dash-charts-row{grid-template-columns:1fr;} }
+
+/* BARRAS PRODUÇÃO */
+.dash-bar-chart { display:flex;align-items:flex-end;gap:5px;height:175px;padding-bottom:28px;position:relative; }
+.dash-bar-col   { flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;height:100%;justify-content:flex-end;cursor:default; }
+.dash-bar-col:hover .dash-bar-fill { filter:brightness(1.12); }
+.dash-bar-val   { font-size:9px;font-weight:700;color:var(--text2,#6b7280);font-family:Inter,sans-serif;white-space:nowrap; }
+.dash-bar-track { flex:1;width:100%;display:flex;align-items:flex-end;max-height:135px; }
+.dash-bar-fill  { width:100%;border-radius:4px 4px 0 0;height:0; }
+.dash-bar-fill.y2025   { background:#cbd5e1; }
+.dash-bar-fill.y2026   { background:#3b82f6; }
+.dash-bar-fill.current { background:#1a56db; }
+.dash-bar-lbl   { font-size:8.5px;color:var(--text2,#9ca3af);font-family:Inter,sans-serif;text-align:center;white-space:nowrap;position:absolute;bottom:0; }
+.dash-bar-lbl.active { color:#1a56db;font-weight:700; }
+
+/* TABELA */
+.dash-table-wrap { overflow-x:auto;-webkit-overflow-scrolling:touch; }
+.dash-table      { width:100%;border-collapse:collapse;font-family:Inter,sans-serif;font-size:13px; }
+.dash-table thead tr { background:#f8fafc;border-bottom:2px solid var(--border,#e5e7eb); }
+.dash-table th   { padding:9px 12px;text-align:left;font-size:11px;font-weight:700;color:var(--text2,#6b7280);text-transform:uppercase;letter-spacing:.6px;white-space:nowrap; }
+.dash-table td   { padding:8px 12px;border-bottom:1px solid #f1f5f9;color:var(--text,#374151);white-space:nowrap; }
+.dash-table tr:hover td { background:#f8fafc; }
+.dash-tr-highlight td { background:#eff6ff !important; }
+.dash-tfoot td   { padding:9px 12px;background:#f1f5f9;font-weight:700;color:var(--text,#111);border-top:2px solid var(--border,#e5e7eb); }
+.dash-yr-badge   { font-size:10px;background:#f1f5f9;color:#64748b;padding:1px 5px;border-radius:4px;font-weight:600; }
+
+/* DELTA */
+.dash-delta    { font-size:10px;font-weight:700;margin-left:3px; }
+.dash-delta.up { color:#10b981; }
+.dash-delta.dn { color:#ef4444; }
+
+/* ── QUADRO DE PEDIDOS POR MÊS ── */
+
+/* Botões de mês */
+.dash-mes-btn {
+  padding: 4px 10px;
+  border: 1.5px solid var(--border, #e5e7eb);
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  font-family: Inter, sans-serif;
+  cursor: pointer;
+  background: transparent;
+  color: var(--text2, #6b7280);
+  transition: all .15s;
+  white-space: nowrap;
+}
+.dash-mes-btn:hover  { border-color:#93c5fd;color:#1d4ed8;background:#eff6ff; }
+.dash-mes-btn.active { background:#1a56db;color:#fff;border-color:#1a56db; }
+
+/* Stats resumo do mês */
+.dash-mes-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+  background: #f8fafc;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 8px 16px;
+  font-family: Inter, sans-serif;
+}
+.dash-mes-stat-val { font-size:20px;font-weight:800;color:#111;letter-spacing:-.5px; }
+.dash-mes-stat-lbl { font-size:11px;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:.6px; }
+
+/* Linhas de pedido clicáveis */
+.dash-ped-row { cursor:pointer;transition:background .1s; }
+.dash-ped-row:hover td { background:#eff6ff !important; }
+.dash-ped-row:active td { background:#dbeafe !important; }
+
+/* Badge número do pedido */
+.dash-ped-num {
+  font-family: 'JetBrains Mono', 'Courier New', monospace;
+  font-size: 12px;
+  font-weight: 700;
+  color: #1a56db;
+  background: #eff6ff;
+  padding: 2px 7px;
+  border-radius: 6px;
+  letter-spacing: .5px;
+}
+
+/* Modal de pedido animação */
+@keyframes upcIn {
+  from { opacity:0;transform:translateY(16px) scale(.97); }
+  to   { opacity:1;transform:translateY(0) scale(1); }
+}
