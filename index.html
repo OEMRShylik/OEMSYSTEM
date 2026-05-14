@@ -7,13 +7,12 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Roboto:wght@700;900&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <link rel="stylesheet" href="css/styles.css">
-<link rel="stylesheet" href="css/dashboard.css">
 <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
 <style>
+#screen-dashboard.active { display:flex !important; }
 #screen-detalhe.active   { display:flex !important; }
 #screen-angulos.active   { display:flex !important; }
 #screen-prensagem.active { display:flex !important; }
-#screen-dashboard.active { display:flex !important; }
 #main { display:flex; flex-direction:column; flex:1; overflow:hidden; }
 /* Fundo background.jpg em TODAS as telas */
 .screen {
@@ -182,19 +181,22 @@
     <div id="user-sector-badge"></div>
   </div>
 
-  <!-- DASHBOARD — primeiro item do menu -->
-  <div class="nav-item" onclick="navTo('dashboard',this)">
+  <div class="nav-item" id="nav-dashboard" style="display:none;" onclick="navTo('dashboard',this)">
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-      <rect x="3" y="3" width="7" height="9" rx="1"/>
-      <rect x="14" y="3" width="7" height="5" rx="1"/>
-      <rect x="14" y="12" width="7" height="9" rx="1"/>
-      <rect x="3" y="16" width="7" height="5" rx="1"/>
+      <rect x="3" y="3" width="7" height="7" rx="1.2"/>
+      <rect x="14" y="3" width="7" height="7" rx="1.2"/>
+      <rect x="3" y="14" width="7" height="7" rx="1.2"/>
+      <rect x="14" y="14" width="7" height="7" rx="1.2"/>
     </svg>
     <span class="nav-tooltip">Dashboard</span>
   </div>
-
   <div class="nav-item active" onclick="navTo('pedidos',this)">
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/>
+      <rect x="9" y="3" width="6" height="4" rx="1"/>
+      <line x1="9" y1="12" x2="15" y2="12"/>
+      <line x1="9" y1="16" x2="13" y2="16"/>
+    </svg>
     <span class="nav-tooltip">Pedidos</span>
   </div>
   <div class="nav-item" onclick="navTo('prensagem',this)">
@@ -251,18 +253,22 @@
     <div id="date-left" style="font-size:12px;color:var(--text2);white-space:nowrap;"></div>
     <div style="width:1px;height:16px;background:var(--border);flex-shrink:0;"></div>
     <button id="btn-novo-pedido-top" class="btn-novo" style="padding:8px 16px;font-size:13px;" onclick="document.getElementById('upload-pdf-novo').click()">+ Novo Pedido</button>
+    <button id="btn-falta-estoque" onclick="abrirTelaEstoque()"
+      style="display:none;padding:5px 12px;background:#fee2e2;color:#991b1b;border:1.5px solid #fca5a5;border-radius:20px;font-size:12px;font-weight:700;font-family:Inter,sans-serif;cursor:pointer;white-space:nowrap;flex-shrink:0;transition:all .15s;">
+      📦 FALTA DE ESTOQUE
+    </button>
     <input type="file" id="upload-pdf-novo" accept=".pdf" style="display:none" onchange="handleNovoPedidoPDF(event)">
   </div>
 
   <!-- DASHBOARD -->
-  <div class="screen" id="screen-dashboard" style="flex-direction:column;overflow:hidden;">
-    <div id="dash-root" style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;"></div>
+  <div class="screen" id="screen-dashboard">
+    <div id="dash-root" style="flex:1;overflow-y:auto;background:var(--bg,#f9fafb);"></div>
   </div>
 
   <!-- PEDIDOS -->
   <div class="screen active" id="screen-pedidos">
     
-    <div id="kanban-search-bar" style="display:flex;align-items:center;gap:10px;padding:8px 16px;background:var(--white);border-bottom:1px solid var(--border);flex-shrink:0;">
+    <div id="kanban-search-bar" style="display:flex;align-items:center;gap:10px;padding:8px 16px;background:var(--white);border-bottom:1px solid var(--border);flex-shrink:0;flex-wrap:nowrap;overflow:hidden;">
       <div style="display:flex;align-items:center;gap:7px;background:var(--bg);border:1px solid var(--border);border-radius:20px;padding:5px 14px;flex:1;max-width:400px;">
         <span style="color:var(--text3);font-size:13px;">🔍</span>
         <input type="text" id="search-input" placeholder="Buscar..." oninput="searchPedidos()" style="border:none;background:none;outline:none;font-family:Inter,sans-serif;font-size:13px;color:var(--text);width:100%;">
@@ -271,7 +277,27 @@
     <div class="kanban-area" id="kanban-area"></div>
   </div>
 
-  <!-- DETALHE DO PEDIDO -->
+  
+  <!-- FALTA DE ESTOQUE -->
+  <div class="screen" id="screen-estoque">
+    <!-- Header -->
+    <div style="display:flex;align-items:center;gap:12px;padding:10px 16px;background:var(--white);border-bottom:1px solid var(--border);flex-shrink:0;">
+      <button onclick="voltarDeEstoque()" style="background:none;border:none;cursor:pointer;color:var(--text2);font-size:20px;padding:2px 8px;border-radius:5px;line-height:1;" title="Voltar">←</button>
+      <div style="flex:1;">
+        <div style="font-size:14px;font-weight:800;color:var(--text);font-family:Inter,sans-serif;">Falta de Estoque</div>
+        <div style="font-size:11px;color:var(--text2);font-family:Inter,sans-serif;">Todos os pedidos com componentes pendentes</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;background:var(--bg);border:1px solid var(--border);border-radius:20px;padding:5px 14px;">
+        <span style="color:var(--text3);font-size:13px;">🔍</span>
+        <input type="text" id="estoque-search" placeholder="Buscar pedido, item, cliente..."
+          oninput="renderEstoque(this.value)"
+          style="border:none;background:none;outline:none;font-family:Inter,sans-serif;font-size:13px;color:var(--text);width:220px;">
+      </div>
+    </div>
+    <div id="estoque-root" style="flex:1;overflow-y:auto;background:var(--bg,#f9fafb);"></div>
+  </div>
+
+<!-- DETALHE DO PEDIDO -->
   <div class="screen" id="screen-detalhe" style="flex-direction:column;overflow:hidden;">
 
     <!-- Header -->
@@ -290,9 +316,13 @@
         style="background:#1a56db;color:#fff;border-color:#1a56db;">
         ▶ Iniciar Pedido
       </button>
-      <button onclick="abrirEtiqSeparacao()"
+      <button onclick="abrirOP()"
         style="background:#fff;color:#374151;">
-        🏷️ Etiquetas de Separação
+        📄 Ordem de Produção
+      </button>
+      <button onclick="abrirSeparacao()"
+        style="background:#fff;color:#374151;">
+        🏷️ Separação
       </button>
       <button id="btn-etiq-pedido" onclick="abrirEtiqPedido()"
         style="background:#fff;color:#374151;">
@@ -328,6 +358,7 @@
             </filter>
           </defs>
 
+          <!-- Cabeça de prensa — embedded base64 (evita problema de caminho) -->
           <image href="assets/prensa.webp" x="0" y="0" width="500" height="500"
             preserveAspectRatio="xMidYMid meet"/>
 
@@ -461,13 +492,15 @@
       <div style="font-size:clamp(9px,1.2vw,11px);font-weight:600;color:#888;letter-spacing:3px;text-transform:uppercase;margin-top:2px;">Ângulo de Montagem</div>
     </div>
 
-    <!-- Dois painéis lado a lado -->
+    <!-- Dois painéis lado a lado (3D oculto no mobile) -->
     <div class="ang-panels" style="flex:1;display:flex;gap:0;min-height:0;overflow:hidden;">
 
+      <!-- Painel esquerdo: transferidor (sempre visível) -->
       <div id="ang-left-panel" style="flex:1;display:flex;align-items:center;justify-content:center;padding:clamp(4px,1vw,8px);min-width:0;">
         <canvas id="ang-canvas" style="display:block;cursor:grab;max-width:100%;max-height:100%;"></canvas>
       </div>
 
+      <!-- Painel direito: modelo 3D (oculto em mobile <600px) -->
       <div id="ang-3d-panel" style="flex:1;display:flex;flex-direction:column;min-width:0;border-left:1px solid #e5e7eb;">
         <div style="font-size:10px;font-weight:700;color:#888;letter-spacing:2px;text-transform:uppercase;text-align:center;padding:8px 0 4px;flex-shrink:0;">VISUALIZAÇÃO 3D</div>
         <div id="ang-hose-3d" style="flex:1;min-height:0;"></div>
@@ -538,6 +571,8 @@
       .mc-tag button:hover { opacity:1; }
     </style>
 
+
+
     <div class="mc-container">
 
       <!-- Comprimento -->
@@ -591,16 +626,18 @@
 
 <!-- Scripts -->
 <script src="js/storage.js"></script>
+<link rel="stylesheet" href="css/dashboard.css">
 <script src="js/app.js"></script>
+<script src="js/dashboard.js"></script>
 <script src="js/pedidos.js"></script>
+<script src="js/aguardando.js"></script>
 <script src="js/novo_pedido.js"></script>
 <script src="js/medidas.js"></script>
 <script src="js/descasque.js"></script>
 <script src="js/viewer3d.js"></script>
-<script src="js/angulos.js"></script>
+  <script src="js/angulos.js"></script>
 <script src="js/calendario.js"></script>
 <script src="js/perfil.js"></script>
-<script src="js/dashboard.js"></script>
 
 <!-- MODAL PERFIL -->
 <style>

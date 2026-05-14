@@ -1,0 +1,27 @@
+{
+  "_meta": {
+    "descricao": "Falta de Estoque — OEM RS. Gerado e atualizado automaticamente pelo sistema.",
+    "campos": {
+      "id":             "ID único da pendência (pedido_item_timestamp)",
+      "pedido":         "Número do pedido",
+      "cliente":        "Nome do cliente",
+      "entrega":        "Data de entrega do pedido (DD/MM/YYYY)",
+      "item":           "Código do componente faltante",
+      "qtd_solicitada": "Quantidade solicitada pelo pedido",
+      "qtd_faltante":   "Quantidade que está faltando",
+      "observacao":     "Comentário do vendedor ou produção",
+      "status":         "Em Falta | Comprado/Transferido | Lançado | Empenhado",
+      "registrado_por": "Nome de quem registrou",
+      "data_registro":  "Data e hora do registro",
+      "concluido_por":  "Nome de quem marcou como Empenhado (null se em aberto)",
+      "data_conclusao": "Data e hora da conclusão (null se em aberto)"
+    },
+    "status_cores": {
+      "Em Falta":             "vermelho  (#ef4444)",
+      "Comprado/Transferido": "amarelo   (#eab308)",
+      "Lançado":              "laranja   (#f97316)",
+      "Empenhado":            "verde     (#22c55e)"
+    }
+  },
+  "registros": []
+}
