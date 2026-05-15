@@ -8,10 +8,8 @@ async function handleNovoPedidoPDF(event) {
   if (!file) return;
   event.target.value = '';
 
-  // Lê o arquivo como Blob — evita problemas de ArrayBuffer detached
   const fileBlob = file.slice(0);
 
-  // Converte para base64 via FileReader (mais confiável que btoa+ArrayBuffer)
   const b64 = await new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload  = () => resolve(reader.result.split(',')[1]);
@@ -19,7 +17,6 @@ async function handleNovoPedidoPDF(event) {
     reader.readAsDataURL(fileBlob);
   });
 
-  // Extrai info do PDF via PDF.js usando o b64 já gerado
   const info = await extractPedidoInfoFromB64(b64);
 
   const hoje = new Date(); hoje.setHours(0,0,0,0);
@@ -30,9 +27,10 @@ async function handleNovoPedidoPDF(event) {
     id:          info.pedido || Date.now().toString().slice(-6),
     cliente:     info.cliente || '(sem nome)',
     entrega:     info.entregaStr || '',
-    etapa:       'corte',
+    // ── CORREÇÃO: novo pedido entra em SEPARAÇÃO (não em corte) ──
+    etapa:       'separacao',
     status,
-    pdfB64:      b64,          // guarda b64 para reusar
+    pdfB64:      b64,
     entregaDate: info.entregaDate,
     processing:  true,
     anexos:      {},
@@ -51,7 +49,6 @@ async function handleNovoPedidoPDF(event) {
     if (!resp.ok) throw new Error(`HTTP ${resp.status}: ${await resp.text()}`);
     const data = await resp.json();
 
-    // Atualiza metadados com dados do backend (mais precisos)
     if (data.meta?.pedido)  pedido.id      = data.meta.pedido;
     if (data.meta?.cliente) pedido.cliente = data.meta.cliente
       .replace(/\s*-?\s*[\d.\/\-]{8,}\s*$/, '').trim().split(/\s+/)[0];
@@ -82,7 +79,6 @@ async function handleNovoPedidoPDF(event) {
   }
 }
 
-// Extrai info usando b64 já gerado — evita múltiplas leituras do arquivo
 async function extractPedidoInfoFromB64(b64) {
   const info = { pedido:'', cliente:'', entregaStr:'', entregaDate:null };
   if (typeof pdfjsLib === 'undefined') return info;
@@ -119,27 +115,10 @@ async function extractPedidoInfoFromB64(b64) {
 }
 
 function _b64toArrayBuffer(b64) {
-  const bin = atob(b64);
-  const buf = new Uint8Array(bin.length);
+  const bin  = atob(b64);
+  const buf  = new Uint8Array(bin.length);
   for (let i = 0; i < bin.length; i++) buf[i] = bin.charCodeAt(i);
   return buf.buffer;
-}
-
-function downloadAnexo(idx, tipo, kitIdx) {
-  const p = pedidos[idx];
-  if (!p?.anexos) return;
-  let filename, b64;
-  if (tipo === 'op' && p.anexos.op)               { filename = p.anexos.op.filename;              b64 = p.anexos.op.data; }
-  else if (tipo === 'kit' && p.anexos.kits?.[kitIdx]) { filename = p.anexos.kits[kitIdx].filename; b64 = p.anexos.kits[kitIdx].data; }
-  else if (tipo === 'embalagem' && p.anexos.embalagem) { filename = p.anexos.embalagem.filename;   b64 = p.anexos.embalagem.data; }
-  else if (tipo === 'corte' && p.anexos.corte)    { filename = p.anexos.corte.filename;             b64 = p.anexos.corte.data; }
-  else return;
-
-  const blob = new Blob([_b64toArrayBuffer(b64)], {type:'application/pdf'});
-  const a    = document.createElement('a');
-  a.href     = URL.createObjectURL(blob);
-  a.download = filename;
-  a.click();
 }
 
 async function extractPedidoInfo(arrayBuf) {
@@ -152,7 +131,6 @@ async function extractPedidoInfo(arrayBuf) {
       const page    = await pdf.getPage(p);
       const content = await page.getTextContent();
       const text    = content.items.map(i => i.str).join(' ');
-
       if (!info.pedido) {
         const m = text.match(/NRO\s+PEDIDO\s*:\s*(\d{6})/i);
         if (m) info.pedido = m[1];
@@ -175,7 +153,6 @@ async function extractPedidoInfo(arrayBuf) {
   return info;
 }
 
-// Stubs para compatibilidade
-function openModal()       {}
-function closeModal()      {}
-function salvarPedido()    {}
+function openModal()    {}
+function closeModal()   {}
+function salvarPedido() {}

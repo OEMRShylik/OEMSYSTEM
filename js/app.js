@@ -23,7 +23,6 @@ async function init() {
   updatePrClock();
   buildPrMang();
   renderDescasque();
-  // Tenta carregar estado salvo
   try {
     const carregou = await carregarEstado();
     if (carregou && pedidos.length > 0) {
@@ -35,7 +34,6 @@ async function init() {
   renderKanban();
   _updateTopbar('pedidos');
   _aplicarPermissoes();
-  // Ângulos só renderiza quando a tela estiver ativa (evita problemas de tamanho)
 }
 
 function updateClock() {
@@ -49,7 +47,6 @@ function updateClock() {
 // ══════════════════════════════════════════════════
 //  NAV
 // ══════════════════════════════════════════════════
-// Títulos das telas para o cabeçalho
 const SCREEN_TITLES = {
   'dashboard':    'Dashboard de Produção',
   'pedidos':      'Gestão de Pedidos',
@@ -60,7 +57,6 @@ const SCREEN_TITLES = {
   'medida-corte': 'Medida de Corte',
 };
 
-// ── Controle de acesso por setor ──
 function _aplicarPermissoes() {
   if (typeof currentUser === 'undefined' || !currentUser) return;
   const setor  = currentUser.setor || '';
@@ -74,20 +70,16 @@ function _aplicarPermissoes() {
     if (navPr) navTo('prensagem', navPr);
   }
 
-  // Dashboard: Admin, Gestão ou Comercial
   const navDash = document.getElementById('nav-dashboard');
   if (navDash) navDash.style.display = ['Admin','Gestão','Comercial'].includes(setor) ? '' : 'none';
 }
-// Reagir ao login
 (function(){ let u=null; setInterval(()=>{ if(typeof currentUser!=='undefined'&&currentUser!==u){u=currentUser;_aplicarPermissoes();} },500); })();
 
-// Sobrescreve navTo para verificar permissões
 function navTo(name, el) {
-  // Verifica permissão para tela de pedidos
   if (name === 'pedidos' && typeof currentUser !== 'undefined' && currentUser) {
     const perm = currentUser.permissoes || {};
     const isAdmin = currentUser.setor === 'Admin' || perm.pedidos === true;
-    if (!isAdmin) return; // Bloqueia acesso
+    if (!isAdmin) return;
   }
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById('screen-' + name).classList.add('active');
@@ -95,7 +87,6 @@ function navTo(name, el) {
   el.classList.add('active');
   currentScreen = name;
 
-  // Atualiza cabeçalho
   _updateTopbar(name);
 
   if (name === 'dashboard') {
@@ -113,21 +104,21 @@ function _updateTopbar(screen) {
   const isPedidos = (screen === 'pedidos');
   const title = SCREEN_TITLES[screen] || '';
 
-  // Título sempre visível
   if (titleEl) {
     titleEl.textContent = title;
     titleEl.style.display = title ? 'block' : 'none';
   }
-  // Botão + Novo Pedido: só em pedidos
   if (btnNovo) btnNovo.style.display = isPedidos ? '' : 'none';
-  // Barra de busca: só em pedidos
-  if (searchEl) searchEl.style.display = isPedidos ? '' : 'none';
+  if (searchEl) searchEl.style.display = isPedidos ? 'flex' : 'none';
 }
 
 // ══════════════════════════════════════════════════
-//  KANBAN
+//  KANBAN — ORDEM CORRETA DAS ETAPAS
+//  1 Separação → 2 Inspeção → 3 Corte → 4 Prensagem → 5 Embalagem → 6 Finalizados
 // ══════════════════════════════════════════════════
 const ETAPAS = [
+  {key:'separacao', label:'SEPARAÇÃO'},
+  {key:'inspecao',  label:'INSPEÇÃO'},
   {key:'corte',     label:'CORTE'},
   {key:'prensagem', label:'PRENSAGEM'},
   {key:'embalagem', label:'EMBALAGEM'},
@@ -204,8 +195,6 @@ function renderCard(p, etapaIdx) {
     topRight = `<div class="status-badge ${statusMap[p.status]||''}">${statusLabel[p.status]||p.status}</div>`;
   }
 
-  let filesHtml = '';
-
   return `<div class="pedido-card ${p.processing?'processing':''}"
     draggable="${draggable}"
     data-pedido-id="${p.id}"
@@ -217,7 +206,6 @@ function renderCard(p, etapaIdx) {
     </div>
     <div class="pedido-cliente">${p.cliente}</div>
     <div class="pedido-entrega">${p.entrega ? 'Entrega: '+p.entrega : ''}</div>
-    ${filesHtml}
   </div>`;
 }
 

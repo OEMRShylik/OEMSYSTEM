@@ -1,0 +1,41 @@
+{
+  "pedidos": {
+    "003328": [
+      {
+        "componente": "H2SC05",
+        "descricao": "MANG. HID. EN 857 2SC 5/16\" - HYLIK",
+        "medida": "5/16",
+        "quantidade": 712.8,
+        "unidade": "MT"
+      },
+      {
+        "componente": "HCP205",
+        "descricao": "CAPA PRENS. 03310 (1 E 2TRAMAS) 5/16",
+        "medida": "5/16",
+        "quantidade": 720,
+        "unidade": "PC"
+      },
+      {
+        "componente": "HPAS12M2005",
+        "descricao": "F.GIR. TB.12 (M20X1,5) DIN 24 X 5/16 - SERIE PESADA",
+        "medida": "5/16",
+        "quantidade": 144,
+        "unidade": "PC"
+      },
+      {
+        "componente": "HPAS9012M2005",
+        "descricao": "F.GIR. 90 TB.12 (M20X1,5) DIN 24 X 5/16 - SERIE PESADA",
+        "medida": "5/16",
+        "quantidade": 144,
+        "unidade": "PC"
+      },
+      {
+        "componente": "HPT12M2005",
+        "descricao": "M.FIXO TB. 12 (M20X1,5) DIN 24 X 5/16 - SERIE PESADA",
+        "medida": "5/16",
+        "quantidade": 432,
+        "unidade": "PC"
+      }
+    ]
+  }
+}

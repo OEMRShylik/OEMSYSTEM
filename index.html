@@ -3,144 +3,14 @@
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>OEM SYSTEM</title>
-<link rel="icon" type="image/png" href="https://encrypted-tbn2.gstatic.com/faviconV2?url=https://www.hylik.com.br&client=VFE&size=64&type=FAVICON&fallback_opts=TYPE,SIZE,URL&nfrp=2">
+<link rel="icon" href="/favicon.ico">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Roboto:wght@700;900&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <link rel="stylesheet" href="css/styles.css">
 <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
-<style>
-#screen-dashboard.active   { display:flex !important; }
-    #screen-calendario.active { display:flex !important; flex-direction:column; }
-#screen-detalhe.active   { display:flex !important; }
-#screen-angulos.active   { display:flex !important; }
-#screen-prensagem.active { display:flex !important; }
-#main { display:flex; flex-direction:column; flex:1; overflow:hidden; }
-/* Fundo background.jpg em TODAS as telas */
-.screen {
-  background-image: url('assets/background.jpg') !important;
-  background-size: cover !important;
-  background-position: center !important;
-  background-repeat: no-repeat !important;
-  background-color: #e8edf2 !important;
-}
 
-/* Responsivo ângulos: mobile oculta painel 3D */
-/* Mobile: layout vertical empilhado — transferidor cima, 3D baixo */
-@media (max-width: 599px) {
-  /* Container muda para coluna */
-  #screen-angulos .ang-panels {
-    flex-direction: column !important;
-    overflow-y: auto !important;
-    -webkit-overflow-scrolling: touch !important;
-  }
-  /* Painel esquerdo (transferidor): altura fixa */
-  #ang-left-panel {
-    flex: none !important;
-    height: 55vw !important;
-    min-height: 220px !important;
-    max-height: 320px !important;
-    width: 100% !important;
-  }
-  /* Painel 3D: visível embaixo, mesmo tamanho */
-  #ang-3d-panel {
-    display: flex !important;
-    flex: none !important;
-    height: 55vw !important;
-    min-height: 220px !important;
-    max-height: 320px !important;
-    width: 100% !important;
-    border-left: none !important;
-    border-top: 1px solid #e5e7eb !important;
-  }
-}
-/* Tablet e notebook: layout horizontal */
-@media (min-width: 600px) {
-  #ang-3d-panel { display:flex !important; }
-}
-/* Tela muito pequena: reduz padding do grau */
-@media (max-width: 400px) {
-  #ang-deg-big { font-size: 28px !important; }
-}
-</style>
-<style>
-/* Botões detalhe — linha horizontal, scroll se necessário */
-#screen-detalhe .detalhe-btns {
-  display:flex; gap:8px; padding:10px 14px;
-  background:var(--white); border-bottom:1px solid var(--border);
-  flex-shrink:0; overflow-x:auto; -webkit-overflow-scrolling:touch;
-}
-#screen-detalhe .detalhe-btns button {
-  flex-shrink:0; white-space:nowrap;
-  padding:9px 16px; border-radius:8px;
-  font-size:13px; font-weight:700; font-family:Inter,sans-serif;
-  cursor:pointer; border:1.5px solid #e5e7eb;
-  transition:opacity .15s;
-}
-</style>
-<style>
-/* Ocultar botão fechar/× do visualizador PDF do pedidos.js */
-#detalhe-conteudo > div > button:last-child,
-#detalhe-conteudo [class*="pdf-close"],
-#detalhe-conteudo [class*="pdf-fechar"],
-#detalhe-conteudo [id*="pdf-close"],
-#detalhe-conteudo [class*="close-btn"],
-#detalhe-conteudo [class*="toolbar"],
-#detalhe-conteudo [class*="pdf-toolbar"],
-#detalhe-conteudo [class*="pdf-topbar"],
-#detalhe-conteudo [id*="pdf-toolbar"],
-#detalhe-conteudo .pdf-toolbar,
-#detalhe-conteudo .pdf-topbar { display:none !important; }
 
-/* Calendário — 547px (+20% de 456px, +40% do original 380px) */
-.kanban-col-calendar {
-  min-width: 547px !important;
-  width: 547px !important;
-  max-width: 547px !important;
-  flex-shrink: 0 !important;
-}
-/* Grade semanal — 7 colunas iguais */
-.cal-week-row {
-  display: grid !important;
-  grid-template-columns: repeat(7, 1fr) !important;
-}
-.cal-weekdays {
-  display: grid !important;
-  grid-template-columns: repeat(7, 1fr) !important;
-}
-/* Célula do dia — altura generosa */
-.cal-day-cell {
-  min-height: 62px !important;
-  overflow: hidden !important;
-  padding: 2px 3px !important;
-  box-sizing: border-box !important;
-}
-/* Chip de pedido */
-.cal-event-chip {
-  display: block !important;
-  white-space: nowrap !important;
-  overflow: hidden !important;
-  text-overflow: ellipsis !important;
-  width: 100% !important;
-  max-width: 100% !important;
-  box-sizing: border-box !important;
-  font-size: 11px !important;
-  font-weight: 700 !important;
-  padding: 2px 5px !important;
-  border-radius: 4px !important;
-  margin-bottom: 2px !important;
-  cursor: pointer !important;
-  line-height: 1.4 !important;
-}
-.chip-nome {
-  white-space: nowrap !important;
-  overflow: hidden !important;
-  text-overflow: ellipsis !important;
-  display: block !important;
-  width: 100% !important;
-  font-size: 11px !important;
-  font-weight: 700 !important;
-}
-</style>
+
 <script src="js/auth.js"></script>
 </head>
 <body>
@@ -373,6 +243,10 @@
       <button id="btn-etiq-embalagem" onclick="_btnSair('embalagem')"
         style="background:#fff;color:#374151;">
         📦 Etiqueta de Embalagem
+      </button>
+      <button id="btn-componentes" onclick="abrirComponentes()"
+        style="background:#fff;color:#374151;">
+        🔩 Componentes
       </button>
     </div>
 
@@ -613,8 +487,6 @@
       .mc-tag button:hover { opacity:1; }
     </style>
 
-
-
     <div class="mc-container">
 
       <!-- Comprimento -->
@@ -679,6 +551,39 @@
 <script src="js/descasque.js"></script>
 <script src="js/viewer3d.js"></script>
 <script src="js/perfil.js"></script>
+
+<!-- ═══════════════════════════════════════════════
+     CORREÇÕES — scripts que estavam faltando
+     ═══════════════════════════════════════════════ -->
+
+<!-- 1. angulos.js: tela de ângulos não funcionava pois este arquivo nunca foi incluído -->
+<script src="js/angulos.js"></script>
+
+<!-- 2. dados_oem.js: extensões de setores/permissões -->
+<script src="js/dados_oem.js"></script>
+
+<!-- 3. componentes.js: tabela de componentes do pedido -->
+<script src="js/componentes.js"></script>
+
+<!-- 3. Chama init() após todos os scripts carregarem.
+        init() existia em app.js mas nunca era invocada,
+        causando prensagem, descasque e kanban vazios. -->
+<script>
+(function () {
+  function _init() {
+    if (typeof init === 'function') {
+      init();
+    } else {
+      console.error('[OEM] init() não encontrada. Verifique js/app.js.');
+    }
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', _init);
+  } else {
+    _init();
+  }
+})();
+</script>
 
 <!-- MODAL PERFIL -->
 <style>

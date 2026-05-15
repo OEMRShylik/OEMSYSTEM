@@ -5,7 +5,6 @@
 let _paginasOP   = [];
 let _paginaAtual = 0;
 
-// ── PDF viewer state ──
 let _pdfDoc      = null;
 let _pdfPage     = 1;
 let _pdfB64      = null;
@@ -23,7 +22,9 @@ async function abrirPedido(idx) {
 
   const badge = document.getElementById('detalhe-status-badge');
   const colorMap = {
-    corte:      'background:#dbeafe;color:#1e40af',
+    separacao:  'background:#eff6ff;color:#1e40af',
+    inspecao:   'background:#f0fdf4;color:#166534',
+    corte:      'background:#fee2e2;color:#991b1b',
     prensagem:  'background:#fef9c3;color:#854d0e',
     embalagem:  'background:#dcfce7;color:#166534',
     finalizado: 'background:#f3f4f6;color:#374151'
@@ -43,7 +44,7 @@ async function abrirPedido(idx) {
 async function _extrairDadosPDF(p) {
   try {
     const b64 = p.pdfB64;
-    if (!b64) { console.warn('pdfB64 não disponível'); return; }
+    if (!b64) return;
     const resp = await fetch('/extrair', {
       method: 'POST', headers: {'Content-Type':'application/json'},
       body: JSON.stringify({ data: b64, filename: 'op.pdf' }),
@@ -65,7 +66,7 @@ function _arrayBufferToB64(buf) {
 }
 
 // ══════════════════════════════════════════════════
-//  INICIAR PEDIDO — dados extraídos página por vez
+//  INICIAR PEDIDO
 // ══════════════════════════════════════════════════
 function abrirIniciarPedido() {
   _paginaAtual = 0;
@@ -73,13 +74,11 @@ function abrirIniciarPedido() {
   _mostrarPaginaOP();
 }
 
-// ── Amostragens: { pageIdx: { amostras: [{corte,prensagem,teste,conferencia,embalagem}], operador } }
 const _amostrasDB = {};
 
 function _getAmostras(pageIdx, pg) {
   if (!_amostrasDB[pageIdx]) {
     const qty = Math.max(1, Math.min(8, Math.round(pg.item_qty || 1)));
-    // Cria sem preencher — só preenche quando operador abre a página
     _amostrasDB[pageIdx] = {
       amostras: Array.from({length: qty}, () => ({
         corte: '', prensagem: '', teste: '', conferencia: '', embalagem: ''
@@ -92,25 +91,18 @@ function _getAmostras(pageIdx, pg) {
   return _amostrasDB[pageIdx];
 }
 
-// Chamado quando o operador ABRE uma página — preenche automaticamente se ainda não visualizou
 function _registrarAbertura(pageIdx, pg) {
   const db = _getAmostras(pageIdx, pg);
-  if (db.visualizado) return; // já registrado
-
+  if (db.visualizado) return;
   db.visualizado = true;
   db.ts_inicio   = new Date().toISOString();
   db.operador    = (typeof currentUser !== 'undefined' && currentUser) ? currentUser.nome : '';
-
-  const etapa = pedidos[currentPedidoIdx]?.etapa || 'corte';
-
+  const etapa = pedidos[currentPedidoIdx]?.etapa || 'separacao';
   if (etapa === 'corte' && pg.corte_mm && !pg.is_index) {
-    // Pré-preenche coluna CORTE com o tamanho de corte
     const corteStr = pg.corte_mm.toLocaleString('pt-BR', {minimumFractionDigits:3, maximumFractionDigits:3});
     db.amostras.forEach(am => { am.corte = corteStr; });
   }
-
   if (etapa === 'prensagem') {
-    // Pré-preenche coluna PRENSAGEM com medida da tabela CRIMP
     const medidaPrensagem = _buscarMedidaPrensagem(pg);
     if (medidaPrensagem !== null) {
       const medStr = medidaPrensagem.toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2});
@@ -119,51 +111,37 @@ function _registrarAbertura(pageIdx, pg) {
   }
 }
 
-// Busca medida de prensagem (paquímetro) na tabela CRIMP pelos itens da página
 function _buscarMedidaPrensagem(pg) {
   if (!pg.lista_itens?.length || typeof CRIMP === 'undefined') return null;
-
-  // Identifica capa e mangueira nos itens da lista
   let codigoCapa  = null;
   let codigoMang  = null;
-
   pg.lista_itens.forEach(it => {
     const cod = (it.codigo || '').toUpperCase();
     const desc = (it.descricao || '').toUpperCase();
-    // Capa: começa com HCP, HLCP, HCPA, HCPG, HCPT, etc
     if (/^H[CLG]?CP/.test(cod) || desc.includes('CAPA') || it.unidade === 'PC' && /^HCP/.test(cod)) {
       if (!codigoCapa) codigoCapa = cod;
     }
-    // Mangueira: MT ou código de mangueira (HR, H2SC, etc)
     if (it.unidade === 'MT' || desc.includes('MANG')) {
       if (!codigoMang) codigoMang = cod;
     }
   });
-
   if (!codigoCapa && !codigoMang) return null;
-
-  // Busca na tabela CRIMP
   const row = CRIMP.find(r => {
     const capMatch  = codigoCapa ? r.capa.toUpperCase() === codigoCapa : true;
     const mangMatch = codigoMang ? r.cod.toUpperCase().startsWith(codigoMang.substring(0,4)) : true;
     return capMatch && (codigoCapa ? true : mangMatch);
   }) || CRIMP.find(r => codigoCapa && r.capa.toUpperCase() === codigoCapa);
-
   return row ? row.medida : null;
 }
 
 function _amostraChange(pageIdx, rowIdx, campo, val) {
-  if (_amostrasDB[pageIdx]) {
-    _amostrasDB[pageIdx].amostras[rowIdx][campo] = val;
-  }
+  if (_amostrasDB[pageIdx]) _amostrasDB[pageIdx].amostras[rowIdx][campo] = val;
 }
 
 function _amostraAdj(pageIdx, rowIdx, campo, delta) {
-  const db  = _amostrasDB[pageIdx];
+  const db = _amostrasDB[pageIdx];
   if (!db) return;
-  // Converte valor pt-BR → float
   const cur = parseFloat(String(db.amostras[rowIdx][campo]).replace(/\./g,'').replace(',','.')) || 0;
-  // Delta de 0.001 (1 milésimo de mm)
   const novo = Math.round((cur + delta) * 1000) / 1000;
   db.amostras[rowIdx][campo] = novo.toLocaleString('pt-BR', {minimumFractionDigits:3, maximumFractionDigits:3});
   const el = document.getElementById(`am_${pageIdx}_${rowIdx}_${campo}`);
@@ -176,22 +154,12 @@ function _operadorChange(pageIdx, val) {
 
 function _renderAmostragens(pageIdx, pg) {
   const db     = _getAmostras(pageIdx, pg);
-  const etapa  = pedidos[currentPedidoIdx]?.etapa || 'corte';
-  const corteVal = pg.corte_mm && !pg.is_index
-    ? pg.corte_mm.toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:4})
-    : '—';
-
+  const etapa  = pedidos[currentPedidoIdx]?.etapa || 'separacao';
   const colunas = ['corte','prensagem','teste','conferencia','embalagem'];
   const labels  = ['Corte','Prensagem','Teste','Conf.','Embalagem'];
-
-  // Mapeamento de etapa → coluna editável
-  const etapaColuna = {
-    corte: 'corte', prensagem: 'prensagem',
-    embalagem: 'embalagem', finalizado: null
-  };
+  const etapaColuna = { corte:'corte', prensagem:'prensagem', embalagem:'embalagem', finalizado:null };
   const colunaAtiva = etapaColuna[etapa] || null;
 
-  // Cabeçalho
   let thead = `<tr style="background:#f3f4f6;">
     <th style="padding:5px 8px;font-size:11px;color:#6b7280;font-weight:700;text-align:center;">#</th>
     ${colunas.map((c,i)=>{
@@ -200,13 +168,10 @@ function _renderAmostragens(pageIdx, pg) {
     }).join('')}
   </tr>`;
 
-  // Linhas
   let rows = db.amostras.map((am, ri) => {
     const cells = colunas.map(campo => {
-      const val       = am[campo] || '';
-      const isAtiva   = campo === colunaAtiva;
-      const isReadonly = !isAtiva; // outras colunas são só leitura na etapa atual
-
+      const val = am[campo] || '';
+      const isAtiva = campo === colunaAtiva;
       if (isAtiva) {
         return `<td style="padding:3px 4px;text-align:center;">
           <div style="display:flex;align-items:center;gap:2px;justify-content:center;">
@@ -221,7 +186,6 @@ function _renderAmostragens(pageIdx, pg) {
           </div>
         </td>`;
       } else {
-        // Readonly — mostra valor mas não edita
         const hasVal = val && val !== '';
         return `<td style="padding:3px 6px;text-align:center;">
           <span style="display:inline-block;width:56px;text-align:center;font-size:12px;font-family:'Courier New',monospace;color:${hasVal?'#111':'#d1d5db'};font-weight:${hasVal?700:400};">
@@ -236,13 +200,8 @@ function _renderAmostragens(pageIdx, pg) {
     </tr>`;
   }).join('');
 
-  // Operador: mostra quem preencheu e quem está preenchendo agora
-  const opCorte    = db.operador || '';
-  const opAtual    = (typeof currentUser !== 'undefined' && currentUser) ? currentUser.nome : '';
+  const opAtual = (typeof currentUser !== 'undefined' && currentUser) ? currentUser.nome : '';
   let operadorHtml = `<div style="margin-top:8px;font-family:Inter,sans-serif;display:flex;flex-direction:column;gap:3px;">`;
-  if (opCorte && etapa !== 'corte') {
-    operadorHtml += `<div style="font-size:11px;color:#6b7280;">✂️ Cortado por: <strong>${opCorte}</strong></div>`;
-  }
   if (opAtual && colunaAtiva) {
     operadorHtml += `<div style="font-size:11px;color:#059669;font-weight:700;">👤 ${opAtual}</div>`;
   }
@@ -271,10 +230,8 @@ function _mostrarPaginaOP() {
   const pg    = _paginasOP[_paginaAtual];
   const total = _paginasOP.length;
 
-  // Registra abertura — preenche automaticamente se primeira vez
   _registrarAbertura(_paginaAtual, pg);
 
-  // ── Lista de itens (tabela fiel ao documento) ──
   let listaHTML = '';
   if (pg.lista_itens?.length) {
     listaHTML = `
@@ -293,7 +250,6 @@ function _mostrarPaginaOP() {
       </div>`;
   }
 
-  // ── Informações do produto ──
   const infoRows = [
     ['Tipo de Corte',         pg.tipo_corte],
     ['Angulo de Montagem',    pg.angulo],
@@ -307,7 +263,7 @@ function _mostrarPaginaOP() {
     <div style="margin-top:18px;padding-top:14px;border-top:1px solid #ccc;">
       <div style="font-weight:700;font-size:13px;margin-bottom:8px;font-family:'Courier New',monospace;">INFORMAÇÃO PRODUTO (REGISTRO MESTRE):</div>
       ${infoRows.map(([label, val])=>`
-        <div style="font-family:'Courier New',monospace;font-size:13px;margin-bottom:3px;${label==='OBS'&&val?'font-weight:700;color:#333;':''} ">
+        <div style="font-family:'Courier New',monospace;font-size:13px;margin-bottom:3px;">
           ${label} : ${val||''}
         </div>`).join('')}
     </div>`;
@@ -316,40 +272,27 @@ function _mostrarPaginaOP() {
     ? '0,0000000'
     : (pg.corte_mm != null ? pg.corte_mm.toLocaleString('pt-BR',{minimumFractionDigits:7}) : '');
 
-  // Renderiza amostragens ANTES do _mostrarConteudo para evitar perder estado
   const amostrasHTML = _renderAmostragens(_paginaAtual, pg);
 
   _mostrarConteudo(`
     <div style="display:flex;gap:0;min-height:400px;">
-
-      <!-- COLUNA ESQUERDA: documento -->
       <div style="flex:0.8;min-width:0;background:#fff;border-right:1px solid #e5e7eb;padding:14px 16px;font-family:'Courier New',monospace;overflow-x:auto;">
-
         <div style="display:flex;justify-content:space-between;margin-bottom:8px;flex-wrap:wrap;gap:6px;">
           <div style="font-size:12px;"><span>ITEM A PRODUZIR: </span><strong>${pg.item_codigo||'—'}</strong></div>
           <div style="font-size:12px;"><span>QUANTIDADE: </span><strong>${pg.item_qty!=null?Number(pg.item_qty).toFixed(2):''}</strong></div>
         </div>
-
         ${pg.descricao?`<div style="font-weight:700;font-size:13px;margin-bottom:10px;">${pg.descricao}</div>`:''}
-
         <div style="font-weight:700;font-size:12px;margin-bottom:10px;">
           TAMANHO DE CORTE (Em Milímetros): ${corteVal}
         </div>
-
         ${listaHTML}
-
         <div style="border-top:1px solid #999;margin:16px 0;"></div>
-
         ${infoHTML}
       </div>
-
-      <!-- COLUNA DIREITA: amostragens -->
       <div style="width:420px;flex-shrink:0;padding:14px 12px;background:#f9fafb;overflow-x:auto;" id="painel-amostras-${_paginaAtual}">
         ${amostrasHTML}
       </div>
     </div>
-
-    <!-- Navegação -->
     <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 14px;background:#fff;border-top:1px solid #e5e7eb;position:sticky;bottom:0;">
       <button onclick="_pgAnterior()" ${_paginaAtual===0?'disabled':''}
         style="padding:9px 20px;background:${_paginaAtual===0?'#e5e7eb':'#1a56db'};color:${_paginaAtual===0?'#9ca3af':'#fff'};border:none;border-radius:7px;font-size:13px;font-weight:700;font-family:Inter,sans-serif;cursor:${_paginaAtual===0?'default':'pointer'};">
@@ -367,8 +310,6 @@ function _mostrarPaginaOP() {
           </button>`
       }
     </div>`);
-
-
 }
 
 function _pgAnterior() { if(_paginaAtual>0){_paginaAtual--;_mostrarPaginaOP();} }
@@ -377,16 +318,12 @@ function _pgProxima()  { if(_paginaAtual<_paginasOP.length-1){_paginaAtual++;_mo
 function _concluirPedido() {
   const p = pedidos[currentPedidoIdx];
   if (!p) return;
-  // Avança para prensagem
   p.etapa = 'prensagem';
-  // Salva amostragens no pedido para relatório futuro
   p.amostragens = JSON.parse(JSON.stringify(_amostrasDB));
   p.amostragens_operador = typeof currentUser !== 'undefined' && currentUser ? currentUser.nome : '';
   p.amostragens_ts = new Date().toISOString();
-  // Salva estado geral
   salvarEstado();
   renderKanban();
-  // Mostra confirmação e volta para pedidos
   _mostrarConteudo(`<div style="padding:48px;text-align:center;font-family:Inter,sans-serif;">
     <div style="font-size:48px;margin-bottom:12px;">✅</div>
     <div style="font-size:18px;font-weight:800;color:#059669;margin-bottom:6px;">Pedido Concluído!</div>
@@ -396,41 +333,45 @@ function _concluirPedido() {
 }
 
 // ══════════════════════════════════════════════════
-//  ETIQUETAS DE SEPARAÇÃO
+//  SEPARAÇÃO
 // ══════════════════════════════════════════════════
-function abrirEtiqSeparacao() {
+function abrirSeparacao() {
   _fecharViewer();
-  const p = pedidos[currentPedidoIdx];
-  if (p.anexos?.separacao) {
-    // Mostra só o viewer + botão trocar flutuante
-    _mostrarConteudo(`<div style="padding:10px 14px 0;display:flex;justify-content:flex-end;gap:8px;">
-      <button onclick="_dlB64('${p.anexos.separacao.filename}',pedidos[currentPedidoIdx].anexos.separacao.data)"
-        style="padding:6px 14px;background:#f3f4f6;color:#374151;border:1.5px solid #e5e7eb;border-radius:7px;font-size:12px;font-weight:700;font-family:Inter,sans-serif;cursor:pointer;">⬇ Baixar</button>
-      <button onclick="document.getElementById('upload-sep').click()"
-        style="padding:6px 14px;background:#f3f4f6;color:#374151;border:1.5px solid #e5e7eb;border-radius:7px;font-size:12px;font-weight:700;font-family:Inter,sans-serif;cursor:pointer;">↻ Trocar PDF</button>
-      <input type="file" id="upload-sep" accept=".pdf" style="display:none" onchange="uploadSeparacao(event)">
-    </div>`);
-    abrirPdfViewer(p.anexos.separacao.filename, p.anexos.separacao.data);
-  } else {
-    _mostrarConteudo(`<div style="padding:24px;max-width:500px;margin:0 auto;">
-      <div style="background:#fff;border-radius:12px;border:1px solid #e5e7eb;padding:32px;text-align:center;">
-        <div style="font-size:40px;margin-bottom:12px;">📎</div>
-        <div style="font-size:15px;font-weight:700;color:#111;font-family:Inter,sans-serif;margin-bottom:6px;">Anexar Etiquetas de Separação</div>
-        <div style="font-size:13px;color:#6b7280;font-family:Inter,sans-serif;margin-bottom:20px;">Faça upload do PDF com as etiquetas de separação.</div>
-        <button onclick="document.getElementById('upload-sep').click()"
-          style="padding:11px 24px;background:#1a56db;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;font-family:Inter,sans-serif;cursor:pointer;">+ Selecionar PDF</button>
-        <input type="file" id="upload-sep" accept=".pdf" style="display:none" onchange="uploadSeparacao(event)">
-      </div>
-    </div>`);
-  }
-}
+  const idx = window._agCurrentIdx ?? window.currentPedidoIdx;
+  const p   = typeof pedidos !== 'undefined' ? pedidos[idx] : null;
+  if (!p) return;
 
-async function uploadSeparacao(event) {
-  const file = event.target.files[0];
-  if (!file) return;
-  const buf = await file.arrayBuffer();
-  pedidos[currentPedidoIdx].anexos.separacao = { filename: file.name, data: _arrayBufferToB64(buf) };
-  abrirEtiqSeparacao();
+  const conteudo = document.getElementById('detalhe-conteudo');
+  if (!conteudo) return;
+  conteudo.innerHTML = '';
+
+  if (p.pdfSepData) {
+    abrirPdfViewer('Separação — #' + p.id + '.pdf', p.pdfSepData);
+    return;
+  }
+
+  // Sem PDF: área para anexar
+  conteudo.innerHTML = `
+    <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;
+                flex:1;gap:16px;padding:48px 24px;color:#9ca3af;font-family:Inter,sans-serif;">
+      <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" opacity=".35">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+        <polyline points="14 2 14 8 20 8"/>
+        <line x1="12" y1="12" x2="12" y2="18"/><line x1="9" y1="15" x2="15" y2="15"/>
+      </svg>
+      <div style="text-align:center;">
+        <div style="font-size:15px;font-weight:700;color:#374151;margin-bottom:6px;">Nenhum PDF de separação anexado</div>
+        <div style="font-size:13px;color:#9ca3af;">Anexe o PDF com as etiquetas de separação deste pedido</div>
+      </div>
+      <button onclick="document.getElementById('upload-pdf-sep').click()"
+        style="padding:10px 24px;background:#1a56db;color:#fff;border:none;border-radius:10px;
+               font-size:14px;font-weight:700;font-family:Inter,sans-serif;cursor:pointer;
+               display:flex;align-items:center;gap:8px;">
+        📎 Anexar PDF de Separação
+      </button>
+      <input type="file" id="upload-pdf-sep" accept=".pdf" style="display:none"
+        onchange="anexarPdfSeparacao(event)">
+    </div>`;
 }
 
 // ══════════════════════════════════════════════════
@@ -443,7 +384,6 @@ function abrirEtiqPedido() {
   if (p.processing) { _mostrarConteudo(_msgAguardando('Etiquetas do Pedido','Processando PDF...')); return; }
   if (!kits?.length) { _mostrarConteudo(_msgAguardando('Etiquetas do Pedido','Nenhuma etiqueta gerada.')); return; }
   _mostrarConteudo('');
-  // Abre o primeiro PDF automaticamente
   abrirPdfViewer(kits[0].filename, kits[0].data);
 }
 
@@ -460,27 +400,38 @@ function abrirEtiqEmbalagem() {
   abrirPdfViewer(emb.filename, emb.data);
 }
 
-// ── Exibe lista de arquivos com botões Visualizar/Baixar ──
-function _mostrarListaArquivos(titulo, itens) {
-  _mostrarConteudo(`<div style="padding:16px;max-width:520px;margin:0 auto;">
-    <div style="font-size:14px;font-weight:700;color:#111;font-family:Inter,sans-serif;margin-bottom:10px;">${titulo}</div>
-    ${itens.map((it,i)=>`
-      <div style="background:#fff;border-radius:10px;border:1px solid #e5e7eb;padding:13px 16px;display:flex;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap;">
-        <div style="flex:1;font-size:13px;font-weight:600;color:#111;font-family:Inter,sans-serif;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${it.label}</div>
-        <div style="display:flex;gap:7px;flex-shrink:0;">
-          <button data-idx="${i}" data-list="${encodeURIComponent(JSON.stringify({filename:it.filename,data:it.data}))}"
-            onclick="(function(btn){var o=JSON.parse(decodeURIComponent(btn.dataset.list));abrirPdfViewer(o.filename,o.data);})(this)"
-            style="padding:6px 14px;background:#1a56db;color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:700;font-family:Inter,sans-serif;cursor:pointer;">👁 Ver</button>
-          <button data-idx="${i}" data-list="${encodeURIComponent(JSON.stringify({filename:it.filename,data:it.data}))}"
-            onclick="(function(btn){var o=JSON.parse(decodeURIComponent(btn.dataset.list));_dlB64(o.filename,o.data);})(this)"
-            style="padding:6px 14px;background:#f3f4f6;color:#374151;border:1.5px solid #e5e7eb;border-radius:6px;font-size:12px;font-weight:700;font-family:Inter,sans-serif;cursor:pointer;">⬇ Baixar</button>
-        </div>
-      </div>`).join('')}
-  </div>`);
+// ══════════════════════════════════════════════════
+//  ORDEM DE PRODUÇÃO
+// ══════════════════════════════════════════════════
+function abrirOP() {
+  _fecharViewer();
+  const idx = window._agCurrentIdx ?? window.currentPedidoIdx;
+  const p   = typeof pedidos !== 'undefined' ? pedidos[idx] : null;
+  if (!p) return;
+
+  const conteudo = document.getElementById('detalhe-conteudo');
+  if (!conteudo) return;
+  conteudo.innerHTML = '';
+
+  // Painel de falta de estoque no topo (injeta se aguardando.js existir)
+  if (typeof _htmlPainel === 'function') {
+    const wrap = document.createElement('div');
+    wrap.id = 'painel-aguardando';
+    wrap.innerHTML = _htmlPainel(p, idx);
+    conteudo.appendChild(wrap);
+  }
+
+  const pdfB64 = _getPdfOp(p);
+  abrirPdfViewer(
+    (p.anexos?.op?.filename || ('OP_' + p.id + '.pdf')),
+    pdfB64
+  );
 }
 
 // ══════════════════════════════════════════════════
-//  VISUALIZADOR DE PDF INLINE / FULLSCREEN MOBILE
+//  VISUALIZADOR DE PDF UNIFICADO
+//  Fundo cinza escuro (#525659), botões Imprimir / Baixar,
+//  contador de páginas — igual ao visualizador de etiquetas
 // ══════════════════════════════════════════════════
 async function abrirPdfViewer(filename, b64) {
   _pdfB64  = b64;
@@ -492,34 +443,52 @@ async function abrirPdfViewer(filename, b64) {
     return;
   }
 
-  // Desktop: todas as páginas empilhadas
   const area = document.getElementById('detalhe-conteudo');
   const existingViewer = document.getElementById('inline-pdf-viewer');
   if (existingViewer) existingViewer.remove();
 
   const viewer = document.createElement('div');
   viewer.id = 'inline-pdf-viewer';
-  viewer.style.cssText = 'background:#525659;padding:12px;';
+  viewer.style.cssText = 'background:#525659;padding:0;display:flex;flex-direction:column;flex:1;min-height:0;';
 
-  // Header com nome e botão baixar/fechar
+  // ── Header idêntico ao das etiquetas (Imprimir + Baixar + ×) ──
   viewer.innerHTML = `
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;padding:0 4px;gap:8px;">
-      <div style="display:flex;align-items:center;gap:8px;min-width:0;flex:1;">
-        <div style="font-size:12px;font-weight:600;color:#fff;font-family:Inter,sans-serif;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${filename}</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:rgba(0,0,0,.35);flex-shrink:0;gap:8px;">
+      <div style="display:flex;align-items:center;gap:10px;min-width:0;flex:1;">
+        <span style="font-size:12px;font-weight:600;color:#fff;font-family:Inter,sans-serif;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${filename}</span>
         <span id="ipdf-page-count" style="background:rgba(255,255,255,.2);color:#fff;font-size:11px;font-weight:700;padding:2px 9px;border-radius:10px;font-family:Inter,sans-serif;white-space:nowrap;flex-shrink:0;">…</span>
       </div>
       <div style="display:flex;gap:6px;flex-shrink:0;">
-        <button id="ipdf-print-btn" style="background:rgba(255,255,255,.15);border:none;color:#fff;padding:5px 12px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif;">🖨️ Imprimir</button>
-        <button onclick="_dlB64('${filename}',_pdfB64)" style="background:rgba(255,255,255,.15);border:none;color:#fff;padding:5px 12px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif;">⬇ Baixar</button>
-        <button onclick="_fecharViewer()" style="background:rgba(255,50,50,.3);border:none;color:#fff;width:28px;height:28px;border-radius:50%;font-size:16px;cursor:pointer;line-height:1;">×</button>
+        <button id="ipdf-print-btn"
+          style="display:flex;align-items:center;gap:5px;background:rgba(255,255,255,.15);border:none;color:#fff;padding:6px 13px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif;transition:background .15s;"
+          onmouseover="this.style.background='rgba(255,255,255,.25)'" onmouseout="this.style.background='rgba(255,255,255,.15)'">
+          🖨️ Imprimir
+        </button>
+        <button onclick="_dlB64('${filename.replace(/'/g,"\\'")}',_pdfB64)"
+          style="display:flex;align-items:center;gap:5px;background:rgba(255,255,255,.15);border:none;color:#fff;padding:6px 13px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif;transition:background .15s;"
+          onmouseover="this.style.background='rgba(255,255,255,.25)'" onmouseout="this.style.background='rgba(255,255,255,.15)'">
+          ⬇ Baixar
+        </button>
+        <button onclick="_fecharViewer()"
+          style="background:rgba(220,50,50,.45);border:none;color:#fff;width:30px;height:30px;border-radius:50%;font-size:17px;cursor:pointer;line-height:1;display:flex;align-items:center;justify-content:center;transition:background .15s;"
+          onmouseover="this.style.background='rgba(220,50,50,.7)'" onmouseout="this.style.background='rgba(220,50,50,.45)'">×</button>
       </div>
     </div>
-    <div id="ipdf-pages" style="display:flex;flex-direction:column;gap:10px;align-items:center;"></div>`;
+    <div id="ipdf-pages" style="flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:10px;align-items:center;padding:14px;"></div>`;
 
   area.appendChild(viewer);
   viewer.scrollIntoView({ behavior:'smooth' });
 
-  // Renderiza todas as páginas
+  if (!b64) {
+    document.getElementById('ipdf-pages').innerHTML = `
+      <div style="padding:48px;text-align:center;color:rgba(255,255,255,.5);font-family:Inter,sans-serif;">
+        <div style="font-size:40px;margin-bottom:8px;">📄</div>
+        <div>Nenhum PDF disponível</div>
+      </div>`;
+    document.getElementById('ipdf-page-count').textContent = '0 páginas';
+    return;
+  }
+
   try {
     const bin = atob(b64);
     const buf = new Uint8Array(bin.length);
@@ -528,62 +497,77 @@ async function abrirPdfViewer(filename, b64) {
     _pdfDoc._b64 = b64;
 
     const pagesEl = document.getElementById('ipdf-pages');
-    const maxW = (viewer.clientWidth || 800) - 32;
-
-    // Contador de páginas
     const countEl = document.getElementById('ipdf-page-count');
-    if (countEl) countEl.textContent = `${_pdfDoc.numPages} ${_pdfDoc.numPages === 1 ? 'página' : 'páginas'}`;
+    const total   = _pdfDoc.numPages;
+    if (countEl) countEl.textContent = `${total} ${total === 1 ? 'página' : 'páginas'}`;
 
-    // Botão imprimir — abre janela de impressão com os canvas renderizados
+    // Botão imprimir
     const printBtn = document.getElementById('ipdf-print-btn');
     if (printBtn) {
-      printBtn.onclick = () => {
-        const canvases = document.querySelectorAll('#ipdf-pages canvas');
-        if (!canvases.length) return;
-        let ifr = document.getElementById('print-iframe');
-        if (!ifr) { ifr = document.createElement('iframe'); ifr.id='print-iframe'; ifr.style.cssText='position:fixed;top:-9999px;left:-9999px;width:1px;height:1px;border:none;'; document.body.appendChild(ifr); }
-        const doc = ifr.contentDocument || ifr.contentWindow.document;
-        doc.open();
-        doc.write('<html><head><style>*{margin:0;padding:0;}body{background:#fff;}img{display:block;width:100%;page-break-after:always;}</style></head><body>');
-        canvases.forEach(c => doc.write(`<img src="${c.toDataURL()}">`));
-        doc.write('</body></html>');
-        doc.close();
-        setTimeout(() => { ifr.contentWindow.focus(); ifr.contentWindow.print(); }, 300);
-      };
+      printBtn.onclick = () => _imprimirTodasPaginas('#ipdf-pages canvas');
     }
 
-    for (let p = 1; p <= _pdfDoc.numPages; p++) {
-      const page   = await _pdfDoc.getPage(p);
-      const vp0    = page.getViewport({ scale: 1 });
-      const scale  = Math.min(maxW / vp0.width, 2.5);
-      const vp     = page.getViewport({ scale });
-      const canvas = document.createElement('canvas');
+    const maxW = (viewer.clientWidth || 800) - 28;
+    const frag = document.createDocumentFragment();
+
+    for (let pg = 1; pg <= total; pg++) {
+      const page    = await _pdfDoc.getPage(pg);
+      const vp0     = page.getViewport({ scale: 1 });
+      const scale   = Math.min(maxW / vp0.width, 2.0);
+      const vp      = page.getViewport({ scale });
+      const canvas  = document.createElement('canvas');
       canvas.width  = vp.width;
       canvas.height = vp.height;
-      canvas.style.cssText = 'max-width:100%;border-radius:4px;box-shadow:0 4px 16px rgba(0,0,0,.4);display:block;';
-      // Número da página
+      canvas.style.cssText = 'max-width:100%;display:block;border-radius:4px;box-shadow:0 4px 16px rgba(0,0,0,.5);';
+
+      // Contador por página
       const wrap = document.createElement('div');
       wrap.style.cssText = 'position:relative;width:100%;display:flex;justify-content:center;';
-      const pgLabel = document.createElement('div');
-      pgLabel.style.cssText = 'position:absolute;top:6px;right:6px;background:rgba(0,0,0,.5);color:#fff;font-size:10px;font-weight:700;padding:2px 7px;border-radius:8px;font-family:Inter,sans-serif;';
-      pgLabel.textContent = `${p} / ${_pdfDoc.numPages}`;
+      const lbl = document.createElement('div');
+      lbl.style.cssText = 'position:absolute;top:6px;right:6px;background:rgba(0,0,0,.55);color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:8px;font-family:Inter,sans-serif;';
+      lbl.textContent = `${pg} / ${total}`;
       wrap.appendChild(canvas);
-      wrap.appendChild(pgLabel);
-      pagesEl.appendChild(wrap);
+      wrap.appendChild(lbl);
+      frag.appendChild(wrap);
+
       await page.render({ canvasContext: canvas.getContext('2d'), viewport: vp }).promise;
     }
-  } catch(e) { console.error('PDF render:', e); }
+    pagesEl.appendChild(frag);
+
+  } catch(e) {
+    console.error('PDF render:', e);
+    const pagesEl = document.getElementById('ipdf-pages');
+    if (pagesEl) pagesEl.innerHTML = `<div style="padding:24px;color:#f87171;font-family:Inter,sans-serif;font-size:13px;">Erro ao renderizar PDF.</div>`;
+  }
 }
 
+// ── Impressão: todas as páginas renderizadas ──
+function _imprimirTodasPaginas(selector) {
+  const canvases = document.querySelectorAll(selector);
+  if (!canvases.length) return;
+  let ifr = document.getElementById('print-iframe');
+  if (!ifr) {
+    ifr = document.createElement('iframe');
+    ifr.id = 'print-iframe';
+    ifr.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:1px;height:1px;border:none;';
+    document.body.appendChild(ifr);
+  }
+  const doc = ifr.contentDocument || ifr.contentWindow.document;
+  doc.open();
+  doc.write('<html><head><style>*{margin:0;padding:0;}body{background:#fff;}img{display:block;width:100%;page-break-after:always;}</style></head><body>');
+  canvases.forEach(c => doc.write(`<img src="${c.toDataURL()}">`));
+  doc.write('</body></html>');
+  doc.close();
+  setTimeout(() => { ifr.contentWindow.focus(); ifr.contentWindow.print(); }, 300);
+}
+
+// ── Mobile: tela cheia ──
 async function _abrirPdfMobile(filename, b64) {
   let overlay = document.getElementById('pdf-mobile-overlay');
   if (!overlay) {
     overlay = document.createElement('div');
     overlay.id = 'pdf-mobile-overlay';
-    overlay.style.cssText = `
-      position:fixed;inset:0;z-index:9999;
-      background:#525659;display:flex;flex-direction:column;
-    `;
+    overlay.style.cssText = 'position:fixed;inset:0;z-index:9999;background:#525659;display:flex;flex-direction:column;';
     document.body.appendChild(overlay);
   }
   overlay.innerHTML = `
@@ -591,9 +575,9 @@ async function _abrirPdfMobile(filename, b64) {
       <button onclick="document.getElementById('pdf-mobile-overlay').remove()"
         style="background:none;border:none;color:#fff;font-size:22px;cursor:pointer;padding:0 6px;">←</button>
       <div style="flex:1;font-size:13px;font-weight:600;color:#fff;font-family:Inter,sans-serif;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${filename}</div>
-      <button id="ipdf-print-btn"
+      <button id="ipdf-print-btn-mob"
         style="background:rgba(255,255,255,.15);border:none;color:#fff;padding:6px 10px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif;">🖨️</button>
-      <button onclick="_dlB64('${filename}',_pdfB64)"
+      <button onclick="_dlB64('${filename.replace(/'/g,"\\'")}',_pdfB64)"
         style="background:rgba(255,255,255,.15);border:none;color:#fff;padding:6px 12px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif;">⬇</button>
     </div>
     <div style="display:flex;align-items:center;justify-content:center;gap:16px;padding:8px;background:rgba(0,0,0,.3);flex-shrink:0;">
@@ -604,23 +588,17 @@ async function _abrirPdfMobile(filename, b64) {
     <div style="flex:1;overflow-y:auto;display:flex;align-items:flex-start;justify-content:center;padding:10px;">
       <canvas id="ipdf-canvas" style="max-width:100%;display:block;border-radius:4px;"></canvas>
     </div>`;
+
   _pdfB64  = b64;
   _pdfPage = 1;
   await _renderPdfPage();
 
-  // Botão imprimir mobile
-  const printBtnM = document.getElementById('ipdf-print-btn');
+  const printBtnM = document.getElementById('ipdf-print-btn-mob');
   if (printBtnM) {
     printBtnM.onclick = () => {
       const canvas = document.getElementById('ipdf-canvas');
       if (!canvas) return;
-      let ifrM = document.getElementById('print-iframe');
-      if (!ifrM) { ifrM = document.createElement('iframe'); ifrM.id='print-iframe'; ifrM.style.cssText='position:fixed;top:-9999px;left:-9999px;width:1px;height:1px;border:none;'; document.body.appendChild(ifrM); }
-      const docM = ifrM.contentDocument || ifrM.contentWindow.document;
-      docM.open();
-      docM.write(`<html><head><style>*{margin:0;}img{width:100%;}</style></head><body><img src="${canvas.toDataURL()}"></body></html>`);
-      docM.close();
-      setTimeout(()=>{ ifrM.contentWindow.focus(); ifrM.contentWindow.print(); }, 300);
+      _imprimirTodasPaginas('#ipdf-canvas');
     };
   }
 }
@@ -644,7 +622,6 @@ async function _renderPdfPage() {
     canvas.width  = vp.width;
     canvas.height = vp.height;
     await page.render({ canvasContext: canvas.getContext('2d'), viewport: vp }).promise;
-
     const info = document.getElementById('ipdf-info');
     if (info) info.textContent = `${_pdfPage} / ${_pdfDoc.numPages}`;
   } catch(e) { console.error('PDF render:', e); }
@@ -661,6 +638,7 @@ function _fecharViewer() {
 }
 
 function _dlB64(filename, b64) {
+  if (!b64) return;
   const bin  = atob(b64);
   const buf  = new Uint8Array(bin.length);
   for (let i = 0; i < bin.length; i++) buf[i] = bin.charCodeAt(i);
@@ -686,6 +664,23 @@ function _mostrarConteudo(html) {
   if (el) el.innerHTML = html;
 }
 
+function _getPdfOp(p) {
+  if (!p) return null;
+  if (p.anexos?.op?.data) return p.anexos.op.data;
+  const campos = ['pdfB64','pdf_b64','pdf','base64','pdfBase64','arquivo','file'];
+  for (const c of campos) {
+    if (p[c] && typeof p[c] === 'string' && p[c].length > 200) return p[c];
+  }
+  for (const [key, val] of Object.entries(p)) {
+    if (typeof val === 'string' && val.length > 1000 &&
+        !['id','cliente','entrega','status','etapa'].includes(key) &&
+        /^[A-Za-z0-9+/=]{100,}$/.test(val.slice(0, 100))) {
+      return val;
+    }
+  }
+  return null;
+}
+
 // ── Voltar ──
 function voltarPedidos() {
   _fecharViewer();
@@ -706,3 +701,20 @@ function avancarOuCapturar()         {}
 function detalhePagePrev()           {}
 function detalhePageNext()           {}
 function _renderBotoesGerados(p)     {}
+
+function anexarPdfSeparacao(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const idx = window._agCurrentIdx ?? window.currentPedidoIdx;
+  const p   = typeof pedidos !== 'undefined' ? pedidos[idx] : null;
+  if (!p) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    p.pdfSepData = e.target.result.split(',')[1];
+    if (typeof salvarEstado === 'function') salvarEstado();
+    if (typeof _mostrarToast === 'function') _mostrarToast('📎 PDF de separação anexado!', '#1a56db');
+    abrirSeparacao();
+  };
+  reader.readAsDataURL(file);
+  event.target.value = '';
+}
