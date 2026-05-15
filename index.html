@@ -9,7 +9,8 @@
 <link rel="stylesheet" href="css/styles.css">
 <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
 <style>
-#screen-dashboard.active { display:flex !important; }
+#screen-dashboard.active   { display:flex !important; }
+    #screen-calendario.active { display:flex !important; flex-direction:column; }
 #screen-detalhe.active   { display:flex !important; }
 #screen-angulos.active   { display:flex !important; }
 #screen-prensagem.active { display:flex !important; }
@@ -77,11 +78,24 @@
 }
 </style>
 <style>
-/* Calendário — 456px (+20% de 380px) */
+/* Ocultar botão fechar/× do visualizador PDF do pedidos.js */
+#detalhe-conteudo > div > button:last-child,
+#detalhe-conteudo [class*="pdf-close"],
+#detalhe-conteudo [class*="pdf-fechar"],
+#detalhe-conteudo [id*="pdf-close"],
+#detalhe-conteudo [class*="close-btn"],
+#detalhe-conteudo [class*="toolbar"],
+#detalhe-conteudo [class*="pdf-toolbar"],
+#detalhe-conteudo [class*="pdf-topbar"],
+#detalhe-conteudo [id*="pdf-toolbar"],
+#detalhe-conteudo .pdf-toolbar,
+#detalhe-conteudo .pdf-topbar { display:none !important; }
+
+/* Calendário — 547px (+20% de 456px, +40% do original 380px) */
 .kanban-col-calendar {
-  min-width: 456px !important;
-  width: 456px !important;
-  max-width: 456px !important;
+  min-width: 547px !important;
+  width: 547px !important;
+  max-width: 547px !important;
   flex-shrink: 0 !important;
 }
 /* Grade semanal — 7 colunas iguais */
@@ -253,10 +267,7 @@
     <div id="date-left" style="font-size:12px;color:var(--text2);white-space:nowrap;"></div>
     <div style="width:1px;height:16px;background:var(--border);flex-shrink:0;"></div>
     <button id="btn-novo-pedido-top" class="btn-novo" style="padding:8px 16px;font-size:13px;" onclick="document.getElementById('upload-pdf-novo').click()">+ Novo Pedido</button>
-    <button id="btn-falta-estoque" onclick="abrirTelaEstoque()"
-      style="display:none;padding:5px 12px;background:#fee2e2;color:#991b1b;border:1.5px solid #fca5a5;border-radius:20px;font-size:12px;font-weight:700;font-family:Inter,sans-serif;cursor:pointer;white-space:nowrap;flex-shrink:0;transition:all .15s;">
-      📦 FALTA DE ESTOQUE
-    </button>
+
     <input type="file" id="upload-pdf-novo" accept=".pdf" style="display:none" onchange="handleNovoPedidoPDF(event)">
   </div>
 
@@ -273,11 +284,42 @@
         <span style="color:var(--text3);font-size:13px;">🔍</span>
         <input type="text" id="search-input" placeholder="Buscar..." oninput="searchPedidos()" style="border:none;background:none;outline:none;font-family:Inter,sans-serif;font-size:13px;color:var(--text);width:100%;">
       </div>
+      <button onclick="abrirTelaCalendario()"
+        style="padding:5px 12px;background:#dbeafe;color:#1e40af;border:1.5px solid #93c5fd;border-radius:20px;font-size:12px;font-weight:700;font-family:Inter,sans-serif;cursor:pointer;white-space:nowrap;flex-shrink:0;transition:all .15s;">
+        📅 CALENDÁRIO
+      </button>
+      <button id="btn-falta-estoque" onclick="abrirTelaEstoque()"
+        style="padding:5px 12px;background:#fee2e2;color:#991b1b;border:1.5px solid #fca5a5;border-radius:20px;font-size:12px;font-weight:700;font-family:Inter,sans-serif;cursor:pointer;white-space:nowrap;flex-shrink:0;transition:all .15s;">
+        📦 FALTA DE ESTOQUE
+      </button>
     </div>
     <div class="kanban-area" id="kanban-area"></div>
   </div>
 
   
+  <!-- CALENDÁRIO -->
+  <div class="screen" id="screen-calendario">
+    <!-- Header -->
+    <div style="display:flex;align-items:center;gap:12px;padding:10px 16px;background:var(--white);border-bottom:1px solid var(--border);flex-shrink:0;">
+      <button onclick="voltarDeCalendario()" style="background:none;border:none;cursor:pointer;color:var(--text2);font-size:20px;padding:2px 8px;border-radius:5px;line-height:1;" title="Voltar">←</button>
+      <div style="flex:1;">
+        <div style="font-size:14px;font-weight:800;color:var(--text);font-family:Inter,sans-serif;">Calendário de Entregas</div>
+        <div style="font-size:11px;color:var(--text2);font-family:Inter,sans-serif;">Todos os pedidos por data de entrega</div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <button id="cal-btn-prev" onclick="calNavegar(-1)"
+          style="padding:5px 10px;border:1px solid var(--border);border-radius:8px;background:var(--white);cursor:pointer;font-size:14px;">‹</button>
+        <div id="cal-titulo" style="font-size:14px;font-weight:700;color:var(--text);font-family:Inter,sans-serif;min-width:140px;text-align:center;">Maio 2026</div>
+        <button id="cal-btn-next" onclick="calNavegar(1)"
+          style="padding:5px 10px;border:1px solid var(--border);border-radius:8px;background:var(--white);cursor:pointer;font-size:14px;">›</button>
+        <button onclick="calNavegar(0)"
+          style="padding:5px 12px;border:1px solid var(--border);border-radius:8px;background:var(--white);cursor:pointer;font-size:12px;font-weight:600;font-family:Inter,sans-serif;">HOJE</button>
+      </div>
+    </div>
+    <!-- Grade do calendário -->
+    <div id="cal-root" style="flex:1;overflow-y:auto;background:var(--bg,#f9fafb);display:flex;flex-direction:column;"></div>
+  </div>
+
   <!-- FALTA DE ESTOQUE -->
   <div class="screen" id="screen-estoque">
     <!-- Header -->
@@ -311,24 +353,24 @@
     </div>
 
     <!-- Botões de ação -->
-    <div class="detalhe-btns">
-      <button onclick="abrirIniciarPedido()"
+    <div class="detalhe-btns" id="detalhe-btns-bar">
+      <button id="btn-iniciar-pedido" onclick="_btnIniciar()"
         style="background:#1a56db;color:#fff;border-color:#1a56db;">
         ▶ Iniciar Pedido
       </button>
-      <button onclick="abrirOP()"
+      <button id="btn-op" onclick="_btnSair('op')"
         style="background:#fff;color:#374151;">
         📄 Ordem de Produção
       </button>
-      <button onclick="abrirSeparacao()"
+      <button id="btn-separacao" onclick="_btnSair('sep')"
         style="background:#fff;color:#374151;">
         🏷️ Separação
       </button>
-      <button id="btn-etiq-pedido" onclick="abrirEtiqPedido()"
+      <button id="btn-etiq-pedido" onclick="_btnSair('etiq')"
         style="background:#fff;color:#374151;">
         📋 Etiquetas do Pedido
       </button>
-      <button id="btn-etiq-embalagem" onclick="abrirEtiqEmbalagem()"
+      <button id="btn-etiq-embalagem" onclick="_btnSair('embalagem')"
         style="background:#fff;color:#374151;">
         📦 Etiqueta de Embalagem
       </button>
@@ -619,7 +661,8 @@
   </div>
 
   <script src="js/dados.js"></script>
-  <script src="js/medida_corte.js"></script>
+<script src="js/calendario.js"></script>
+<script src="js/medida_corte.js"></script>
 
 </div><!-- /main -->
 </div><!-- /app-body -->
@@ -635,8 +678,6 @@
 <script src="js/medidas.js"></script>
 <script src="js/descasque.js"></script>
 <script src="js/viewer3d.js"></script>
-  <script src="js/angulos.js"></script>
-<script src="js/calendario.js"></script>
 <script src="js/perfil.js"></script>
 
 <!-- MODAL PERFIL -->

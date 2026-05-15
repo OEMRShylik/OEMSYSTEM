@@ -63,40 +63,23 @@ const SCREEN_TITLES = {
 // ── Controle de acesso por setor ──
 function _aplicarPermissoes() {
   if (typeof currentUser === 'undefined' || !currentUser) return;
-  const perm   = currentUser.permissoes || {};
   const setor  = currentUser.setor || '';
   const isAdmin = setor === 'Admin';
 
-  // Nav Pedidos: só Admin vê
   const navPedidos = document.querySelector('.nav-item[onclick*="pedidos"]');
   if (navPedidos) navPedidos.style.display = isAdmin ? '' : 'none';
 
-  // Redirecionar se não Admin e estiver em pedidos
   if (!isAdmin && typeof currentScreen !== 'undefined' && currentScreen === 'pedidos') {
     const navPr = document.querySelector('.nav-item[onclick*="prensagem"]');
     if (navPr) navTo('prensagem', navPr);
   }
 
-  // Nav Dashboard: Admin, Gestão ou Comercial
-  const podeVerDash = ['Admin','Gestão','Comercial'].includes(setor);
+  // Dashboard: Admin, Gestão ou Comercial
   const navDash = document.getElementById('nav-dashboard');
-  if (navDash) {
-    navDash.style.display    = podeVerDash ? '' : 'none';
-    navDash.style.visibility = podeVerDash ? 'visible' : 'hidden';
-  }
+  if (navDash) navDash.style.display = ['Admin','Gestão','Comercial'].includes(setor) ? '' : 'none';
 }
-
-// Garantir que _aplicarPermissoes roda quando auth.js define currentUser
-// (auth.js pode chamar init() antes de setar currentUser)
-(function _watchAuth() {
-  let _lastUser = null;
-  setInterval(() => {
-    if (typeof currentUser !== 'undefined' && currentUser !== _lastUser) {
-      _lastUser = currentUser;
-      _aplicarPermissoes();
-    }
-  }, 500);
-})();
+// Reagir ao login
+(function(){ let u=null; setInterval(()=>{ if(typeof currentUser!=='undefined'&&currentUser!==u){u=currentUser;_aplicarPermissoes();} },500); })();
 
 // Sobrescreve navTo para verificar permissões
 function navTo(name, el) {

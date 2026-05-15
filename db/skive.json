@@ -100,16 +100,6 @@
     "int": 25.0
   },
   {
-    "capa": "HCP608",
-    "ext": null,
-    "int": null
-  },
-  {
-    "capa": "HCP610",
-    "ext": null,
-    "int": null
-  },
-  {
     "capa": "HCP612",
     "ext": 42.0,
     "int": 9.0

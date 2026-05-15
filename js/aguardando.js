@@ -11,38 +11,50 @@ window.ESTOQUE_DB = [];  // espelho em memória do estoque.json
 
 // ── Carregar estoque.json ao iniciar ──
 (async function _carregarEstoque() {
+  const LS_KEY = 'oem_estoque_db_v2'; // v2 = chave definitiva
+
+  // 1. localStorage é a fonte primária (funciona offline e persiste)
   try {
-    // 1. Tentar carregar do servidor Flask
-    const r = await fetch('db/estoque.json');
+    const local = localStorage.getItem(LS_KEY);
+    if (local) {
+      const parsed = JSON.parse(local);
+      window.ESTOQUE_DB = Array.isArray(parsed) ? parsed : [];
+    }
+  } catch(_) {}
+
+  // 2. Tentar enriquecer com dados do servidor (se Flask disponível)
+  try {
+    const r = await fetch('db/estoque.json', { cache: 'no-store' });
     if (r.ok) {
       const d = await r.json();
-      window.ESTOQUE_DB = Array.isArray(d.registros) ? d.registros : [];
-      // Salvar cópia no localStorage como backup offline
-      try { localStorage.setItem('oem_estoque_db', JSON.stringify(window.ESTOQUE_DB)); } catch(_) {}
-    } else { throw new Error('não ok'); }
-  } catch(e) {
-    // 2. Fallback: localStorage (funciona offline)
-    try {
-      const local = localStorage.getItem('oem_estoque_db');
-      window.ESTOQUE_DB = local ? JSON.parse(local) : [];
-    } catch(_) { window.ESTOQUE_DB = []; }
-  }
+      const serverRegs = Array.isArray(d.registros) ? d.registros : [];
+      // Mesclar: servidor prevalece se tiver mais dados
+      if (serverRegs.length > (window.ESTOQUE_DB||[]).length) {
+        window.ESTOQUE_DB = serverRegs;
+        // Sincronizar de volta pro localStorage
+        try { localStorage.setItem(LS_KEY, JSON.stringify(window.ESTOQUE_DB)); } catch(_) {}
+      }
+    }
+  } catch(_) { /* servidor indisponível — usa localStorage */ }
 
-  // Aguardar pedidos carregarem (carregarEstado é async), então sincronizar
-  let tentativas = 0;
-  const sincLoop = setInterval(() => {
-    if (typeof pedidos !== 'undefined' && pedidos.length > 0 || tentativas++ > 20) {
-      clearInterval(sincLoop);
-      _sincronizarPendencias();
+  if (!Array.isArray(window.ESTOQUE_DB)) window.ESTOQUE_DB = [];
+
+  // 3. Sincronizar com pedidos quando estiverem carregados
+  let t = 0;
+  const loop = setInterval(() => {
+    const prontos = typeof pedidos !== 'undefined' && pedidos !== null;
+    if (prontos || t++ > 30) {
+      clearInterval(loop);
+      if (prontos && window.ESTOQUE_DB.length > 0) _sincronizarPendencias();
       _atualizarBotaoEstoque();
     }
-  }, 300);
+  }, 200);
 })();
 
 /** Salva ESTOQUE_DB no servidor via Flask */
 async function _salvarEstoque() {
   // Sempre salvar no localStorage primeiro (funciona offline)
-  try { localStorage.setItem('oem_estoque_db', JSON.stringify(window.ESTOQUE_DB)); } catch(_) {}
+  try { localStorage.setItem('oem_estoque_db_v2', JSON.stringify(window.ESTOQUE_DB)); } catch(_) {}
   // Depois tentar salvar no servidor Flask
   try {
     await fetch('/salvar_estoque', {
@@ -123,12 +135,15 @@ window.addEventListener('load', function() {
   if (typeof window.renderCard === 'function' && !window._agPatchedCard) {
     const _orig = window.renderCard;
     window.renderCard = function(p, etapaIdx) {
-      let html = _orig(p, etapaIdx);
-      if (!_isAguardando(p)) return html;
-      html = html.replace(/class="pedido-card([^"]*)"/, (_, r) =>
-        `class="pedido-card${r} card-aguardando"`);
-      html = html.replace(/<div class="status-badge[^"]*">[^<]*<\/div>/,
-        `<div class="status-badge status-aguardando">⏳ AGUARDANDO</div>`);
+      let html;
+      try { html = _orig(p, etapaIdx); } catch(e) { return ''; }
+      if (!html || !_isAguardando(p)) return html || '';
+      try {
+        html = html.replace(/class="pedido-card([^"]*)"/, (_, r) =>
+          `class="pedido-card${r} card-aguardando"`);
+        html = html.replace(/<div class="status-badge[^"]*">[^<]*<\/div>/,
+          `<div class="status-badge status-aguardando">⏳ AGUARDANDO</div>`);
+      } catch(e) {}
       return html;
     };
     window._agPatchedCard = true;
@@ -162,14 +177,23 @@ window.addEventListener('load', function() {
       window._agCurrentIdx = idx;
       const p = pedidos[idx];
       if (!p) return;
+
       // Badge de status
       const b = document.getElementById('detalhe-status-badge');
       if (b && _isAguardando(p)) {
         b.textContent = '⏳ Aguardando';
         b.style.cssText += ';background:#fef9c3;color:#854d0e;border:1px solid #fde047;';
       }
-      // Injeta painel de falta de estoque no topo do detalhe-conteudo
-      setTimeout(() => _injetarPainelNoDetalhe(idx), 0);
+
+      // Injeta painel após pedidos.js terminar de renderizar (timeout 0 = fim da fila)
+      setTimeout(() => {
+        // Remover qualquer botão fechar que o pedidos.js possa ter inserido
+        document.querySelectorAll(
+          '[data-pdf-close],[id*="fechar-pdf"],[id*="btn-fechar"],[data-action="close-pdf"]'
+        ).forEach(el => el.remove());
+
+        _injetarPainelNoDetalhe(idx);
+      }, 0);
     };
     window._agPatchedAbrirPedido = true;
   }
@@ -188,12 +212,16 @@ function abrirSeparacao() {
   if (!conteudo) return;
   conteudo.innerHTML = '';
 
-  // Se já tem PDF de separação: só exibe o visualizador
+  // Remover qualquer botão fechar que o pedidos.js possa ter criado
+  document.querySelectorAll('[data-pdf-close],[id*="fechar-pdf"],[id*="btn-fechar"],[data-action="close-pdf"]')
+    .forEach(el => el.remove());
+
+  // Se já tem PDF de separação: exibe visualizador sem botão fechar
   if (p.pdfSepData) {
     const pdfWrap = document.createElement('div');
-    pdfWrap.style.cssText = 'flex:1;display:flex;flex-direction:column;';
+    pdfWrap.style.cssText = 'flex:1;display:flex;flex-direction:column;min-height:200px;overflow-y:auto;';
     conteudo.appendChild(pdfWrap);
-    _renderPdfSep(p.pdfSepData, pdfWrap);
+    _exibirPdfNoConteudo(p.pdfSepData, pdfWrap);
     return;
   }
 
@@ -542,6 +570,14 @@ function renderEstoque(filtro) {
   const root = document.getElementById('estoque-root');
   if (!root) return;
 
+  // Garantir ESTOQUE_DB do localStorage antes de renderizar
+  if (!Array.isArray(window.ESTOQUE_DB) || window.ESTOQUE_DB.length === 0) {
+    try {
+      const local = localStorage.getItem('oem_estoque_db_v2');
+      if (local) window.ESTOQUE_DB = JSON.parse(local);
+    } catch(_) {}
+  }
+
   filtro = filtro ?? (document.getElementById('estoque-search')?.value || '');
   const q = filtro.toLowerCase();
 
@@ -794,6 +830,14 @@ function irParaPedido(numPedido) {
     #ag-ac-drop::-webkit-scrollbar-thumb { background: #e5e7eb; border-radius: 4px; }
     .ag-ac-item:hover { background: #f8fafc; }
     #modal-aguardando > div { max-height: 92vh; overflow-y: auto; }
+
+    /* Ocultar barra/toolbar do PDF gerada pelo pedidos.js */
+    #detalhe-conteudo [id*="pdf-toolbar"],
+    #detalhe-conteudo [class*="pdf-toolbar"],
+    #detalhe-conteudo [id*="pdf-header"],
+    #detalhe-conteudo [class*="pdf-header"],
+    #detalhe-conteudo [class*="viewer-bar"],
+    #detalhe-conteudo [class*="pdf-bar"] { display:none !important; }
   `;
   document.head.appendChild(s);
 })();
@@ -805,8 +849,7 @@ function irParaPedido(numPedido) {
 function _atualizarBotaoEstoque() {
   const btn = document.getElementById('btn-falta-estoque');
   if (!btn) return;
-  // Sempre visível na topbar (exceto em telas que ocultam a topbar)
-  btn.style.display = '';
+  // Visibilidade gerenciada pela kanban-search-bar
   const n = (window.ESTOQUE_DB||[]).filter(r => r.status !== 'Empenhado').length;
   if (n > 0) btn.classList.add('tem-falta');
   else       btn.classList.remove('tem-falta');
@@ -1059,6 +1102,17 @@ function _injetarPainelNoDetalhe(idx) {
   const conteudo = document.getElementById('detalhe-conteudo');
   if (!p || !conteudo) return;
 
+  // Garantir ESTOQUE_DB carregado (fallback localStorage)
+  if (!Array.isArray(window.ESTOQUE_DB) || window.ESTOQUE_DB.length === 0) {
+    try {
+      const local = localStorage.getItem('oem_estoque_db_v2');
+      if (local) {
+        window.ESTOQUE_DB = JSON.parse(local);
+        _sincronizarPendencias();
+      }
+    } catch(_) {}
+  }
+
   // Remover painel anterior se existir (evita duplicata)
   const antigo = document.getElementById('painel-aguardando');
   if (antigo) antigo.remove();
@@ -1265,22 +1319,474 @@ function abrirOP() {
   wrap.innerHTML = _htmlPainel(p, idx);
   conteudo.appendChild(wrap);
 
-  // Visualizador do PDF da OP (pdfData = PDF original do pedido)
+  // Visualizador do PDF da OP — busca em qualquer campo conhecido
+  const pdfB64  = _getPdfOp(p);
   const pdfWrap = document.createElement('div');
-  pdfWrap.style.cssText = 'flex:1;display:flex;flex-direction:column;';
+  pdfWrap.style.cssText = 'flex:1;display:flex;flex-direction:column;min-height:200px;';
   conteudo.appendChild(pdfWrap);
+  _exibirPdfNoConteudo(pdfB64, pdfWrap);
+}
 
-  if (p.pdfData) {
-    _renderPdfSep(p.pdfData, pdfWrap);
+// ══════════════════════════════════════════════════
+//  CONTROLE DE ESTADO DO PEDIDO INICIADO
+//  • Ao iniciar: oculta botões de nav secundários
+//  • Se pedido em andamento e clica em outro botão: pede confirmação
+//  • Botão "Iniciar" vira "Retomar" se já iniciou
+//  • Salva item atual automaticamente
+// ══════════════════════════════════════════════════
+
+window._pedidoEmAndamento = false; // true quando iniciar pedido está ativo
+window._proximaAcao       = null;  // ação pendente após confirmação de saída
+
+/** Chamado ao clicar em Iniciar / Retomar Pedido */
+function _btnIniciar() {
+  const idx = window._agCurrentIdx ?? window.currentPedidoIdx;
+  const p   = typeof pedidos !== 'undefined' ? pedidos[idx] : null;
+  if (!p) return;
+
+  // Ao iniciar: mover de Separação → Inspeção automaticamente
+  if (p.etapa === 'separacao' || p.etapa === 'corte') {
+    const novaEtapa = p.etapa === 'separacao' ? 'inspecao' : p.etapa;
+    p.etapa = novaEtapa;
+    if (typeof salvarEstado === 'function') salvarEstado();
+    if (typeof renderKanban  === 'function') renderKanban();
+  }
+
+  // Atualizar UI para modo "em andamento"
+  _setModoAndamento(true, idx);
+
+  // Chamar abrirIniciarPedido do pedidos.js
+  if (typeof abrirIniciarPedido === 'function') {
+    abrirIniciarPedido();
   } else {
-    pdfWrap.innerHTML = `
+    if (typeof _mostrarToast === 'function') _mostrarToast('Em desenvolvimento', '#6b7280');
+  }
+}
+
+/** Chamado ao clicar em OP / Separação / Etiquetas enquanto pedido pode estar em andamento */
+function _btnSair(acao) {
+  if (window._pedidoEmAndamento) {
+    // Mostrar aviso antes de sair
+    window._proximaAcao = acao;
+    _mostrarAvisoSaida();
+    return;
+  }
+  _executarAcao(acao);
+}
+
+/** Executa a ação de navegação para outro módulo */
+function _executarAcao(acao) {
+  switch(acao) {
+    case 'op':        abrirOP(); break;
+    case 'sep':       abrirSeparacao(); break;
+    case 'etiq':
+      if (typeof abrirEtiqPedido === 'function') abrirEtiqPedido();
+      else if (typeof _mostrarToast === 'function') _mostrarToast('Em desenvolvimento', '#6b7280');
+      break;
+    case 'embalagem':
+      if (typeof abrirEtiqEmbalagem === 'function') abrirEtiqEmbalagem();
+      else if (typeof _mostrarToast === 'function') _mostrarToast('Em desenvolvimento', '#6b7280');
+      break;
+  }
+}
+
+/** Modal de aviso "Deseja realmente sair?" */
+function _mostrarAvisoSaida() {
+  let modal = document.getElementById('modal-aviso-saida');
+  if (modal) modal.remove();
+
+  modal = document.createElement('div');
+  modal.id = 'modal-aviso-saida';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(3px);';
+
+  modal.innerHTML = `
+    <div style="background:#fff;border-radius:16px;width:340px;max-width:92vw;overflow:hidden;
+                box-shadow:0 24px 60px rgba(0,0,0,.25);animation:upcIn .18s ease;font-family:Inter,sans-serif;">
+      <div style="background:linear-gradient(135deg,#f59e0b,#b45309);padding:20px 18px 16px;">
+        <div style="font-size:18px;font-weight:800;color:#fff;">⚠️ Pedido em andamento</div>
+        <div style="font-size:13px;color:rgba(255,255,255,.85);margin-top:4px;">
+          Você está com um pedido iniciado. Deseja realmente sair?
+        </div>
+      </div>
+      <div style="padding:16px;display:flex;flex-direction:column;gap:10px;">
+        <div style="font-size:13px;color:#374151;padding:10px 12px;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;">
+          💾 O progresso do item atual será salvo automaticamente.
+        </div>
+        <div style="display:flex;gap:10px;">
+          <button onclick="_confirmarSaida(true)"
+            style="flex:1;padding:11px;border:none;border-radius:10px;cursor:pointer;
+                   background:#ef4444;color:#fff;font-size:14px;font-weight:700;">
+            ✅ Sim, sair
+          </button>
+          <button onclick="_confirmarSaida(false)"
+            style="flex:1;padding:11px;border:1.5px solid #e5e7eb;border-radius:10px;cursor:pointer;
+                   background:#fff;color:#374151;font-size:14px;font-weight:700;">
+            ❌ Não, continuar
+          </button>
+        </div>
+      </div>
+    </div>`;
+
+  document.body.appendChild(modal);
+}
+
+function _confirmarSaida(sair) {
+  const modal = document.getElementById('modal-aviso-saida');
+  if (modal) modal.remove();
+
+  if (!sair) return; // Continua no pedido
+
+  // Salvar item atual antes de sair
+  _salvarItemAtual();
+
+  // Voltar ao modo normal (botões visíveis)
+  _setModoAndamento(false, window._agCurrentIdx ?? window.currentPedidoIdx);
+
+  // Executar ação pendente
+  if (window._proximaAcao) {
+    _executarAcao(window._proximaAcao);
+    window._proximaAcao = null;
+  }
+}
+
+/** Salvar item atual em andamento */
+function _salvarItemAtual() {
+  const idx = window._agCurrentIdx ?? window.currentPedidoIdx;
+  const p   = typeof pedidos !== 'undefined' ? pedidos[idx] : null;
+  if (!p) return;
+
+  // Tentar chamar salvarItemAtual do pedidos.js se existir
+  if (typeof salvarItemAtualPedido === 'function') {
+    salvarItemAtualPedido();
+  }
+
+  // Sempre salvar estado geral
+  if (typeof salvarEstado === 'function') salvarEstado();
+}
+
+/** Alterna UI entre modo andamento e modo normal */
+function _setModoAndamento(emAndamento, idx) {
+  window._pedidoEmAndamento = emAndamento;
+  const p = typeof pedidos !== 'undefined' ? pedidos[idx] : null;
+
+  const btnIniciar = document.getElementById('btn-iniciar-pedido');
+  const btnOP      = document.getElementById('btn-op');
+  const btnSep     = document.getElementById('btn-separacao');
+  const btnEtiq    = document.getElementById('btn-etiq-pedido');
+  const btnEmb     = document.getElementById('btn-etiq-embalagem');
+
+  if (emAndamento) {
+    // Ocultar botões secundários
+    [btnOP, btnSep, btnEtiq, btnEmb].forEach(b => { if (b) b.style.display = 'none'; });
+    // Alterar texto do Iniciar para Retomar se já iniciou antes
+    if (btnIniciar) {
+      btnIniciar.textContent = '⏸ Retomar Pedido';
+      btnIniciar.style.background = '#059669'; // verde
+    }
+    // Salvar flag no pedido
+    if (p) { p._iniciado = true; if (typeof salvarEstado === 'function') salvarEstado(); }
+  } else {
+    // Mostrar botões secundários
+    [btnOP, btnSep, btnEtiq, btnEmb].forEach(b => { if (b) b.style.display = ''; });
+    // Restaurar texto do botão baseado em se foi iniciado antes
+    if (btnIniciar) {
+      const foiIniciado = p && p._iniciado;
+      btnIniciar.innerHTML = foiIniciado ? '▶ Retomar Pedido' : '▶ Iniciar Pedido';
+      btnIniciar.style.background = '#1a56db';
+    }
+  }
+}
+
+/** Ao abrir pedido: restaurar estado correto dos botões */
+(function _patchAbrirPedidoBotoes() {
+  // Interceptar após o patch existente de abrirPedido
+  const _checkBotoes = setInterval(() => {
+    if (!window._agPatchedAbrirPedido) return;
+    clearInterval(_checkBotoes);
+
+    const _apOrig = window.abrirPedido;
+    window.abrirPedido = function(idx) {
+      _apOrig(idx);
+      // Restaurar estado dos botões baseado em p._iniciado
+      const p = typeof pedidos !== 'undefined' ? pedidos[idx] : null;
+      window._pedidoEmAndamento = false; // resetar ao abrir novo pedido
+      window._proximaAcao = null;
+      setTimeout(() => _setModoAndamento(false, idx), 50);
+    };
+  }, 200);
+})();
+
+// ══════════════════════════════════════════════════
+//  FIX: abrirOP usa campo correto do PDF
+//  O campo pode ser pdfData, arquivos, pdf, etc.
+//  _getPdfDosPedido(): retorna o base64 do PDF da OP
+// ══════════════════════════════════════════════════
+
+function _getPdfOp(p) {
+  if (!p) return null;
+
+  // Campos nomeados conhecidos
+  const camposDirectos = ['pdfData','pdf_b64','pdf','base64','pdfBase64','arquivo','file'];
+  for (const c of camposDirectos) {
+    if (p[c] && typeof p[c] === 'string' && p[c].length > 200) return p[c];
+  }
+
+  // arquivos[] em várias formas
+  for (const c of ['arquivos','files','pdfs','anexos']) {
+    if (Array.isArray(p[c]) && p[c].length > 0) {
+      const arq = p[c][0];
+      if (typeof arq === 'string' && arq.length > 200) return arq;
+      if (arq && typeof arq === 'object') {
+        for (const k of ['data','b64','base64','content','pdf','src']) {
+          if (arq[k] && typeof arq[k] === 'string' && arq[k].length > 200) return arq[k];
+        }
+      }
+    }
+  }
+
+  // Varredura automática: qualquer campo com string base64 longa (>1000 chars)
+  // Isso garante que encontra o campo independente do nome
+  for (const [key, val] of Object.entries(p)) {
+    if (
+      typeof val === 'string' &&
+      val.length > 1000 &&
+      !['id','cliente','entrega','status','etapa','pendencias'].includes(key) &&
+      // Verificar se parece base64 (só chars válidos)
+      /^[A-Za-z0-9+/=]{100,}$/.test(val.slice(0, 100))
+    ) {
+      console.log('[OP] PDF encontrado no campo:', key, '— tamanho:', val.length);
+      return val;
+    }
+  }
+
+  console.warn('[OP] Nenhum PDF encontrado no pedido. Campos disponíveis:', Object.keys(p).filter(k => typeof p[k] === 'string' && p[k].length > 10));
+  return null;
+}
+
+// ══════════════════════════════════════════════════
+//  VISUALIZADOR PDF UNIFICADO (sem botão fechar)
+//  Mesmo padrão para OP, Separação e Etiquetas
+// ══════════════════════════════════════════════════
+
+async function _exibirPdfNoConteudo(pdfB64, container) {
+  if (!pdfB64) {
+    container.innerHTML = `
       <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;
-                  padding:40px;gap:10px;color:#9ca3af;font-family:Inter,sans-serif;">
-        <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity=".4">
+                  flex:1;gap:12px;padding:48px;color:#9ca3af;font-family:Inter,sans-serif;">
+        <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" opacity=".4">
           <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
           <polyline points="14 2 14 8 20 8"/>
         </svg>
-        <div style="font-size:13px;">Nenhuma OP anexada a este pedido</div>
+        <div style="font-size:14px;font-weight:600;color:#374151;">Nenhum PDF disponível</div>
       </div>`;
+    return;
+  }
+  if (typeof pdfjsLib === 'undefined') {
+    container.innerHTML = '<div style="padding:16px;color:#dc2626;font-family:Inter,sans-serif;">pdf.js não carregado.</div>';
+    return;
+  }
+  container.innerHTML = '<div style="padding:16px;text-align:center;color:#9ca3af;font-family:Inter,sans-serif;font-size:13px;">Carregando PDF…</div>';
+  try {
+    const pdf = await pdfjsLib.getDocument({ data: _b64ToBytes(pdfB64) }).promise;
+    container.innerHTML = '';
+    // Calcular escala baseada na largura real do container
+    const contW = container.offsetWidth || 800;
+    const frag = document.createDocumentFragment();
+    for (let i = 1; i <= pdf.numPages; i++) {
+      const page    = await pdf.getPage(i);
+      const vpBase  = page.getViewport({ scale: 1 });
+      const scale   = Math.min(contW / vpBase.width, 1.8); // máx 1.8, se ajusta ao container
+      const vp      = page.getViewport({ scale });
+      const canvas  = document.createElement('canvas');
+      canvas.width  = vp.width;
+      canvas.height = vp.height;
+      canvas.style.cssText = 'width:100%;display:block;margin-bottom:2px;border-radius:0;';
+      frag.appendChild(canvas);
+      await page.render({ canvasContext: canvas.getContext('2d'), viewport: vp }).promise;
+    }
+    container.appendChild(frag);
+  } catch(e) {
+    container.innerHTML = `<div style="padding:16px;color:#dc2626;font-family:Inter,sans-serif;font-size:13px;">Erro ao renderizar PDF.</div>`;
+    console.error('[PDF]', e);
   }
 }
+
+
+// ══════════════════════════════════════════════════
+//  PATCH CALENDÁRIO — Cliente primeiro, largura +20%
+// ══════════════════════════════════════════════════
+
+window.addEventListener('load', function() {
+  // ── Patch renderCalendario para mostrar cliente antes do número ──
+  if (typeof window.renderCalendario === 'function' && !window._calPatchado) {
+    const _origCal = window.renderCalendario;
+    window.renderCalendario = function() {
+      _origCal.apply(this, arguments);
+      // Após renderizar, reordenar chips: cliente primeiro
+      _reordenarChipsCalendario();
+    };
+    window._calPatchado = true;
+  }
+
+  // ── MutationObserver para detectar quando o calendário for re-renderizado ──
+  const kanbanArea = document.getElementById('kanban-area');
+  if (kanbanArea) {
+    const obs = new MutationObserver(() => {
+      // Throttle para não rodar demais
+      clearTimeout(window._calObsTimer);
+      window._calObsTimer = setTimeout(_reordenarChipsCalendario, 50);
+    });
+    obs.observe(kanbanArea, { childList: true, subtree: true });
+  }
+});
+
+function _reordenarChipsCalendario() {
+  if (typeof pedidos === 'undefined') return;
+
+  // Mapa id → cliente para lookup rápido
+  const mapaCliente = {};
+  pedidos.forEach(p => { mapaCliente[p.id] = p.cliente; });
+
+  document.querySelectorAll('.cal-event-chip').forEach(chip => {
+    // Já foi processado
+    if (chip.dataset.calPatched) return;
+
+    // Extrair texto completo do chip
+    const texto = chip.textContent || '';
+
+    // Procurar padrão de número de pedido (#XXXXXX ou só XXXXXX)
+    const mNum = texto.match(/#?(\d{6})/);
+    if (!mNum) return;
+
+    const numPedido = mNum[1]; // ex: "003328"
+    // Tentar com e sem zeros à esquerda
+    const cliente = mapaCliente[numPedido]
+                 || mapaCliente[numPedido.replace(/^0+/, '')]
+                 || '';
+
+    if (!cliente) return;
+
+    // Reescrever conteúdo: cliente primeiro, número depois (completo)
+    // Preservar onclick e classes
+    const nomeEl = chip.querySelector('.chip-nome');
+    if (nomeEl) {
+      // Se tem .chip-nome (provavelmente o número), trocar para cliente
+      // e garantir que número aparece menor abaixo
+      nomeEl.textContent = cliente;
+      // Adicionar número menor se não existir
+      if (!chip.querySelector('.chip-num')) {
+        const numEl = document.createElement('span');
+        numEl.className = 'chip-num';
+        numEl.textContent = '#' + numPedido;
+        numEl.style.cssText = 'display:block;font-size:9px;font-weight:600;opacity:.7;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
+        chip.appendChild(numEl);
+      }
+    } else {
+      // Chip sem filhos estruturados — reescrever direto
+      const onclick = chip.getAttribute('onclick') || '';
+      chip.innerHTML = '';
+      const clienteSpan = document.createElement('span');
+      clienteSpan.className = 'chip-nome';
+      clienteSpan.textContent = cliente;
+      clienteSpan.style.cssText = 'display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:11px;font-weight:700;';
+      const numSpan = document.createElement('span');
+      numSpan.className = 'chip-num';
+      numSpan.textContent = '#' + numPedido;
+      numSpan.style.cssText = 'display:block;font-size:9px;font-weight:600;opacity:.7;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
+      chip.appendChild(clienteSpan);
+      chip.appendChild(numSpan);
+    }
+
+    chip.dataset.calPatched = '1';
+  });
+}
+
+// ══════════════════════════════════════════════════
+//  PATCH: novos pedidos vão para 'separacao'
+//  Intercepta o push de novos pedidos no array
+// ══════════════════════════════════════════════════
+window.addEventListener('load', function() {
+  // Observar mudanças no array pedidos[] para capturar novos pedidos
+  // A abordagem mais robusta: monkey-patch Array.prototype.push localmente
+  // Só para o array pedidos[]
+  const _patchPedidosArray = () => {
+    if (typeof pedidos === 'undefined' || !Array.isArray(pedidos)) return false;
+    if (pedidos._patchado) return true;
+    const _origPush = pedidos.push.bind(pedidos);
+    pedidos.push = function(...args) {
+      args.forEach(p => {
+        // Se novo pedido não tem etapa definida ou está em 'corte' por padrão
+        // E não foi iniciado: colocar em 'separacao'
+        if (p && !p._iniciado && (!p.etapa || p.etapa === 'corte')) {
+          // Só muda para separacao se for um pedido recém criado (sem pdfSepData, sem pendencias)
+          // Os pedidos existentes com etapa:'corte' são mantidos como estão
+        }
+        // Novos pedidos (sem etapa definida) → separacao
+        if (p && !p.etapa) p.etapa = 'separacao';
+      });
+      return _origPush(...args);
+    };
+    pedidos._patchado = true;
+    return true;
+  };
+  // Tentar imediatamente e periodicamente
+  if (!_patchPedidosArray()) {
+    const t = setInterval(() => { if (_patchPedidosArray()) clearInterval(t); }, 300);
+  }
+});
+
+// ══════════════════════════════════════════════════
+//  FIX: _updateTopbar — restaurar display:flex na search bar ao voltar
+// ══════════════════════════════════════════════════
+window.addEventListener('load', function() {
+  if (typeof window._updateTopbar === 'function' && !window._topbarPatched) {
+    var _origTopbar = window._updateTopbar;
+    window._updateTopbar = function(screen) {
+      _origTopbar(screen);
+      // Garantir que search bar volta como flex (não string vazia)
+      var searchEl = document.getElementById('kanban-search-bar');
+      if (searchEl && screen === 'pedidos') {
+        searchEl.style.display = 'flex';
+      }
+    };
+    window._topbarPatched = true;
+  }
+});
+
+// ══════════════════════════════════════════════════
+//  FIX: Adicionar etapas SEPARAÇÃO e INSPEÇÃO
+//  Sobrescreve o ETAPAS do app.js original
+// ══════════════════════════════════════════════════
+window.addEventListener('load', function() {
+  // Sobrescrever ETAPAS com as novas colunas
+  if (typeof ETAPAS !== 'undefined') {
+    // Verificar se já tem separacao (para não duplicar)
+    var temSep = ETAPAS.some(function(e) { return e.key === 'separacao'; });
+    if (!temSep) {
+      ETAPAS.unshift(
+        {key:'inspecao',  label:'INSPEÇÃO'},
+        {key:'separacao', label:'SEPARAÇÃO'}
+      );
+    }
+  }
+
+  // Migrar pedidos sem etapa → separacao, e re-renderizar kanban
+  var migrar = function() {
+    if (typeof pedidos === 'undefined') return false;
+    var migrados = 0;
+    pedidos.forEach(function(p) {
+      if (!p.etapa) { p.etapa = 'separacao'; migrados++; }
+    });
+    if (migrados > 0 && typeof salvarEstado === 'function') salvarEstado();
+    return true;
+  };
+
+  // Tentar imediatamente e após carregarEstado
+  if (!migrar()) {
+    var t = setInterval(function() {
+      if (migrar()) { clearInterval(t); if (typeof renderKanban === 'function') renderKanban(); }
+    }, 300);
+  } else {
+    if (typeof renderKanban === 'function') setTimeout(renderKanban, 50);
+  }
+});

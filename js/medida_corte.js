@@ -3,7 +3,7 @@
 //  Fórmula: Comprimento Final - Terminal A - Terminal B - 10
 // ══════════════════════════════════════════════════
 
-const TERMINAIS = window.TERMINAIS || [];
+// TERMINAIS vem de dados.js via window.TERMINAIS
 
 // ── Estado ──
 const _mcState = { a: null, b: null, activeIdx: { a: -1, b: -1 } };

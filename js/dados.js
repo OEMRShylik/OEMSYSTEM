@@ -1,13 +1,9 @@
 // ══════════════════════════════════════════════════
-//  dados.js — Gerado por py/export_js.py + dados do sistema
+//  dados.js — Gerado automaticamente por py/export_js.py
+//  NÃO editar manualmente — edite os JSONs em db/ e rode export_js.py
 // ══════════════════════════════════════════════════
 
-// Setores e permissões
-window.SETORES = ['Admin', 'Gestão', 'Comercial', 'Produção', 'Expedição', 'Qualidade'];
-
-// sectorColor já definida em auth.js — não redefine aqui
-
-window.DESCASQUE = [
+const DESCASQUE = [
   {
     "capa": "HCP4R06",
     "ext": 25.0,
@@ -109,16 +105,6 @@ window.DESCASQUE = [
     "int": 25.0
   },
   {
-    "capa": "HCP608",
-    "ext": null,
-    "int": null
-  },
-  {
-    "capa": "HCP610",
-    "ext": null,
-    "int": null
-  },
-  {
     "capa": "HCP612",
     "ext": 42.0,
     "int": 9.0
@@ -165,7 +151,7 @@ window.DESCASQUE = [
   }
 ];
 
-window.TERMINAIS = [
+const TERMINAIS = [
   {
     "id": 1,
     "cod": "HFJ0403",
@@ -3378,7 +3364,7 @@ window.TERMINAIS = [
   }
 ];
 
-window.CRIMP = [
+const CRIMP     = [
   {
     "id": 1,
     "mangueira": "ACMAA",
@@ -4047,8 +4033,8 @@ window.CRIMP = [
     "size": "3/8\" -6",
     "capa": "HCP106",
     "medida": 20.0,
-    "tela": 19.0,
-    "castanha": 19.0,
+    "tela": 20.0,
+    "castanha": 19,
     "correcao": 0.0
   },
   {

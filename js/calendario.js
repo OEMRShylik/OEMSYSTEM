@@ -1,139 +1,213 @@
 // ══════════════════════════════════════════════════
-init();
-window.addEventListener('resize', () => {
-  if (currentScreen === 'angulos') { _angDrawAll(); }
-});
+//  CALENDARIO.JS  ·  OEM RS
+//  Calendário de entregas em tela cheia
+//  Sem conflitos de declaração com outros scripts
+// ══════════════════════════════════════════════════
 
-// ══ CALENDÁRIO / AGENDA ══
-function renderCalendario() {
-  const area = document.getElementById('kanban-area');
-  const old = document.getElementById('kanban-calendar-col');
-  if (old) old.remove();
+// Usar IIFE para encapsular e evitar conflitos de variáveis globais
+(function() {
 
-  const col = document.createElement('div');
-  col.className = 'kanban-col-calendar';
-  col.id = 'kanban-calendar-col';
+// Estado do calendário — no namespace window para acesso externo
+window.CAL = window.CAL || {
+  ano: new Date().getFullYear(),
+  mes: new Date().getMonth(),
+};
 
-  const hoje = new Date();
-  const mesNomes = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho',
-                    'Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+var _MESES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho',
+               'Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+var _DIAS  = ['DOM','SEG','TER','QUA','QUI','SEX','SÁB'];
 
-  // Mapa data → pedidos
-  const dataMap = {};
-  pedidos.filter(p => p.entrega).forEach(p => {
-    if (!dataMap[p.entrega]) dataMap[p.entrega] = [];
-    dataMap[p.entrega].push(p);
+var _COR_ETAPA = {
+  separacao : {bg:'#eff6ff', text:'#1d4ed8', border:'#bfdbfe'},
+  inspecao  : {bg:'#f0fdf4', text:'#166534', border:'#bbf7d0'},
+  corte     : {bg:'#fee2e2', text:'#991b1b', border:'#fca5a5'},
+  prensagem : {bg:'#fef9c3', text:'#854d0e', border:'#fde047'},
+  embalagem : {bg:'#fff7ed', text:'#9a3412', border:'#fdba74'},
+  finalizado: {bg:'#f9fafb', text:'#6b7280', border:'#e5e7eb'},
+  _default  : {bg:'#f3e8ff', text:'#6b21a8', border:'#d8b4fe'},
+};
+
+// ── Helpers ──
+function _dateStr(ano, mes, dia) {
+  return ano + '-' + String(mes + 1).padStart(2,'0') + '-' + String(dia).padStart(2,'0');
+}
+function _celulaVazia() {
+  var c = document.createElement('div');
+  c.style.cssText = 'border-right:1px solid var(--border,#e5e7eb);border-bottom:1px solid var(--border,#e5e7eb);min-height:90px;background:#f8fafc;';
+  return c;
+}
+
+// ── Navegação ──
+window.calNavegar = function(delta) {
+  if (delta === 0) {
+    var h = new Date();
+    window.CAL.ano = h.getFullYear();
+    window.CAL.mes = h.getMonth();
+  } else {
+    window.CAL.mes += delta;
+    if (window.CAL.mes > 11) { window.CAL.mes = 0;  window.CAL.ano++; }
+    if (window.CAL.mes < 0)  { window.CAL.mes = 11; window.CAL.ano--; }
+  }
+  window.renderCalFull();
+};
+
+// ── Render principal ──
+window.renderCalFull = function() {
+  var root = document.getElementById('cal-root');
+  if (!root) return;
+
+  var ano = window.CAL.ano;
+  var mes = window.CAL.mes;
+
+  // Título
+  var titulo = document.getElementById('cal-titulo');
+  if (titulo) titulo.textContent = _MESES[mes] + ' ' + ano;
+
+  var primeiroDia = new Date(ano, mes, 1).getDay();
+  var diasNoMes   = new Date(ano, mes + 1, 0).getDate();
+  var hoje        = new Date();
+  var hojeStr     = _dateStr(hoje.getFullYear(), hoje.getMonth(), hoje.getDate());
+
+  // Mapear pedidos por data de entrega
+  var pedidosPorDia = {};
+  var todosP = (typeof pedidos !== 'undefined') ? pedidos : [];
+  todosP.forEach(function(p, idx) {
+    if (!p.entrega) return;
+    var partes = p.entrega.split('/');
+    if (partes.length !== 3) return;
+    var dataKey = partes[2] + '-' + partes[1].padStart(2,'0') + '-' + partes[0].padStart(2,'0');
+    if (!pedidosPorDia[dataKey]) pedidosPorDia[dataKey] = [];
+    pedidosPorDia[dataKey].push({p: p, idx: idx});
   });
 
-  const primeiroDia = new Date(calYear, calMonth, 1);
-  const ultimoDia  = new Date(calYear, calMonth + 1, 0);
-  const diasNoMes  = ultimoDia.getDate();
-  const inicioSemana = primeiroDia.getDay();
+  root.innerHTML = '';
 
-  col.innerHTML = `
-    <div class="cal-header">
-      <div class="cal-header-btn-group">
-        <button class="cal-nav-btn" onclick="calNavegar(-1)">&#8249;</button>
-        <button class="cal-nav-btn" onclick="calNavegar(1)">&#8250;</button>
-      </div>
-      <span class="cal-header-title">${mesNomes[calMonth]} ${calYear}</span>
-      <button class="cal-today-btn" onclick="calIrHoje()">HOJE</button>
-    </div>
-    <div class="cal-weekdays">
-      <div class="cal-weekday-label">Dom</div>
-      <div class="cal-weekday-label">Seg</div>
-      <div class="cal-weekday-label">Ter</div>
-      <div class="cal-weekday-label">Qua</div>
-      <div class="cal-weekday-label">Qui</div>
-      <div class="cal-weekday-label">Sex</div>
-      <div class="cal-weekday-label">Sáb</div>
-    </div>
-    <div class="cal-body" id="cal-body-grid">
-      ${gerarGrade(calYear, calMonth, inicioSemana, diasNoMes, dataMap, hoje)}
-    </div>
-  `;
+  // Header dias da semana
+  var header = document.createElement('div');
+  header.style.cssText = 'display:grid;grid-template-columns:repeat(7,1fr);border-bottom:2px solid var(--border,#e5e7eb);flex-shrink:0;background:var(--white,#fff);';
+  _DIAS.forEach(function(d, i) {
+    var cell = document.createElement('div');
+    cell.style.cssText = 'padding:8px 4px;text-align:center;font-size:11px;font-weight:700;letter-spacing:.8px;font-family:Inter,sans-serif;color:' + (i===0||i===6 ? '#94a3b8' : '#6b7280') + ';';
+    cell.textContent = d;
+    header.appendChild(cell);
+  });
+  root.appendChild(header);
 
-  area.appendChild(col);
-}
+  // Grade de dias
+  var grade = document.createElement('div');
+  grade.style.cssText = 'display:grid;grid-template-columns:repeat(7,1fr);align-content:start;';
 
-function gerarGrade(year, month, inicioSemana, diasNoMes, dataMap, hoje) {
-  const mesAnteriorDias = new Date(year, month, 0).getDate();
-  const cells = [];
+  // Células vazias antes do primeiro dia
+  for (var z = 0; z < primeiroDia; z++) grade.appendChild(_celulaVazia());
 
-  for (let i = inicioSemana - 1; i >= 0; i--) {
-    cells.push({ day: mesAnteriorDias - i, currentMonth: false, date: null });
+  // Dias do mês
+  for (var dia = 1; dia <= diasNoMes; dia++) {
+    var dataKey    = _dateStr(ano, mes, dia);
+    var ehHoje     = dataKey === hojeStr;
+    var ehPassado  = dataKey < hojeStr;
+    var diaSemana  = (primeiroDia + dia - 1) % 7;
+    var isWeekend  = diaSemana === 0 || diaSemana === 6;
+    var psDoDia    = pedidosPorDia[dataKey] || [];
+
+    var cell = document.createElement('div');
+    var bgCor = ehHoje ? '#eff6ff' : (ehPassado || isWeekend) ? '#fafafa' : 'var(--white,#fff)';
+    cell.style.cssText = 'border-right:1px solid var(--border,#e5e7eb);border-bottom:1px solid var(--border,#e5e7eb);padding:4px 4px 6px;min-height:90px;display:flex;flex-direction:column;gap:2px;background:' + bgCor + ';' + (ehHoje ? 'outline:2px solid #1d4ed8;outline-offset:-1px;' : '');
+
+    // Número do dia
+    var numEl = document.createElement('div');
+    var numCor = ehHoje ? '#fff' : ehPassado ? '#cbd5e1' : isWeekend ? '#94a3b8' : 'var(--text,#374151)';
+    numEl.style.cssText = 'font-size:12px;font-weight:700;font-family:Inter,sans-serif;text-align:right;padding:1px 2px 3px;' + (ehHoje ? 'background:#1d4ed8;color:#fff;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;margin-left:auto;' : 'color:' + numCor + ';');
+    numEl.textContent = dia;
+    cell.appendChild(numEl);
+
+    // Chips de pedidos
+    psDoDia.forEach(function(item) {
+      var p   = item.p;
+      var idx = item.idx;
+      var cor = _COR_ETAPA[p.etapa] || _COR_ETAPA._default;
+
+      var chip = document.createElement('div');
+      chip.style.cssText = 'background:' + cor.bg + ';color:' + cor.text + ';border:1px solid ' + cor.border + ';border-radius:5px;padding:2px 5px;cursor:pointer;overflow:hidden;flex-shrink:0;';
+
+      var clienteEl = document.createElement('div');
+      clienteEl.style.cssText = 'font-size:11px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:Inter,sans-serif;';
+      clienteEl.textContent = p.cliente || '—';
+
+      var numPedido = document.createElement('div');
+      numPedido.style.cssText = 'font-size:9px;font-weight:600;opacity:.7;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:"JetBrains Mono",monospace;';
+      numPedido.textContent = '#' + p.id;
+
+      chip.appendChild(clienteEl);
+      chip.appendChild(numPedido);
+
+      chip.onclick = (function(i) {
+        return function(e) {
+          e.stopPropagation();
+          window.voltarDeCalendario();
+          setTimeout(function() { if (typeof abrirPedido === 'function') abrirPedido(i); }, 100);
+        };
+      })(idx);
+
+      cell.appendChild(chip);
+    });
+
+    grade.appendChild(cell);
   }
-  for (let d = 1; d <= diasNoMes; d++) {
-    const dd = String(d).padStart(2,'0');
-    const mm = String(month+1).padStart(2,'0');
-    cells.push({ day: d, currentMonth: true, date: `${dd}/${mm}/${year}` });
-  }
-  while (cells.length % 7 !== 0) {
-    cells.push({ day: cells.length - (inicioSemana + diasNoMes) + 1, currentMonth: false, date: null });
+
+  // Células do próximo mês para completar última semana
+  var total = primeiroDia + diasNoMes;
+  var sobra = total % 7;
+  if (sobra > 0) {
+    for (var s = 0; s < 7 - sobra; s++) grade.appendChild(_celulaVazia());
   }
 
-  const feriados = {
-    '21/04':'Tiradentes','01/05':'Dia do Trabalho','07/09':'Independência',
-    '12/10':'N.Sra.Aparecida','02/11':'Finados','15/11':'Proclamação',
-    '25/12':'Natal','01/01':'Ano Novo',
+  root.appendChild(grade);
+};
+
+// ══════════════════════════════════════════════════
+//  NAV: Abrir / Fechar tela de calendário
+// ══════════════════════════════════════════════════
+
+window.abrirTelaCalendario = function() {
+  document.querySelectorAll('.screen').forEach(function(s) { s.classList.remove('active'); });
+  var sc = document.getElementById('screen-calendario');
+  if (sc) sc.classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(function(n) { n.classList.remove('active'); });
+  if (typeof currentScreen !== 'undefined') window.currentScreen = 'calendario';
+
+  var titleEl = document.getElementById('topbar-screen-title');
+  if (titleEl) { titleEl.textContent = 'Calendário'; titleEl.style.display = 'block'; }
+  var btnNovo  = document.getElementById('btn-novo-pedido-top');
+  var searchEl = document.getElementById('kanban-search-bar');
+  if (btnNovo)  btnNovo.style.display  = 'none';
+  if (searchEl) searchEl.style.display = 'none';
+
+  window.renderCalFull();
+};
+
+window.voltarDeCalendario = function() {
+  var navEl = document.querySelector('.nav-item[onclick*="pedidos"]');
+  if (navEl && typeof navTo === 'function') {
+    navTo('pedidos', navEl);
+  } else {
+    document.querySelectorAll('.screen').forEach(function(s) { s.classList.remove('active'); });
+    var sc = document.getElementById('screen-pedidos');
+    if (sc) sc.classList.add('active');
+    if (typeof currentScreen !== 'undefined') window.currentScreen = 'pedidos';
+    var titleEl = document.getElementById('topbar-screen-title');
+    if (titleEl) titleEl.textContent = 'Gestão de Pedidos';
+    var searchEl = document.getElementById('kanban-search-bar');
+    if (searchEl) searchEl.style.display = '';
+    var btnNovo = document.getElementById('btn-novo-pedido-top');
+    if (btnNovo)  btnNovo.style.display  = '';
+  }
+};
+
+  // Expor renderCalendario globalmente (chamado pelo app.js no renderKanban)
+  window.renderCalendario = function() {
+    // No modo tela cheia: atualiza se estiver aberta
+    if (window.currentScreen === 'calendario') window.renderCalFull();
+    // Não faz nada no modo kanban embutido (removemos a coluna de calendário do kanban)
   };
 
-  let html = '';
-  for (let r = 0; r < cells.length; r += 7) {
-    html += '<div class="cal-week-row">';
-    for (let i = r; i < r + 7; i++) {
-      const cell = cells[i];
-      const isHoje = cell.currentMonth &&
-        cell.day === hoje.getDate() &&
-        month === hoje.getMonth() &&
-        year === hoje.getFullYear();
-      const peds = cell.date ? (dataMap[cell.date] || []) : [];
-
-      const feriadoKey = cell.date ? cell.date.substring(0,5) : null;
-      const feriado = feriadoKey ? feriados[feriadoKey] : null;
-
-      html += `<div class="cal-day-cell${cell.currentMonth ? '' : ' other-month'}${isHoje ? ' today' : ''}">`;
-      html += `<div class="cal-day-num">${cell.day}</div>`;
-
-      if (feriado) {
-        html += `<div class="cal-event-chip feriado">${feriado}</div>`;
-      }
-
-      const MAX_VISIBLE = 3;
-      peds.slice(0, MAX_VISIBLE).forEach(p => {
-        // Mostra: CLIENTE completo (sem truncar no JS — o CSS faz ellipsis)
-        const nomeCliente = (p.cliente || '—').toUpperCase();
-        const idCurto = (p.id || '').replace('#','');
-        const cls = p.etapa === 'finalizado' ? 'finalizado' : (p.status || '');
-        html += `<div class="cal-event-chip ${cls}" title="#${idCurto} — ${nomeCliente}" onclick="abrirPedido(${pedidos.indexOf(p)})">
-          <span class="chip-nome">#${idCurto} ${nomeCliente}</span>
-        </div>`;
-      });
-      if (peds.length > MAX_VISIBLE) {
-        html += `<div class="cal-more-link" onclick="calVerDia('${cell.date}')">+${peds.length - MAX_VISIBLE} mais</div>`;
-      }
-
-      html += '</div>';
-    }
-    html += '</div>';
-  }
-  return html;
-}
-
-function calNavegar(dir) {
-  calMonth += dir;
-  if (calMonth > 11) { calMonth = 0; calYear++; }
-  if (calMonth < 0)  { calMonth = 11; calYear--; }
-  renderCalendario();
-}
-
-function calIrHoje() {
-  const h = new Date();
-  calMonth = h.getMonth();
-  calYear  = h.getFullYear();
-  renderCalendario();
-}
-
-function calVerDia(dateStr) {
-  alert('Pedidos em ' + dateStr);
-}
+})(); // fim do IIFE
