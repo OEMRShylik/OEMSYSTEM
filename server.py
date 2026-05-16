@@ -222,6 +222,86 @@ def servir_pdf(filename):
 
 COMPONENTS_FILE = BASE_DIR / 'db' / 'components.json'
 
+# ══════════════════════════════════════════════════
+#  LIMPAR PDFs FÍSICOS
+# ══════════════════════════════════════════════════
+
+@app.route("/limpar_pdfs", methods=["OPTIONS", "POST"])
+def limpar_pdfs():
+    if request.method == "OPTIONS": return "", 204
+    try:
+        removidos = 0
+        erros = []
+        for f in PDF_DIR.iterdir():
+            if f.is_file():
+                try:
+                    f.unlink()
+                    removidos += 1
+                except Exception as e:
+                    erros.append(str(f.name))
+        print(f"[limpar_pdfs] {removidos} arquivo(s) removido(s), {len(erros)} erro(s)")
+        return jsonify({"ok": True, "removidos": removidos, "erros": erros})
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({"erro": str(e)}), 500
+
+
+# ══════════════════════════════════════════════════
+#  LIMPAR DASHBOARD
+# ══════════════════════════════════════════════════
+
+@app.route("/limpar_dashboard", methods=["OPTIONS", "POST"])
+def limpar_dashboard():
+    if request.method == "OPTIONS": return "", 204
+    try:
+        zerados = []
+
+        # report.json — preserva _meta, zera array de pedidos
+        report_f = BASE_DIR / 'db' / 'report.json'
+        if report_f.exists():
+            try:
+                atual = _json_mod.loads(report_f.read_text(encoding='utf-8'))
+                meta  = atual.get('_meta', {})
+            except Exception:
+                meta = {}
+            # Atualiza _meta para refletir o reset
+            meta['total_registros'] = 0
+            meta['periodo']         = ''
+            vazio = {
+                '_meta': meta,
+                'pedidos': []
+            }
+            report_f.write_text(
+                _json_mod.dumps(vazio, ensure_ascii=False, indent=2),
+                encoding='utf-8'
+            )
+            zerados.append('report.json')
+
+        # estoque.json
+        estoque_f = BASE_DIR / 'db' / 'estoque.json'
+        if estoque_f.exists():
+            estoque_f.write_text(
+                _json_mod.dumps({'_meta': {}, 'registros': []}, ensure_ascii=False, indent=2),
+                encoding='utf-8'
+            )
+            zerados.append('estoque.json')
+
+        # components.json
+        comp_f = BASE_DIR / 'db' / 'components.json'
+        if comp_f.exists():
+            comp_f.write_text(
+                _json_mod.dumps({'pedidos': {}}, ensure_ascii=False, indent=2),
+                encoding='utf-8'
+            )
+            zerados.append('components.json')
+
+        print(f"[limpar_dashboard] zerado: {zerados}")
+        return jsonify({'ok': True, 'zerados': zerados})
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({'erro': str(e)}), 500
+
+
 @app.route("/salvar_components", methods=["OPTIONS", "POST"])
 def salvar_components():
     if request.method == "OPTIONS": return "", 204
@@ -367,11 +447,179 @@ def processar():
 
 
 # ══════════════════════════════════════════════════
+#  REPORT — registrar pedido e faturamento
+# ══════════════════════════════════════════════════
+
+REPORT_FILE = BASE_DIR / 'db' / 'report.json'
+
+def _load_report():
+    if REPORT_FILE.exists():
+        try:
+            return _json_mod.loads(REPORT_FILE.read_text(encoding='utf-8'))
+        except Exception:
+            pass
+    return {'_meta': {}, 'pedidos': []}
+
+def _save_report(data):
+    data['_meta']['total_registros'] = len(data['pedidos'])
+    REPORT_FILE.write_text(
+        _json_mod.dumps(data, ensure_ascii=False, indent=2),
+        encoding='utf-8'
+    )
+
+
+@app.route('/registrar_pedido_report', methods=['OPTIONS', 'POST'])
+def registrar_pedido_report():
+    """
+    Recebe os bytes do PDF processado, calcula qtd de mangueiras
+    (soma item_qty das páginas com corte_mm > 0) e registra no report.json.
+    Body: { data: base64, filename: str, pedido: str, cliente: str,
+            ano: int, mes: str, mes_nome: str }
+    """
+    if request.method == 'OPTIONS': return '', 204
+    try:
+        body     = request.get_json(force=True)
+        data_b64 = body.get('data', '')
+        pedido   = (body.get('pedido') or '').strip()
+        cliente  = (body.get('cliente') or '').strip()
+        ano      = int(body.get('ano') or 0)
+        mes      = str(body.get('mes') or '').zfill(2)
+        mes_nome = body.get('mes_nome', '')
+
+        if not data_b64 or not pedido:
+            return jsonify({'erro': 'data e pedido são obrigatórios'}), 400
+
+        # Calcular qtd de mangueiras a partir das páginas do PDF
+        pdf_bytes = base64.b64decode(data_b64)
+        try:
+            resumo   = extrair_resumo(pdf_bytes)
+            paginas  = resumo.get('paginas', [])
+            qtd      = sum(
+                int(pg.get('item_qty') or 0)
+                for pg in paginas
+                if not pg.get('is_index') and (pg.get('corte_mm') or 0) > 0
+            )
+            # Pega cliente/data do PDF se não fornecido
+            if not cliente:
+                cliente = resumo.get('cliente_nome', '').split()[0]
+            if not ano:
+                data_str = resumo.get('data_entrega', '')
+                if data_str:
+                    parts = data_str.split('/')
+                    if len(parts) == 3:
+                        ano = int(parts[2])
+                        mes = parts[1].zfill(2)
+        except Exception as e:
+            print(f'[report] Erro ao extrair páginas: {e}')
+            qtd = 0
+
+        # Nomes dos meses
+        MESES = {
+            '01':'Janeiro','02':'Fevereiro','03':'Março','04':'Abril',
+            '05':'Maio','06':'Junho','07':'Julho','08':'Agosto',
+            '09':'Setembro','10':'Outubro','11':'Novembro','12':'Dezembro'
+        }
+        if not mes_nome and mes:
+            mes_nome = MESES.get(mes, '')
+
+        report = _load_report()
+
+        # Verificar se pedido já existe → atualiza qtd, preserva fat
+        existente = next((p for p in report['pedidos'] if p['pedido'] == pedido), None)
+        if existente:
+            existente['qtd']      = qtd
+            existente['cliente']  = cliente or existente['cliente']
+            existente['ano']      = ano     or existente['ano']
+            existente['mes']      = mes     or existente['mes']
+            existente['mes_nome'] = mes_nome or existente['mes_nome']
+            print(f'[report] Atualizado #{pedido}: qtd={qtd}')
+        else:
+            report['pedidos'].append({
+                'pedido':   pedido,
+                'cliente':  cliente,
+                'qtd':      qtd,
+                'fat':      None,   # preenchido manualmente depois
+                'ano':      ano,
+                'mes':      mes,
+                'mes_nome': mes_nome,
+            })
+            print(f'[report] Adicionado #{pedido}: qtd={qtd}')
+
+        # Ordenar por ano, mes, pedido
+        report['pedidos'].sort(key=lambda p: (p.get('ano',0), p.get('mes',''), p.get('pedido','')))
+        _save_report(report)
+
+        return jsonify({'ok': True, 'pedido': pedido, 'qtd': qtd})
+
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({'erro': str(e)}), 500
+
+
+@app.route('/atualizar_faturamento', methods=['OPTIONS', 'POST'])
+def atualizar_faturamento():
+    """
+    Atualiza o faturamento de um pedido no report.json.
+    Body: { pedido: str, fat: float | null }
+    """
+    if request.method == 'OPTIONS': return '', 204
+    try:
+        body   = request.get_json(force=True)
+        pedido = (body.get('pedido') or '').strip()
+        fat    = body.get('fat')  # pode ser null
+
+        if not pedido:
+            return jsonify({'erro': 'pedido é obrigatório'}), 400
+
+        if fat is not None:
+            try: fat = float(fat)
+            except (ValueError, TypeError): fat = None
+
+        report = _load_report()
+        reg = next((p for p in report['pedidos'] if p['pedido'] == pedido), None)
+        if not reg:
+            return jsonify({'erro': f'Pedido {pedido} não encontrado no report'}), 404
+
+        reg['fat'] = fat
+        _save_report(report)
+        print(f'[report] Fat #{pedido}: {fat}')
+        return jsonify({'ok': True, 'pedido': pedido, 'fat': fat})
+
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({'erro': str(e)}), 500
+
+
+# ══════════════════════════════════════════════════
 #  MAIN
 # ══════════════════════════════════════════════════
 
 if __name__ == "__main__":
-    import socket
+    import socket, shutil
+
+    # ── Garantir logo disponível para os geradores de etiqueta ──
+    # Os label_generators buscam logo_hylik.png relativo ao próprio arquivo (py/)
+    # Se a logo está em assets/, copia para py/ automaticamente
+    for logo_nome in ['logo_hylik.png', 'logo_H.ico']:
+        src = BASE_DIR / 'assets' / logo_nome
+        dst = BASE_DIR / 'py'    / logo_nome
+        if src.exists() and not dst.exists():
+            try:
+                shutil.copy2(src, dst)
+                print(f'[logo] {logo_nome} copiado para py/')
+            except Exception as e:
+                print(f'[logo] Erro ao copiar {logo_nome}: {e}')
+
+    # ── Favicon: criar em assets/ se não existir ──
+    favicon_dst = BASE_DIR / 'assets' / 'favicon.ico'
+    favicon_ico = BASE_DIR / 'py' / 'logo_H.ico'
+    if favicon_ico.exists() and not favicon_dst.exists():
+        try:
+            shutil.copy2(favicon_ico, favicon_dst)
+            print('[favicon] logo_H.ico copiado para assets/favicon.ico')
+        except Exception as e:
+            print(f'[favicon] Erro: {e}')
+
     try:
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         s.connect(("8.8.8.8", 80))

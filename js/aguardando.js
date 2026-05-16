@@ -1048,18 +1048,21 @@ function _btnIniciar() {
   const p   = typeof pedidos !== 'undefined' ? pedidos[idx] : null;
   if (!p) return;
 
-  if (p.etapa === 'separacao' || p.etapa === 'inspecao') {
-    p.etapa = 'corte';
+  // Ao iniciar, mover para INSPEÇÃO (não para Corte)
+  if (p.etapa === 'separacao') {
+    p.etapa = 'inspecao';
     if (typeof salvarEstado === 'function') salvarEstado();
     if (typeof renderKanban  === 'function') renderKanban();
   }
 
   _setModoAndamento(true, idx);
 
+  // Mostrar OP dentro do fluxo de iniciar
   if (typeof abrirIniciarPedido === 'function') {
     abrirIniciarPedido();
   } else {
-    if (typeof _mostrarToast === 'function') _mostrarToast('Em desenvolvimento', '#6b7280');
+    // Fallback: abre OP diretamente
+    if (typeof abrirOP === 'function') abrirOP();
   }
 }
 
@@ -1138,13 +1141,22 @@ function _setModoAndamento(emAndamento, idx) {
   const btnSep     = document.getElementById('btn-separacao');
   const btnEtiq    = document.getElementById('btn-etiq-pedido');
   const btnEmb     = document.getElementById('btn-etiq-embalagem');
+  const btnComp    = document.getElementById('btn-componentes');
 
   if (emAndamento) {
-    [btnOP, btnSep, btnEtiq, btnEmb].forEach(b => { if (b) b.style.display = 'none'; });
-    if (btnIniciar) { btnIniciar.textContent = '⏸ Retomar Pedido'; btnIniciar.style.background = '#059669'; }
+    // Em andamento: oculta ações externas, mostra OP dentro do fluxo
+    [btnSep, btnEtiq, btnEmb, btnComp].forEach(b => { if (b) b.style.display = 'none'; });
+    // btn-op fica oculto na barra mas disponível dentro do abrirIniciarPedido
+    if (btnOP) btnOP.style.display = 'none';
+    if (btnIniciar) {
+      btnIniciar.innerHTML = '⏸ Retomar Pedido';
+      btnIniciar.style.background = '#059669';
+    }
     if (p) { p._iniciado = true; if (typeof salvarEstado === 'function') salvarEstado(); }
   } else {
-    [btnOP, btnSep, btnEtiq, btnEmb].forEach(b => { if (b) b.style.display = ''; });
+    // Fora do andamento: restaura botões normais (sem btn-op na barra)
+    [btnSep, btnEtiq, btnEmb, btnComp].forEach(b => { if (b) b.style.display = ''; });
+    if (btnOP) btnOP.style.display = 'none'; // OP sempre oculto na barra principal
     if (btnIniciar) {
       const foiIniciado = p && p._iniciado;
       btnIniciar.innerHTML = foiIniciado ? '▶ Retomar Pedido' : '▶ Iniciar Pedido';

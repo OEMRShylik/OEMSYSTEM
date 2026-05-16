@@ -71,6 +71,30 @@ function _arrayBufferToB64(buf) {
 function abrirIniciarPedido() {
   _paginaAtual = 0;
   _fecharViewer();
+
+  // Mostrar botão de OP dentro da área de conteúdo enquanto em andamento
+  const conteudo = document.getElementById('detalhe-conteudo');
+  if (conteudo) conteudo.innerHTML = '';
+
+  // Injetar mini-barra com botão OP dentro do conteúdo
+  const opBar = document.createElement('div');
+  opBar.id = 'op-inline-bar';
+  opBar.style.cssText = 'display:flex;align-items:center;gap:8px;padding:8px 14px;background:#fff;border-bottom:1px solid #e5e7eb;flex-shrink:0;';
+  opBar.innerHTML = `
+    <span style="font-size:12px;font-weight:600;color:#6b7280;font-family:Inter,sans-serif;">Visualizar:</span>
+    <button onclick="abrirOP()"
+      style="display:flex;align-items:center;gap:6px;padding:6px 14px;background:#f8fafc;
+             border:1.5px solid #e5e7eb;border-radius:7px;font-size:12px;font-weight:700;
+             font-family:Inter,sans-serif;color:#374151;cursor:pointer;transition:background .15s;"
+      onmouseover="this.style.background='#eff6ff';this.style.borderColor='#1a56db';this.style.color='#1a56db'"
+      onmouseout="this.style.background='#f8fafc';this.style.borderColor='#e5e7eb';this.style.color='#374151'">
+      📄 Ordem de Produção (PDF completo)
+    </button>`;
+
+  if (conteudo) {
+    conteudo.appendChild(opBar);
+  }
+
   _mostrarPaginaOP();
 }
 
@@ -315,19 +339,46 @@ function _mostrarPaginaOP() {
 function _pgAnterior() { if(_paginaAtual>0){_paginaAtual--;_mostrarPaginaOP();} }
 function _pgProxima()  { if(_paginaAtual<_paginasOP.length-1){_paginaAtual++;_mostrarPaginaOP();} }
 
+// Mapa de progressão de etapas
+const _PROXIMA_ETAPA = {
+  inspecao:  'corte',
+  corte:     'prensagem',
+  prensagem: 'embalagem',
+  embalagem: 'finalizado',
+};
+const _ETAPA_LABEL = {
+  inspecao:  'INSPEÇÃO',
+  corte:     'CORTE',
+  prensagem: 'PRENSAGEM',
+  embalagem: 'EMBALAGEM',
+  finalizado:'FINALIZADO',
+};
+
 function _concluirPedido() {
   const p = pedidos[currentPedidoIdx];
   if (!p) return;
-  p.etapa = 'prensagem';
+
+  // Determina próxima etapa baseado na etapa atual
+  const etapaAtual  = p.etapa;
+  const proximaEtapa = _PROXIMA_ETAPA[etapaAtual] || 'finalizado';
+  const proximaLabel = _ETAPA_LABEL[proximaEtapa]  || proximaEtapa.toUpperCase();
+
+  p.etapa = proximaEtapa;
   p.amostragens = JSON.parse(JSON.stringify(_amostrasDB));
   p.amostragens_operador = typeof currentUser !== 'undefined' && currentUser ? currentUser.nome : '';
   p.amostragens_ts = new Date().toISOString();
   salvarEstado();
   renderKanban();
+
+  // Desativa modo andamento ao concluir
+  if (typeof _setModoAndamento === 'function') {
+    _setModoAndamento(false, currentPedidoIdx);
+  }
+
   _mostrarConteudo(`<div style="padding:48px;text-align:center;font-family:Inter,sans-serif;">
     <div style="font-size:48px;margin-bottom:12px;">✅</div>
-    <div style="font-size:18px;font-weight:800;color:#059669;margin-bottom:6px;">Pedido Concluído!</div>
-    <div style="font-size:14px;color:#6b7280;">Movido para PRENSAGEM</div>
+    <div style="font-size:18px;font-weight:800;color:#059669;margin-bottom:6px;">Etapa Concluída!</div>
+    <div style="font-size:14px;color:#6b7280;">Movido para <strong>${proximaLabel}</strong></div>
   </div>`);
   setTimeout(() => voltarPedidos(), 1800);
 }
