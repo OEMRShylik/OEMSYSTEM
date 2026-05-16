@@ -1,3 +1,215 @@
 {
-  "pedidos": {}
+  "pedidos": {
+    "003328": [
+      {
+        "componente": "H2SC05",
+        "descricao": "MANG. HID. EN 857 2SC 5/16\" - HYLIK",
+        "quantidade": 712.8,
+        "unidade": "MT"
+      },
+      {
+        "componente": "HCP205",
+        "descricao": "CAPA PRENS. 03310 (1 E 2TRAMAS) 5/16",
+        "quantidade": 720,
+        "unidade": "PC"
+      },
+      {
+        "componente": "HPAS12M2005",
+        "descricao": "F.GIR. TB.12 (M20X1,5) DIN 24 X 5/16 - SERIE PESADA",
+        "quantidade": 144,
+        "unidade": "PC"
+      },
+      {
+        "componente": "HPAS9012M2005",
+        "descricao": "F.GIR. 90 TB.12 (M20X1,5) DIN 24 X 5/16 - SERIE PESADA",
+        "quantidade": 144,
+        "unidade": "PC"
+      },
+      {
+        "componente": "HPT12M2005",
+        "descricao": "M.FIXO TB. 12 (M20X1,5) DIN 24 X 5/16 - SERIE PESADA",
+        "quantidade": 432,
+        "unidade": "PC"
+      }
+    ],
+    "004497": [
+      {
+        "componente": "HCP206",
+        "descricao": "CAPA PRENS. 03310 (1 E 2TRAMAS) 3/8",
+        "quantidade": 60,
+        "unidade": "PC"
+      },
+      {
+        "componente": "HCP208",
+        "descricao": "CAPA PRENS. 03310 (1 E 2TRAMAS) 1/2",
+        "quantidade": 24,
+        "unidade": "PC"
+      },
+      {
+        "componente": "HCP210",
+        "descricao": "CAPA PRENS. 03310 (1 E 2TRAMAS) 5/8",
+        "quantidade": 24,
+        "unidade": "PC"
+      },
+      {
+        "componente": "HPAS12M2006",
+        "descricao": "F.GIR. TB.12 (M20X1,5) DIN 24 X 3/8 - SERIE PESADA",
+        "quantidade": 30,
+        "unidade": "PC"
+      },
+      {
+        "componente": "HPAS16M2408",
+        "descricao": "F.GIR. TB.16 (M24X1,5) DIN 24 X 1/2 - SERIE PESADA",
+        "quantidade": 12,
+        "unidade": "PC"
+      },
+      {
+        "componente": "HPAS16M2410",
+        "descricao": "F.GIR. TB.16 (M24X1,5) DIN 24 X 5/8 - SERIE PESADA",
+        "quantidade": 18,
+        "unidade": "PC"
+      },
+      {
+        "componente": "HPAS9012M2006",
+        "descricao": "F.GIR. 90 TB.12 (M20X1,5) DIN 24 X 3/8 - SERIE PESADA",
+        "quantidade": 30,
+        "unidade": "PC"
+      },
+      {
+        "componente": "HPAS9016M2408",
+        "descricao": "F.GIR. 90 TB.16 (M24X1,5) DIN 24 X 1/2 - SERIE PESADA",
+        "quantidade": 12,
+        "unidade": "PC"
+      },
+      {
+        "componente": "HPAS9016M2410",
+        "descricao": "F.GIR. 90 TB.16 (M24X1,5) DIN 24 X 5/8 - SERIE PESADA",
+        "quantidade": 6,
+        "unidade": "PC"
+      },
+      {
+        "componente": "HPM20",
+        "descricao": "PROTETOR PLAST. P/ MANG. - 20MM",
+        "quantidade": 28.799999999999997,
+        "unidade": "MT"
+      },
+      {
+        "componente": "HPM25",
+        "descricao": "PROTETOR PLAST. P/ MANG. - 25MM",
+        "quantidade": 24,
+        "unidade": "MT"
+      },
+      {
+        "componente": "S2SC06",
+        "descricao": "MANG. HID. EN 857 2SC 3/8 - SEMPERIT",
+        "quantidade": 136.2,
+        "unidade": "MT"
+      },
+      {
+        "componente": "S2SC08",
+        "descricao": "MANG. HID. EN 857 2SC 1/2 - SEMPERIT",
+        "quantidade": 97.19999999999999,
+        "unidade": "MT"
+      },
+      {
+        "componente": "S2SC10",
+        "descricao": "MANG. HID. EN 857 2SC 5/8 - SEMPERIT",
+        "quantidade": 24.9,
+        "unidade": "MT"
+      }
+    ],
+    "004689": [
+      {
+        "componente": "HCP206",
+        "descricao": "CAPA PRENS. 03310 (1 E 2TRAMAS) 3/8",
+        "medida": "3/8",
+        "quantidade": 208,
+        "unidade": "PC"
+      },
+      {
+        "componente": "HCP208",
+        "descricao": "CAPA PRENS. 03310 (1 E 2TRAMAS) 1/2",
+        "medida": "1/2",
+        "quantidade": 80,
+        "unidade": "PC"
+      },
+      {
+        "componente": "HFJ0606",
+        "descricao": "F.GIR. 9/16 UNF JIC 37 X 3/8",
+        "medida": "9/16",
+        "quantidade": 80,
+        "unidade": "PC"
+      },
+      {
+        "componente": "HPAS12M2006",
+        "descricao": "F.GIR. TB.12 (M20X1,5) DIN 24 X 3/8 - SERIE PESADA",
+        "medida": "3/8",
+        "quantidade": 68,
+        "unidade": "PC"
+      },
+      {
+        "componente": "HPAS16M2408",
+        "descricao": "F.GIR. TB.16 (M24X1,5) DIN 24 X 1/2 - SERIE PESADA",
+        "medida": "1/2",
+        "quantidade": 22,
+        "unidade": "PC"
+      },
+      {
+        "componente": "HPAS9016M2408",
+        "descricao": "F.GIR. 90 TB.16 (M24X1,5) DIN 24 X 1/2 - SERIE PESADA",
+        "medida": "1/2",
+        "quantidade": 10,
+        "unidade": "PC"
+      },
+      {
+        "componente": "HPAS90L16M2408",
+        "descricao": "F.GIR. 90 LONGA TB. 16 (M24X1,5) DIN 24 X 1/2 - SERIE PESADA",
+        "medida": "1/2",
+        "quantidade": 10,
+        "unidade": "PC"
+      },
+      {
+        "componente": "HPT12M2006",
+        "descricao": "M.FIXO TB. 12 (M20X1,5) DIN 24 X 3/8 - SERIE PESADA",
+        "medida": "3/8",
+        "quantidade": 60,
+        "unidade": "PC"
+      },
+      {
+        "componente": "HPT16M2408",
+        "descricao": "M.FIXO TB. 16 (M24X1,5) DIN 24 X 1/2 - SERIE PESADA",
+        "medida": "1/2",
+        "quantidade": 38,
+        "unidade": "PC"
+      },
+      {
+        "componente": "HR206",
+        "descricao": "MANG. HID. SAE 100 R2 3/8 - HYLIK",
+        "medida": "3/8",
+        "quantidade": 44.6,
+        "unidade": "MT"
+      },
+      {
+        "componente": "HR206L",
+        "descricao": "MANG. HID. SAE 100 R2 3/8 - HYLIK - COBERTURA LISA",
+        "medida": "3/8",
+        "quantidade": 45.199999999999996,
+        "unidade": "MT"
+      },
+      {
+        "componente": "HR208",
+        "descricao": "MANG. HID. SAE 100 R2 1/2 - HYLIK",
+        "medida": "1/2",
+        "quantidade": 15.219999999999999,
+        "unidade": "MT"
+      },
+      {
+        "componente": "HR208L",
+        "descricao": "MANG. HID. SAE 100 R2 1/2 - HYLIK - COBERTURA LISA",
+        "medida": "1/2",
+        "quantidade": 74.39999999999999,
+        "unidade": "MT"
+      }
+    ]
+  }
 }

@@ -413,14 +413,7 @@ function abrirOP() {
   if (!conteudo) return;
   conteudo.innerHTML = '';
 
-  // Painel de falta de estoque no topo (injeta se aguardando.js existir)
-  if (typeof _htmlPainel === 'function') {
-    const wrap = document.createElement('div');
-    wrap.id = 'painel-aguardando';
-    wrap.innerHTML = _htmlPainel(p, idx);
-    conteudo.appendChild(wrap);
-  }
-
+  // Apenas o visualizador de PDF — sem painel de falta de estoque
   const pdfB64 = _getPdfOp(p);
   abrirPdfViewer(
     (p.anexos?.op?.filename || ('OP_' + p.id + '.pdf')),

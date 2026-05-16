@@ -1,305 +1,388 @@
-# ══════════════════════════════════════════════════
-#  py/server.py  —  OEM RS  (Flask)
-#  Porta 5050  |  Serve o front-end + processa PDFs
-# ══════════════════════════════════════════════════
-import os, json, base64, traceback
+"""
+OEM RS — Backend Flask
+Processa PDF da OP: organiza, gera etiquetas de módulo e embalagem.
+Serve o frontend (index.html + js/ + css/ + assets/) para acesso via celular.
+"""
+import base64
+import io
+import json as _json_mod
+import os
+import re
+import sys
+import traceback
 from pathlib import Path
-from flask import Flask, request, jsonify, send_from_directory, Response
 
-# ── Diretórios ──────────────────────────────────
-# server.py fica na RAIZ do projeto (nao em py/)
-# BASE = mesma pasta do server.py
-BASE  = Path(__file__).resolve().parent    # .../projeto/
+# Raiz do projeto (onde está server.py)
+BASE_DIR = Path(__file__).resolve().parent
 
-DATA    = BASE / 'data'
-PDF_DIR = DATA / 'pdfs'
-STATE_F = DATA / 'oem_estado.json'
+# Adiciona py/ ao path para importar os módulos de processamento
+sys.path.insert(0, str(BASE_DIR / 'py'))
+sys.path.insert(0, str(BASE_DIR))
 
-DATA.mkdir(parents=True, exist_ok=True)
+from flask import Flask, jsonify, request, send_from_directory
+import mimetypes
+mimetypes.add_type('model/gltf-binary', '.glb')
+mimetypes.add_type('model/gltf+json', '.gltf')
+
+from label_corte import build_corte_document
+from label_generator_embalagem_final import build_embalagem_document
+from label_generator_modulo_corrigido import build_label_documents
+from op_organizer import reorder_pdf, summarize
+from extract import extrair_resumo
+
+PEDIDO_RE = re.compile(r"NRO\s+PEDIDO\s*:\s*(\d{6})", re.IGNORECASE)
+CLIENTE_RE = re.compile(r"Nome\s+Cliente\s*:\s*(.+?)(?:\s{2,}|\s*-\s*[\d.\/\-]+|$)", re.IGNORECASE)
+DATE_RE    = re.compile(r"Data\s+Entrega\s*:\s*(\d{2}/\d{2}/\d{4})", re.IGNORECASE)
+CNPJ_RE    = re.compile(r"\s*-?\s*[\d.\/\-]{8,}\s*$")
+
+# BASE_DIR já definido no topo
+
+app = Flask(__name__)
+app.config["MAX_CONTENT_LENGTH"] = 200 * 1024 * 1024
+app.config["JSON_SORT_KEYS"] = False
+
+# Diretório para PDFs físicos (storage v2)
+PDF_DIR = BASE_DIR / "data" / "pdfs"
 PDF_DIR.mkdir(parents=True, exist_ok=True)
 
-# Imprime o caminho na inicializacao para diagnostico
-print(f"[OEM] BASE = {BASE}")
-print(f"[OEM] index.html existe: {(BASE / 'index.html').exists()}")
 
-app = Flask(__name__, static_folder=str(BASE), static_url_path='')
+# ══════════════════════════════════════════════════
+#  FRONTEND
+# ══════════════════════════════════════════════════
 
-
-# ── Página principal ──────────────────────────────
 @app.route('/')
 def index():
-    if not (BASE / 'index.html').exists():
-        return f"index.html nao encontrado em: {BASE}", 500
-    return send_from_directory(str(BASE), 'index.html')
+    return send_from_directory(BASE_DIR, 'index.html')
 
-
-# ── Favicon: evita 404 no console ────────────────
 @app.route('/favicon.ico')
 def favicon():
-    ico = BASE / 'assets' / 'favicon.ico'
+    from flask import Response
+    ico = BASE_DIR / 'assets' / 'favicon.ico'
     if ico.exists():
-        return send_from_directory(str(ico.parent), 'favicon.ico',
-                                   mimetype='image/x-icon')
+        return send_from_directory(str(ico.parent), 'favicon.ico', mimetype='image/x-icon')
     return Response(status=204)
 
+@app.route('/<path:filename>')
+def static_files(filename):
+    safe_path = (BASE_DIR / filename).resolve()
+    if not str(safe_path).startswith(str(BASE_DIR.resolve())):
+        return "Acesso negado", 403
+    if safe_path.is_file():
+        return send_from_directory(BASE_DIR, filename)
+    return "Não encontrado", 404
+
 
 # ══════════════════════════════════════════════════
-#  ESTADO DE NEGÓCIO  (apenas metadados, sem PDFs)
+#  CORS
 # ══════════════════════════════════════════════════
 
-@app.route('/salvar_estado', methods=['POST'])
+@app.after_request
+def _cors(response):
+    response.headers["Access-Control-Allow-Origin"]  = "*"
+    response.headers["Access-Control-Allow-Headers"] = "Content-Type, X-Filename"
+    response.headers["Access-Control-Allow-Methods"] = "POST, OPTIONS, GET"
+    return response
+
+
+# ══════════════════════════════════════════════════
+#  HELPERS
+# ══════════════════════════════════════════════════
+
+def _b64(data: bytes) -> str:
+    return base64.b64encode(data).decode()
+
+
+def _get_pdf_bytes():
+    body = request.get_data(as_text=False)
+    print(f"[get_pdf] content_type={request.content_type!r}  body_len={len(body)}")
+
+    if body and (request.content_type or '').startswith('application/json'):
+        try:
+            j = _json_mod.loads(body.decode('utf-8'))
+            if "data" in j:
+                b64_str = j["data"]
+                padding = 4 - len(b64_str) % 4
+                if padding != 4:
+                    b64_str += '=' * padding
+                data = base64.b64decode(b64_str)
+                name = j.get("filename", "op.pdf")
+                print(f"[json b64]  decoded={len(data)} bytes  filename={name!r}")
+                return data, name
+        except Exception as e:
+            print(f"[json b64]  erro: {e}")
+
+    if "pdf" in request.files:
+        f = request.files["pdf"]
+        data = f.read()
+        name = f.filename or "op.pdf"
+        if len(data) > 0:
+            return data, name
+
+    if body and len(body) > 100:
+        name = request.headers.get("X-Filename", "op.pdf")
+        return body, name
+
+    raise ValueError(f"PDF vazio. content_type={request.content_type!r}  body_len={len(body)}")
+
+
+def _extract_meta(pdf_bytes):
+    from pypdf import PdfReader
+    reader = PdfReader(io.BytesIO(pdf_bytes))
+    pedido = cliente = data = ""
+    for page in reader.pages[:6]:
+        text = page.extract_text() or ""
+        if not pedido:
+            m = PEDIDO_RE.search(text)
+            if m: pedido = m.group(1)
+        if not cliente:
+            m = CLIENTE_RE.search(text)
+            if m:
+                raw = CNPJ_RE.sub("", m.group(1)).strip()
+                cliente = " ".join(raw.split()[:3])
+        if not data:
+            m = DATE_RE.search(text)
+            if m: data = m.group(1)
+        if pedido and cliente and data:
+            break
+    return {"pedido": pedido, "cliente": cliente, "data": data}
+
+
+# ══════════════════════════════════════════════════
+#  ESTADO
+# ══════════════════════════════════════════════════
+
+ESTADO_FILE = BASE_DIR / 'oem_estado.json'
+
+@app.route("/salvar_estado", methods=["OPTIONS", "POST"])
 def salvar_estado():
+    if request.method == "OPTIONS": return "", 204
     try:
-        body = request.get_json(force=True)
-        if not body:
-            return jsonify({'erro': 'Corpo vazio'}), 400
-        STATE_F.write_text(json.dumps(body, ensure_ascii=False, indent=None),
-                           encoding='utf-8')
-        kb = STATE_F.stat().st_size / 1024
-        print(f'[estado] salvo  {kb:.1f} KB')
-        return jsonify({'ok': True, 'kb': round(kb, 1)})
+        body = request.get_data(as_text=True)
+        data = _json_mod.loads(body)
+        ESTADO_FILE.write_text(body, encoding='utf-8')
+        print(f"[estado] Salvo: {len(body):,} bytes  pedidos={len(data.get('peds') or data.get('pedidos',[]))}")
+        return jsonify({"ok": True})
     except Exception as e:
         traceback.print_exc()
-        return jsonify({'erro': str(e)}), 500
+        return jsonify({"error": str(e)}), 500
 
-
-@app.route('/carregar_estado', methods=['GET'])
+@app.route("/carregar_estado", methods=["GET"])
 def carregar_estado():
-    if not STATE_F.exists():
-        return jsonify({}), 200
     try:
-        data = json.loads(STATE_F.read_text(encoding='utf-8'))
-        return jsonify(data)
+        if ESTADO_FILE.exists():
+            return ESTADO_FILE.read_text(encoding='utf-8'), 200, {"Content-Type": "application/json"}
+        return jsonify({}), 404
     except Exception as e:
-        traceback.print_exc()
-        return jsonify({'erro': str(e)}), 500
+        return jsonify({"error": str(e)}), 500
 
 
 # ══════════════════════════════════════════════════
-#  PDFs FÍSICOS
-#  POST /salvar_pdf  { filename, data: base64 }
-#  GET  /pdf/<filename>  → { data: base64 }
+#  PDFs FÍSICOS (storage v2)
 # ══════════════════════════════════════════════════
 
-@app.route('/salvar_pdf', methods=['POST'])
+@app.route("/salvar_pdf", methods=["OPTIONS", "POST"])
 def salvar_pdf():
+    if request.method == "OPTIONS": return "", 204
     try:
         body = request.get_json(force=True)
-        filename = body.get('filename', '').strip()
-        data_b64 = body.get('data', '')
-
+        filename = (body.get("filename") or "").strip()
+        data_b64 = body.get("data", "")
         if not filename or not data_b64:
-            return jsonify({'erro': 'filename e data são obrigatórios'}), 400
-
-        # Sanitiza nome de arquivo: só alfanumérico, ponto, underscore, hífen
-        safe_name = ''.join(c for c in filename if c.isalnum() or c in '._-')
-        if not safe_name:
-            return jsonify({'erro': 'Nome de arquivo inválido'}), 400
-
-        dest = PDF_DIR / safe_name
-
-        # Não sobrescreve se já existe (economiza disco e I/O)
+            return jsonify({"erro": "filename e data são obrigatórios"}), 400
+        safe = ''.join(c for c in filename if c.isalnum() or c in '._-')
+        if not safe:
+            return jsonify({"erro": "Nome inválido"}), 400
+        dest = PDF_DIR / safe
         if dest.exists():
-            return jsonify({'ok': True, 'cached': True, 'kb': round(dest.stat().st_size / 1024, 1)})
-
+            return jsonify({"ok": True, "cached": True})
         raw = base64.b64decode(data_b64)
         dest.write_bytes(raw)
-        kb = len(raw) / 1024
-        print(f'[pdf] salvo  {safe_name}  {kb:.0f} KB')
-        return jsonify({'ok': True, 'cached': False, 'kb': round(kb, 1)})
-
+        print(f"[pdf] salvo {safe} {len(raw)//1024}KB")
+        return jsonify({"ok": True, "cached": False})
     except Exception as e:
         traceback.print_exc()
-        return jsonify({'erro': str(e)}), 500
+        return jsonify({"erro": str(e)}), 500
 
-
-@app.route('/pdf/<path:filename>', methods=['GET'])
+@app.route("/pdf/<path:filename>", methods=["GET"])
 def servir_pdf(filename):
-    """Retorna o PDF como base64 JSON para o front-end."""
     try:
-        safe_name = ''.join(c for c in filename if c.isalnum() or c in '._-')
-        dest = PDF_DIR / safe_name
-
+        safe = ''.join(c for c in filename if c.isalnum() or c in '._-')
+        dest = PDF_DIR / safe
         if not dest.exists():
-            return jsonify({'erro': 'Arquivo não encontrado'}), 404
-
-        raw  = dest.read_bytes()
-        b64  = base64.b64encode(raw).decode('ascii')
-        kb   = len(raw) / 1024
-        print(f'[pdf] servido  {safe_name}  {kb:.0f} KB')
-        return jsonify({'data': b64, 'filename': safe_name, 'kb': round(kb, 1)})
-
+            return jsonify({"erro": "Não encontrado"}), 404
+        raw = dest.read_bytes()
+        return jsonify({"data": base64.b64encode(raw).decode(), "filename": safe})
     except Exception as e:
-        traceback.print_exc()
-        return jsonify({'erro': str(e)}), 500
-
-
-# ══════════════════════════════════════════════════
-#  PROCESSAR PDF (OP → reorganização + etiquetas)
-# ══════════════════════════════════════════════════
-
-@app.route('/processar', methods=['POST'])
-def processar():
-    try:
-        body     = request.get_json(force=True)
-        data_b64 = body.get('data', '')
-        filename = body.get('filename', 'op.pdf')
-
-        if not data_b64:
-            return jsonify({'erro': 'data vazio'}), 400
-
-        raw = base64.b64decode(data_b64)
-        resultado = {}
-
-        # Metadados básicos do PDF
-        try:
-            from py.extract import extrair_meta
-            resultado['meta'] = extrair_meta(raw)
-        except Exception as e:
-            resultado['meta_error'] = str(e)
-            resultado['meta'] = {}
-
-        # OP reorganizada
-        try:
-            from py.op_organizer import organizar_op
-            op_raw  = organizar_op(raw)
-            op_b64  = base64.b64encode(op_raw).decode('ascii')
-            num     = resultado.get('meta', {}).get('pedido', 'OP')
-            op_name = f'{num}.pdf'
-            # Salva automaticamente no servidor
-            (PDF_DIR / op_name).write_bytes(op_raw)
-            resultado['op_organizado'] = {'filename': op_name, 'data': op_b64}
-        except Exception as e:
-            resultado['op_error'] = str(e)
-
-        # Etiquetas de módulo (kits)
-        try:
-            from py.label_generator_modulo_corrigido import gerar_etiquetas_modulo
-            etiquetas = gerar_etiquetas_modulo(raw)
-            resultado['etiquetas_modulo'] = []
-            num = resultado.get('meta', {}).get('pedido', 'KIT')
-            for i, et_raw in enumerate(etiquetas):
-                et_b64 = base64.b64encode(et_raw).decode('ascii')
-                et_name = f'KIT_{i+1}_{num}.pdf'
-                (PDF_DIR / et_name).write_bytes(et_raw)
-                resultado['etiquetas_modulo'].append({'filename': et_name, 'data': et_b64})
-        except Exception as e:
-            resultado['modulo_error'] = str(e)
-
-        # Etiqueta de embalagem
-        try:
-            from py.label_generator_embalagem_final import gerar_embalagem
-            emb_raw  = gerar_embalagem(raw)
-            emb_b64  = base64.b64encode(emb_raw).decode('ascii')
-            num      = resultado.get('meta', {}).get('pedido', 'EMBALAGEM')
-            emb_name = f'EMBALAGEM_{num}.pdf'
-            (PDF_DIR / emb_name).write_bytes(emb_raw)
-            resultado['etiqueta_embalagem'] = {'filename': emb_name, 'data': emb_b64}
-        except Exception as e:
-            resultado['embalagem_error'] = str(e)
-
-        # Etiqueta de corte
-        try:
-            from py.label_corte import gerar_etiqueta_corte
-            crt_raw  = gerar_etiqueta_corte(raw)
-            crt_b64  = base64.b64encode(crt_raw).decode('ascii')
-            num      = resultado.get('meta', {}).get('pedido', 'CORTE')
-            crt_name = f'CORTE_{num}.pdf'
-            (PDF_DIR / crt_name).write_bytes(crt_raw)
-            resultado['etiqueta_corte'] = {'filename': crt_name, 'data': crt_b64}
-        except Exception as e:
-            resultado['corte_error'] = str(e)
-
-        return jsonify(resultado)
-
-    except Exception as e:
-        traceback.print_exc()
-        return jsonify({'erro': str(e)}), 500
-
-
-# ══════════════════════════════════════════════════
-#  EXTRAIR DADOS DO PDF
-# ══════════════════════════════════════════════════
-
-@app.route('/extrair', methods=['POST'])
-def extrair():
-    try:
-        body     = request.get_json(force=True)
-        data_b64 = body.get('data', '')
-        if not data_b64:
-            return jsonify({'erro': 'data vazio'}), 400
-        raw = base64.b64decode(data_b64)
-        try:
-            from py.extract import extrair_paginas
-            paginas = extrair_paginas(raw)
-        except Exception as e:
-            paginas = []
-            print(f'[extrair] erro: {e}')
-        return jsonify({'paginas': paginas})
-    except Exception as e:
-        traceback.print_exc()
-        return jsonify({'erro': str(e)}), 500
+        return jsonify({"erro": str(e)}), 500
 
 
 # ══════════════════════════════════════════════════
 #  COMPONENTES
 # ══════════════════════════════════════════════════
 
-COMPONENTS_F = DATA / 'components.json'
+COMPONENTS_FILE = BASE_DIR / 'db' / 'components.json'
 
-@app.route('/salvar_components', methods=['POST'])
+@app.route("/salvar_components", methods=["OPTIONS", "POST"])
 def salvar_components():
+    if request.method == "OPTIONS": return "", 204
     try:
         body = request.get_json(force=True)
-        if not COMPONENTS_F.parent.exists():
-            COMPONENTS_F.parent.mkdir(parents=True, exist_ok=True)
-        COMPONENTS_F.write_text(
-            json.dumps(body, ensure_ascii=False, indent=2),
-            encoding='utf-8'
-        )
-        return jsonify({'ok': True})
+        COMPONENTS_FILE.parent.mkdir(parents=True, exist_ok=True)
+        COMPONENTS_FILE.write_text(_json_mod.dumps(body, ensure_ascii=False, indent=2), encoding='utf-8')
+        return jsonify({"ok": True})
     except Exception as e:
-        traceback.print_exc()
-        return jsonify({'erro': str(e)}), 500
+        return jsonify({"erro": str(e)}), 500
 
-
-@app.route('/db/components.json', methods=['GET'])
+@app.route("/db/components.json", methods=["GET"])
 def servir_components():
-    if not COMPONENTS_F.exists():
-        return jsonify({'pedidos': {}})
-    try:
-        return jsonify(json.loads(COMPONENTS_F.read_text(encoding='utf-8')))
-    except Exception as e:
-        return jsonify({'erro': str(e)}), 500
+    if not COMPONENTS_FILE.exists():
+        return jsonify({"pedidos": {}})
+    return COMPONENTS_FILE.read_text(encoding='utf-8'), 200, {"Content-Type": "application/json"}
 
 
 # ══════════════════════════════════════════════════
 #  ESTOQUE
 # ══════════════════════════════════════════════════
 
-ESTOQUE_F = DATA / 'estoque.json'
+ESTOQUE_FILE = BASE_DIR / 'db' / 'estoque.json'
 
-@app.route('/salvar_estoque', methods=['POST'])
+@app.route("/salvar_estoque", methods=["OPTIONS", "POST"])
 def salvar_estoque():
+    if request.method == "OPTIONS": return "", 204
     try:
-        body = request.get_json(force=True)
-        ESTOQUE_F.write_text(json.dumps(body, ensure_ascii=False, indent=2),
-                             encoding='utf-8')
-        return jsonify({'ok': True})
+        dados = request.get_json()
+        if not dados or 'registros' not in dados:
+            return jsonify({"ok": False, "erro": "Dados inválidos"}), 400
+        try:
+            atual = _json_mod.loads(ESTOQUE_FILE.read_text(encoding='utf-8'))
+        except Exception:
+            atual = {"_meta": {}, "registros": []}
+        atual['registros'] = dados['registros']
+        ESTOQUE_FILE.write_text(_json_mod.dumps(atual, ensure_ascii=False, indent=2), encoding='utf-8')
+        return jsonify({"ok": True, "total": len(dados['registros'])})
+    except Exception as e:
+        return jsonify({"ok": False, "erro": str(e)}), 500
+
+
+# ══════════════════════════════════════════════════
+#  EXTRAIR + PROCESSAR
+# ══════════════════════════════════════════════════
+
+@app.route("/extrair", methods=["OPTIONS", "POST"])
+def extrair():
+    if request.method == "OPTIONS": return "", 204
+    try:
+        pdf_bytes, filename = _get_pdf_bytes()
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 400
+    try:
+        return jsonify(extrair_resumo(pdf_bytes))
     except Exception as e:
         traceback.print_exc()
-        return jsonify({'erro': str(e)}), 500
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/processar", methods=["OPTIONS", "POST"])
+def processar():
+    if request.method == "OPTIONS": return "", 204
+
+    try:
+        pdf_bytes, filename = _get_pdf_bytes()
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 400
+
+    print(f"[processar] {filename!r}  {len(pdf_bytes):,} bytes")
+    result = {}
+    org_bytes = pdf_bytes
+
+    # 1. Metadados
+    try:
+        result["meta"] = _extract_meta(pdf_bytes)
+    except Exception as e:
+        result["meta"] = {"pedido": "", "cliente": filename, "data": ""}
+        result["meta_error"] = str(e)
+
+    pedido_id = result["meta"].get("pedido") or Path(filename).stem
+
+    # 2. Organizar OP
+    try:
+        org_bytes, _, ordered_groups = reorder_pdf(pdf_bytes)
+        result["op_organizado"] = {
+            "filename": f"{pedido_id}.pdf",
+            "data": _b64(org_bytes),
+            "summary": summarize(ordered_groups),
+        }
+        # Salva fisicamente
+        (PDF_DIR / f"{pedido_id}.pdf").write_bytes(org_bytes)
+        print(f"[op_org] ok {len(org_bytes):,} bytes")
+    except Exception as e:
+        traceback.print_exc()
+        result["op_organizado"] = None
+        result["op_error"] = str(e)
+
+    # 3. Etiquetas de módulo
+    try:
+        label_docs = build_label_documents(org_bytes, filename)
+        result["etiquetas_modulo"] = [
+            {"filename": d["file_name"], "data": _b64(d["pdf_bytes"])}
+            for d in label_docs
+        ]
+        for d in label_docs:
+            (PDF_DIR / d["file_name"]).write_bytes(d["pdf_bytes"])
+        print(f"[modulo] {len(label_docs)} doc(s)")
+    except Exception as e:
+        traceback.print_exc()
+        result["etiquetas_modulo"] = []
+        result["modulo_error"] = str(e)
+
+    # 4. Etiqueta de embalagem
+    try:
+        emb_doc = build_embalagem_document(pdf_bytes)
+        result["etiqueta_embalagem"] = {
+            "filename": emb_doc["file_name"],
+            "data": _b64(emb_doc["pdf_bytes"]),
+        }
+        (PDF_DIR / emb_doc["file_name"]).write_bytes(emb_doc["pdf_bytes"])
+        print(f"[embalagem] ok")
+    except Exception as e:
+        traceback.print_exc()
+        result["etiqueta_embalagem"] = None
+        result["embalagem_error"] = str(e)
+
+    # 5. Etiqueta de corte
+    try:
+        corte_doc = build_corte_document(org_bytes, pedido_id)
+        result["etiqueta_corte"] = {
+            "filename": corte_doc["file_name"],
+            "data": _b64(corte_doc["pdf_bytes"]),
+        }
+        (PDF_DIR / corte_doc["file_name"]).write_bytes(corte_doc["pdf_bytes"])
+        print(f"[corte] ok")
+    except Exception as e:
+        traceback.print_exc()
+        result["etiqueta_corte"] = None
+        result["corte_error"] = str(e)
+
+    return jsonify(result)
 
 
 # ══════════════════════════════════════════════════
 #  MAIN
 # ══════════════════════════════════════════════════
 
-if __name__ == '__main__':
-    print('=' * 48)
-    print('  OEM System  |  http://localhost:5050')
-    print(f'  Raiz:   {BASE}')
-    print(f'  PDFs:   {PDF_DIR}')
-    print(f'  Estado: {STATE_F}')
-    print('=' * 48)
-    app.run(host='0.0.0.0', port=5050, debug=False, threaded=True)
+if __name__ == "__main__":
+    import socket
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(("8.8.8.8", 80))
+        local_ip = s.getsockname()[0]
+        s.close()
+    except Exception:
+        local_ip = "127.0.0.1"
+
+    print("=" * 55)
+    print("  OEM RS - http://localhost:5050")
+    print(f"  Rede local: http://{local_ip}:5050")
+    print("=" * 55)
+
+    app.run(host="0.0.0.0", port=5050, debug=True, use_reloader=False)

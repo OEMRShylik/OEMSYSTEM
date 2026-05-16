@@ -544,6 +544,7 @@
 <link rel="stylesheet" href="css/dashboard.css">
 <script src="js/app.js"></script>
 <script src="js/dashboard.js"></script>
+<script src="js/dashboard_componentes.js"></script>
 <script src="js/pedidos.js"></script>
 <script src="js/aguardando.js"></script>
 <script src="js/novo_pedido.js"></script>
@@ -576,6 +577,27 @@
     } else {
       console.error('[OEM] init() não encontrada. Verifique js/app.js.');
     }
+
+    // Patch: injeta seção de componentes no final do dashboard
+    // Aguarda renderDashboard existente e adiciona a seção após
+    const _origRenderDash = window.renderDashboard;
+    window.renderDashboard = function() {
+      if (typeof _origRenderDash === 'function') _origRenderDash.apply(this, arguments);
+      // Injeta seção de componentes após o conteúdo existente
+      setTimeout(() => {
+        const root = document.getElementById('dash-root');
+        if (!root) return;
+        // Remove seção anterior se existir
+        const old = document.getElementById('dash-comp-section');
+        if (old) old.remove();
+        // Cria wrapper e renderiza
+        const wrap = document.createElement('div');
+        root.appendChild(wrap);
+        if (typeof renderDashboardComponentes === 'function') {
+          renderDashboardComponentes(wrap);
+        }
+      }, 50);
+    };
   }
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', _init);

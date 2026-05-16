@@ -355,7 +355,6 @@ function _extrairComponentesDaOP(paginasOP) {
         mapa[cod] = {
           componente: cod,
           descricao:  it.descricao || '',
-          medida:     _extrairMedida(cod, it.descricao),
           quantidade: qtdTotal,
           unidade:    _classificarUnidade(cod, it.unidade),
         };
@@ -377,7 +376,6 @@ function _extrairComponentesDaOP(paginasOP) {
           mapa[cod] = {
             componente: cod,
             descricao:  it.descricao || '',
-            medida:     _extrairMedida(cod, it.descricao),
             quantidade: qtd,
             unidade:    _classificarUnidade(cod, it.unidade),
           };
@@ -414,16 +412,7 @@ function _classificarUnidade(codigo, unidadeOriginal) {
   return 'PC';
 }
 
-// Tenta extrair medida do código ou descrição (ex: "5/16", "3/4", "1\"", "25mm")
-function _extrairMedida(codigo, desc) {
-  const texto = (codigo + ' ' + desc).toUpperCase();
-  const m =
-    texto.match(/(\d+\/\d+)/) ||
-    texto.match(/(\d+(?:[.,]\d+)?\s*MM)/) ||
-    texto.match(/(\d+(?:[.,]\d+)?\s*")/) ||
-    texto.match(/R(\d+)/);
-  return m ? m[1] : '';
-}
+
 
 // ── Construir UI ────────────────────────────────────
 function _compBuildUI(p) {
@@ -431,28 +420,15 @@ function _compBuildUI(p) {
   root.id = 'comp-root';
 
   root.innerHTML = `
-    <!-- Toolbar -->
-    <div id="comp-toolbar">
-      <input
-        id="comp-search"
-        type="text"
-        placeholder="Buscar componente, descrição ou medida..."
-        oninput="_compBuscar(this.value)"
-        autocomplete="off"
-        spellcheck="false"
-      >
-      <span id="comp-count">0 itens</span>
-    </div>
-
     <!-- Tabela -->
     <div id="comp-table-wrap">
       <table id="comp-table">
         <thead>
           <tr>
-            <th onclick="_compSort('componente')"  id="comp-th-componente">Componente</th>
-            <th onclick="_compSort('descricao')"   id="comp-th-descricao">Descrição</th>
-            <th onclick="_compSort('medida')"      id="comp-th-medida"    style="text-align:right;">Medida</th>
-            <th onclick="_compSort('quantidade')"  id="comp-th-quantidade" style="text-align:right;">Quantidade</th>
+            <th id="comp-th-componente">Componente</th>
+            <th id="comp-th-descricao">Descrição</th>
+            <th id="comp-th-unidade" style="text-align:center;">Unidade</th>
+            <th id="comp-th-quantidade" style="text-align:right;">Quantidade</th>
           </tr>
         </thead>
         <tbody id="comp-tbody"></tbody>
@@ -475,20 +451,11 @@ function _compBuildUI(p) {
 function _compRenderTabela() {
   const itens = _compGetItens();
 
-  const tbody     = document.getElementById('comp-tbody');
-  const emptyEl   = document.getElementById('comp-empty');
-  const countEl   = document.getElementById('comp-count');
-  const emptySubEl= document.getElementById('comp-empty-sub');
+  const tbody    = document.getElementById('comp-tbody');
+  const emptyEl  = document.getElementById('comp-empty');
+  const emptySubEl = document.getElementById('comp-empty-sub');
 
   if (!tbody) return;
-
-  // Atualiza headers de ordenação
-  ['componente','descricao','medida','quantidade'].forEach(col => {
-    const th = document.getElementById('comp-th-' + col);
-    if (!th) return;
-    th.className = '';
-    if (_compSortCol === col) th.className = _compSortDir === 1 ? 'sorted-asc' : 'sorted-desc';
-  });
 
   if (!itens.length) {
     tbody.innerHTML = '';
@@ -498,13 +465,13 @@ function _compRenderTabela() {
         ? `Nenhum resultado para "${_compFiltro}"`
         : 'Este pedido não possui componentes registrados.';
     }
-    if (countEl) countEl.textContent = '0 itens';
+
     return;
   }
 
   emptyEl?.classList.remove('visible');
 
-  if (countEl) countEl.textContent = itens.length + ' ' + (itens.length === 1 ? 'item' : 'itens');
+
 
   // Destaque da busca
   const q = _compFiltro.trim();
@@ -512,19 +479,27 @@ function _compRenderTabela() {
   tbody.innerHTML = itens.map(it => {
     const cod    = _compHighlight(it.componente || '', q);
     const desc   = _compHighlight(it.descricao  || '', q);
-    const medida = _compHighlight(it.medida      || '', q);
+    const unidade = it.unidade || '—';
     const qtd    = parseFloat(it.quantidade) || 0;
     const qtdFmt = _compFmtQtd(qtd);
+
+    // Cor da badge de unidade
+    const unBg    = unidade === 'MT' ? '#e0f2fe' : '#f0fdf4';
+    const unColor = unidade === 'MT' ? '#0369a1' : '#166534';
+    const unBorder= unidade === 'MT' ? '#7dd3fc' : '#86efac';
 
     return `<tr>
       <td><span class="comp-cod">${cod}</span></td>
       <td><span class="comp-desc">${desc}</span></td>
-      <td><span class="comp-medida">${medida || '<span style="color:#d1d5db;">—</span>'}</span></td>
-      <td>
-        <span class="comp-qtd">
-          ${qtdFmt}
-          ${it.unidade ? `<span class="comp-qtd-unit">${it.unidade}</span>` : ''}
+      <td style="text-align:center;">
+        <span style="display:inline-block;font-size:11px;font-weight:800;padding:2px 10px;
+                     border-radius:8px;letter-spacing:.4px;
+                     background:${unBg};color:${unColor};border:1px solid ${unBorder};">
+          ${unidade}
         </span>
+      </td>
+      <td>
+        <span class="comp-qtd">${qtdFmt}</span>
       </td>
     </tr>`;
   }).join('');
