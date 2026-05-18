@@ -28,21 +28,21 @@ function isPrimeiraSenha(usuario) {
 
 const USUARIOS = [
   // Gestão
-  { id:'U001', nome:'Giovane',   usuario:'GIOVANE',   get senha(){ return getSenha('GIOVANE');   }, setor:'Admin',     cor:'sector-admin',     initials:'GI', permissoes:{ pedidos:'total', prensagem:'total', descasque:'total', angulos:'total', gestao:true, all:true } },
-  { id:'U002', nome:'Jeremias',  usuario:'JEREMIAS',  get senha(){ return getSenha('JEREMIAS');  }, setor:'Gestão',    cor:'sector-gestao',    initials:'JE', permissoes:{ pedidos:'total', prensagem:'total', descasque:'total', angulos:'total', gestao:true } },
+  { id:'U001', nome:'Giovane Felipeli', usuario:'GIOVANE', matricula:'000064', get senha(){ return getSenha('GIOVANE'); }, setor:'Admin',     cor:'sector-admin',     initials:'GI', permissoes:{ pedidos:'total', prensagem:'total', descasque:'total', angulos:'total', gestao:true, all:true } },
+  { id:'U002', nome:'Jeremias',  usuario:'JEREMIAS',  matricula:'002', get senha(){ return getSenha('JEREMIAS');  }, setor:'Gestão',    cor:'sector-gestao',    initials:'JE', permissoes:{ pedidos:'total', prensagem:'total', descasque:'total', angulos:'total', gestao:true } },
   // Produção
-  { id:'U003', nome:'Naiara',    usuario:'NAIARA',    get senha(){ return getSenha('NAIARA');    }, setor:'Produção',  cor:'sector-producao',  initials:'NA', permissoes:{ pedidos:'leitura', prensagem:'total', descasque:'total', angulos:'total', gestao:false } },
-  { id:'U004', nome:'Joao',      usuario:'JOAO',      get senha(){ return getSenha('JOAO');      }, setor:'Produção',  cor:'sector-producao',  initials:'JO', permissoes:{ pedidos:'leitura', prensagem:'total', descasque:'total', angulos:'total', gestao:false } },
-  { id:'U005', nome:'Isrrael',   usuario:'ISRRAEL',   get senha(){ return getSenha('ISRRAEL');   }, setor:'Produção',  cor:'sector-producao',  initials:'IS', permissoes:{ pedidos:'leitura', prensagem:'total', descasque:'total', angulos:'total', gestao:false } },
-  { id:'U006', nome:'Angelys',   usuario:'ANGELYS',   get senha(){ return getSenha('ANGELYS');   }, setor:'Produção',  cor:'sector-producao',  initials:'AN', permissoes:{ pedidos:'leitura', prensagem:'total', descasque:'total', angulos:'total', gestao:false } },
-  { id:'U007', nome:'Alejandra', usuario:'ALEJANDRA', get senha(){ return getSenha('ALEJANDRA'); }, setor:'Produção',  cor:'sector-producao',  initials:'AL', permissoes:{ pedidos:'leitura', prensagem:'total', descasque:'total', angulos:'total', gestao:false } },
+  { id:'U003', nome:'Naiara',    usuario:'NAIARA',    matricula:'003', get senha(){ return getSenha('NAIARA');    }, setor:'Produção',  cor:'sector-producao',  initials:'NA', permissoes:{ pedidos:'leitura', prensagem:'total', descasque:'total', angulos:'total', gestao:false } },
+  { id:'U004', nome:'Joao',      usuario:'JOAO',      matricula:'004', get senha(){ return getSenha('JOAO');      }, setor:'Produção',  cor:'sector-producao',  initials:'JO', permissoes:{ pedidos:'leitura', prensagem:'total', descasque:'total', angulos:'total', gestao:false } },
+  { id:'U005', nome:'Isrrael',   usuario:'ISRRAEL',   matricula:'005', get senha(){ return getSenha('ISRRAEL');   }, setor:'Produção',  cor:'sector-producao',  initials:'IS', permissoes:{ pedidos:'leitura', prensagem:'total', descasque:'total', angulos:'total', gestao:false } },
+  { id:'U006', nome:'Angelys',   usuario:'ANGELYS',   matricula:'006', get senha(){ return getSenha('ANGELYS');   }, setor:'Produção',  cor:'sector-producao',  initials:'AN', permissoes:{ pedidos:'leitura', prensagem:'total', descasque:'total', angulos:'total', gestao:false } },
+  { id:'U007', nome:'Alejandra', usuario:'ALEJANDRA', matricula:'007', get senha(){ return getSenha('ALEJANDRA'); }, setor:'Produção',  cor:'sector-producao',  initials:'AL', permissoes:{ pedidos:'leitura', prensagem:'total', descasque:'total', angulos:'total', gestao:false } },
   // Comercial
-  { id:'U008', nome:'Josafa',    usuario:'JOSAFA',    get senha(){ return getSenha('JOSAFA');    }, setor:'Comercial', cor:'sector-comercial', initials:'JS', permissoes:{ pedidos:'total', prensagem:'leitura', descasque:'leitura', angulos:'leitura', gestao:false } },
-  { id:'U009', nome:'Lucas',     usuario:'LUCAS',     get senha(){ return getSenha('LUCAS');     }, setor:'Comercial', cor:'sector-comercial', initials:'LU', permissoes:{ pedidos:'total', prensagem:'leitura', descasque:'leitura', angulos:'leitura', gestao:false } },
-  { id:'U010', nome:'Isabelle',  usuario:'ISABELLE',  get senha(){ return getSenha('ISABELLE');  }, setor:'Comercial', cor:'sector-comercial', initials:'IB', permissoes:{ pedidos:'total', prensagem:'leitura', descasque:'leitura', angulos:'leitura', gestao:false } },
+  { id:'U008', nome:'Josafa',    usuario:'JOSAFA',    matricula:'008', get senha(){ return getSenha('JOSAFA');    }, setor:'Comercial', cor:'sector-comercial', initials:'JS', permissoes:{ pedidos:'total', prensagem:'leitura', descasque:'leitura', angulos:'leitura', gestao:false } },
+  { id:'U009', nome:'Lucas',     usuario:'LUCAS',     matricula:'009', get senha(){ return getSenha('LUCAS');     }, setor:'Comercial', cor:'sector-comercial', initials:'LU', permissoes:{ pedidos:'total', prensagem:'leitura', descasque:'leitura', angulos:'leitura', gestao:false } },
+  { id:'U010', nome:'Isabelle',  usuario:'ISABELLE',  matricula:'010', get senha(){ return getSenha('ISABELLE');  }, setor:'Comercial', cor:'sector-comercial', initials:'IB', permissoes:{ pedidos:'total', prensagem:'leitura', descasque:'leitura', angulos:'leitura', gestao:false } },
   // Expedição
-  { id:'U011', nome:'Augusto',   usuario:'AUGUSTO',   get senha(){ return getSenha('AUGUSTO');   }, setor:'Expedição', cor:'sector-expedicao', initials:'AU', permissoes:{ pedidos:'expedicao', prensagem:'leitura', descasque:'leitura', angulos:'leitura', gestao:false } },
-  { id:'U012', nome:'Gustavo',   usuario:'GUSTAVO',   get senha(){ return getSenha('GUSTAVO');   }, setor:'Expedição', cor:'sector-expedicao', initials:'GU', permissoes:{ pedidos:'expedicao', prensagem:'leitura', descasque:'leitura', angulos:'leitura', gestao:false } },
+  { id:'U011', nome:'Augusto',   usuario:'AUGUSTO',   matricula:'011', get senha(){ return getSenha('AUGUSTO');   }, setor:'Expedição', cor:'sector-expedicao', initials:'AU', permissoes:{ pedidos:'expedicao', prensagem:'leitura', descasque:'leitura', angulos:'leitura', gestao:false } },
+  { id:'U012', nome:'Gustavo',   usuario:'GUSTAVO',   matricula:'012', get senha(){ return getSenha('GUSTAVO');   }, setor:'Expedição', cor:'sector-expedicao', initials:'GU', permissoes:{ pedidos:'expedicao', prensagem:'leitura', descasque:'leitura', angulos:'leitura', gestao:false } },
 ];
 
 let currentUser = null;
@@ -62,28 +62,47 @@ function auditRecord(acao, detalhe='') {
   localStorage.setItem('oem_audit', JSON.stringify(auditLog.slice(-500))); // keep last 500
 }
 
-// ── Switch tabs ──
+// ── Painel de login por senha ──
+function abrirLoginForm() {
+  const overlay = document.getElementById('login-form-overlay');
+  if (!overlay) return;
+  overlay.style.display = 'flex';
+  setTimeout(() => document.getElementById('login-user-input')?.focus(), 80);
+}
+
+function fecharLoginForm() {
+  const overlay = document.getElementById('login-form-overlay');
+  if (overlay) overlay.style.display = 'none';
+  const errEl = document.getElementById('login-error-form');
+  if (errEl) errEl.textContent = '';
+}
+
+// ── Switch tabs (mantido para compatibilidade com doLogout) ──
 function loginSwitchTab(tab) {
-  document.getElementById('tab-qr').classList.toggle('active', tab==='qr');
-  document.getElementById('tab-pass').classList.toggle('active', tab==='pass');
-  document.getElementById('login-qr-panel').style.display  = tab==='qr'   ? 'flex' : 'none';
-  document.getElementById('login-pass-panel').style.display = tab==='pass' ? 'flex' : 'none';
+  fecharLoginForm();
   if (tab === 'qr') qrStart(); else qrStop();
 }
 
 // ── Login by username+password ──
 function doLogin() {
-  const user = document.getElementById('login-user-input').value.trim();
-  const pass = document.getElementById('login-pass-input').value;
-  const errEl = document.getElementById('login-error');
-  const u = USUARIOS.find(x => x.usuario.toLowerCase() === user.toLowerCase() && x.senha === pass);
+  const user  = (document.getElementById('login-user-input')?.value || '').trim();
+  const pass  = document.getElementById('login-pass-input')?.value || '';
+  const errEl = document.getElementById('login-error-form');
+  const u = _getUsuariosRuntime().find(x => x.usuario.toLowerCase() === user.toLowerCase() && x.senha === pass);
   if (!u) {
-    errEl.textContent = 'Usuário ou senha inválidos.';
-    document.getElementById('login-pass-input').value = '';
-    document.getElementById('login-pass-input').focus();
+    if (errEl) errEl.textContent = 'Usuário ou senha inválidos.';
+    const pi = document.getElementById('login-pass-input');
+    if (pi) { pi.value = ''; pi.focus(); }
     return;
   }
-  errEl.textContent = '';
+  if (u.status === 'inativo') {
+    if (errEl) errEl.textContent = 'Usuário inativo. Contate o administrador.';
+    const pi = document.getElementById('login-pass-input');
+    if (pi) pi.value = '';
+    return;
+  }
+  if (errEl) errEl.textContent = '';
+  fecharLoginForm();
   performLogin(u);
 }
 
@@ -144,6 +163,12 @@ function finalizarLogin(u) {
   if (nameEl)  nameEl.textContent = u.nome.split(' ')[0];
   if (badgeEl) { badgeEl.textContent = u.setor; badgeEl.className = ''; badgeEl.classList.add(...['sector-badge-small', u.cor]); }
 
+  const topbarUserText = document.getElementById('topbar-user-text');
+  if (topbarUserText) {
+    const setorDisplay = { 'Admin':'Administrador', 'Produção':'Produção', 'Comercial':'Comercial', 'Expedição':'Expedição', 'Gestão':'Gestão' };
+    topbarUserText.textContent = u.nome + ' | ' + (setorDisplay[u.setor] || u.setor);
+  }
+
   applyPermissions(u);
 
   // Stop camera and hide login screen
@@ -161,28 +186,29 @@ function sectorColor(setor) {
 // ── Apply permissions to nav items ──
 function applyPermissions(u) {
   const p = u.permissoes;
-  // Nav items visibility
-  const navPrensagem = document.querySelector('[onclick*="prensagem"]');
-  const navDescasque = document.querySelector('[onclick*="descasque"]');
-  const navAngulos   = document.querySelector('[onclick*="angulos"]');
-
-  // Produção: mostra tudo mas pedidos só leitura (sem botão + Novo Pedido, sem arrastar)
-  // Comercial: tudo visível, pedidos total
-  // Expedição: pedidos expedicao, resto leitura
-  // Gestão: tudo total
-
   const isAdmin = u.setor === 'Admin';
 
-  // Botão + Novo Pedido
+  // Global read-only flag (Gestão e Comercial só visualizam pedidos)
+  window._soLeitura = !!p.soLeitura;
+
+  // Drag: apenas Admin pode arrastar cards no kanban
+  window._pedidosDragEnabled = isAdmin;
+
+  // Botão + Novo Pedido: apenas Admin
   const btnNovo = document.querySelector('.btn-novo');
-  if (btnNovo) btnNovo.style.display = (isAdmin || p.pedidos === 'total' || p.gestao) ? '' : 'none';
+  if (btnNovo) btnNovo.style.display = isAdmin ? '' : 'none';
 
-  // Nav Pedidos: só Admin vê
-  const navPedidos = document.querySelector('.nav-item[onclick*=\"pedidos\"]');
-  if (navPedidos) navPedidos.style.display = isAdmin ? '' : 'none';
+  // Nav Pedidos: todos os setores
+  const navPedidos = document.querySelector('.nav-item[onclick*="pedidos"]');
+  if (navPedidos) navPedidos.style.display = '';
 
-  // Disable drag for read-only pedidos
-  window._pedidosDragEnabled = p.pedidos !== 'leitura';
+  // Nav Dashboard: Admin, Gestão, Comercial
+  const navDash = document.getElementById('nav-dashboard');
+  if (navDash) navDash.style.display = p.dashboard ? '' : 'none';
+
+  // Nav Usuários: apenas Admin
+  const navUsuarios = document.getElementById('nav-usuarios');
+  if (navUsuarios) navUsuarios.style.display = isAdmin ? '' : 'none';
 }
 
 // ── Logout ──
@@ -190,14 +216,16 @@ function doLogout() {
   auditRecord('logout');
   currentUser = null;
   document.getElementById('change-pass-overlay').classList.remove('open');
-  document.getElementById('login-screen').style.display = 'flex';
-  document.getElementById('login-screen').classList.remove('hide');
-  // Clear password field
+  const ls = document.getElementById('login-screen');
+  ls.style.display = 'block';
+  ls.classList.remove('hide');
+  fecharLoginForm();
   const pi = document.getElementById('login-pass-input');
   if (pi) pi.value = '';
   const ui = document.getElementById('login-user-input');
   if (ui) ui.value = '';
-  loginSwitchTab('qr');
+  const err = document.getElementById('login-error');
+  if (err) err.textContent = '';
   qrStart();
 }
 
@@ -218,16 +246,13 @@ function qrStart() {
       video.srcObject = stream;
       video.style.display = 'block';
       if (placeholder) placeholder.style.display = 'none';
-      document.getElementById('qr-hint').textContent = 'Aponte para o QR Code do crachá';
+      const hint = document.getElementById('qr-hint');
+      if (hint) hint.textContent = 'Aponte para o QR Code do crachá';
       video.onloadedmetadata = () => { video.play(); qrLoop(); };
     })
     .catch(() => {
-      document.getElementById('qr-hint').textContent = 'Câmera não autorizada. Use usuário/senha.';
-      const placeholder = document.getElementById('qr-placeholder');
-      if (placeholder) {
-        placeholder.querySelector('span').textContent = 'Sem acesso à câmera';
-        placeholder.style.display = 'flex';
-      }
+      const hint = document.getElementById('qr-hint');
+      if (hint) hint.textContent = 'Câmera não disponível — use o botão abaixo.';
     });
 }
 
@@ -243,14 +268,41 @@ function qrLoop() {
   if (video.readyState === video.HAVE_ENOUGH_DATA) {
     canvas.width  = video.videoWidth;
     canvas.height = video.videoHeight;
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
     const img = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    const code = jsQR(img.data, img.width, img.height, { inversionAttempts: 'dontInvert' });
+    const code = jsQR(img.data, img.width, img.height, { inversionAttempts: 'attemptBoth' });
     if (code && code.data) {
-      const u = USUARIOS.find(x => x.id === code.data);
+      const raw = code.data.trim();
+      const users = _getUsuariosRuntime();
+      // Tenta decodificar Base64 (apps de QR costumam encapsular em base64)
+      let decoded = '';
+      try { decoded = atob(raw); } catch(e) {}
+      // Sequências de dígitos do raw E do texto decodificado
+      const digSeqs = [...new Set([
+        ...(raw.match(/\d+/g) || []),
+        ...(decoded.match(/\d+/g) || []),
+      ])];
+      let u = users.find(x => x.id === raw || (decoded && x.id === decoded));
+      if (!u) {
+        u = users.find(x => {
+          if (!x.matricula) return false;
+          const mat = String(x.matricula);
+          return mat === raw || mat === decoded || digSeqs.some(d => mat === d);
+        });
+      }
+      // Debug: mostra o que foi lido quando não há match
+      if (!u) {
+        const hint = document.getElementById('qr-hint');
+        if (hint) hint.textContent = '🔍 ' + (decoded || raw).substring(0, 40);
+      }
       if (u) {
         qrStop();
+        if (u.status === 'inativo') {
+          const hint = document.getElementById('qr-hint');
+          if (hint) hint.textContent = 'Usuário inativo. Contate o administrador.';
+          return;
+        }
         performLogin(u);
         return;
       }
@@ -266,4 +318,62 @@ window.addEventListener('DOMContentLoaded', () => {
 
 
 const ANGULOS = Array.from({length:72}, (_,i) => i*5); // 0, 5, 10 ... 355
+
+// ── Runtime user list (base USUARIOS + localStorage overrides/extras/deletes) ──
+function _setorPermissoes(setor) {
+  const map = {
+    'Admin':    { pedidos:'total',    dashboard:true,  soLeitura:false, gestao:true,  all:true },
+    'Gestão':   { pedidos:'leitura',  dashboard:true,  soLeitura:true,  gestao:false },
+    'Produção': { pedidos:'leitura',  dashboard:false, soLeitura:false, gestao:false },
+    'Comercial':{ pedidos:'leitura',  dashboard:true,  soLeitura:true,  gestao:false },
+    'Expedição':{ pedidos:'expedicao',dashboard:false, soLeitura:false, gestao:false },
+  };
+  return map[setor] || { pedidos:'leitura', dashboard:false, soLeitura:true, gestao:false };
+}
+
+function _setorCor(setor) {
+  const map = { 'Admin':'sector-admin','Gestão':'sector-gestao','Produção':'sector-producao','Comercial':'sector-comercial','Expedição':'sector-expedicao' };
+  return map[setor] || 'sector-gestao';
+}
+
+function _getUsuariosRuntime() {
+  try {
+    const overrides = JSON.parse(localStorage.getItem('oem_users_overrides') || '{}');
+    const extras    = JSON.parse(localStorage.getItem('oem_users_extras')    || '[]');
+    const deleted   = JSON.parse(localStorage.getItem('oem_users_deleted')   || '[]');
+    const senhas    = loadSenhas();
+
+    const base = USUARIOS
+      .filter(u => !deleted.includes(u.id))
+      .map(u => {
+        const ovr   = overrides[u.id] || {};
+        const setor = ovr.setor  || u.setor;
+        const nome  = ovr.nome   || u.nome;
+        const status = ovr.status || 'ativo';
+        return {
+          ...u,
+          nome,
+          setor,
+          status,
+          matricula:  ovr.matricula ?? u.matricula ?? '',
+          cor:        _setorCor(setor),
+          permissoes: _setorPermissoes(setor),
+          initials:   nome.slice(0,2).toUpperCase(),
+          senha:      senhas[u.usuario] !== undefined ? senhas[u.usuario] : (USUARIOS_DEFAULT[u.usuario] || '1234'),
+        };
+      });
+
+    const extraUsers = extras.map(e => ({
+      ...e,
+      status:     e.status || 'ativo',
+      matricula:  e.matricula ?? '',
+      cor:        _setorCor(e.setor),
+      permissoes: _setorPermissoes(e.setor),
+      initials:   (e.nome || '').slice(0,2).toUpperCase(),
+      senha:      senhas[e.usuario] !== undefined ? senhas[e.usuario] : '1234',
+    }));
+
+    return [...base, ...extraUsers];
+  } catch(e) { return [...USUARIOS]; }
+}
 

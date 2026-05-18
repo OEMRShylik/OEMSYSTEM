@@ -142,7 +142,7 @@ async function renderDashboard() {
     await _carregarReport();
     if (!_D_IND.length) {
       root.innerHTML = `<div style="padding:48px;text-align:center;font-family:Inter,sans-serif;color:#9ca3af;">
-        <div style="font-size:32px;margin-bottom:8px;">📊</div>
+        <div style="font-size:32px;margin-bottom:8px;"></div>
         <div style="font-size:15px;font-weight:700;color:#374151;">Sem dados de produção</div>
         <div style="font-size:13px;margin-top:6px;">Adicione pedidos via <strong>+ Novo Pedido</strong> para popular o dashboard.</div>
       </div>`;
@@ -212,14 +212,14 @@ async function renderDashboard() {
 
     <!-- KPIs -->
     <div class="dash-kpis">
-      ${_kpi('📦','Pedidos',       totPed,                      `${indAT.length} ${indAT.length===1?'mês':'meses'} acumulado`, '')}
-      ${_kpi('🔧','Produção',      fmt(totMang)+' mang',        `${fmt(Math.round(totMang/indAT.length))}/mês médio`, '')}
-      ${_kpi('💰','Faturamento',   fmtR(totFat),                `${fmtR(Math.round(totFat/indAT.length))}/mês médio`, '')}
-      ${_kpi('⚡','Mang/hora',     ultimo.mang_hora.toFixed(2), `${anterior.mang_hora.toFixed(2)} mês ant. ${dd(ultimo,anterior,'mang_hora')}`, '')}
-      ${_kpi('📋','Ticket Médio',  fmtR(ticketMedio),           `${fmtR(ticketAnt)} mês ant. <span class="dash-delta ${dC(ticketMedio-ticketAnt)}">${dV(ticketMedio-ticketAnt)}</span>`, ticketMedio>ticketAnt?'kpi-ok':'kpi-amber')}
-      ${_kpi('🏆','Maior Cliente', cliAT[0]?.cliente||'—',      fmtR(cliAT[0]?.faturamento||0), '')}
-      ${_kpi('📈','Mang/dia',      ultimo.mang_dia.toFixed(1),  `${anterior.mang_dia.toFixed(1)} mês ant. ${dd(ultimo,anterior,'mang_dia')}`, '')}
-      ${_kpi('🗓️','Último mês',    fmtR(ultimo.faturamento),    `${ultimo.mes} · ${ultimo.pedidos} pedidos`, '')}
+      ${_kpi('','Pedidos',       totPed,                      `${indAT.length} ${indAT.length===1?'mês':'meses'} acumulado`, '')}
+      ${_kpi('','Produção',      fmt(totMang)+' mang',        `${fmt(Math.round(totMang/indAT.length))}/mês médio`, '')}
+      ${_kpi('','Faturamento',   fmtR(totFat),                `${fmtR(Math.round(totFat/indAT.length))}/mês médio`, '')}
+      ${_kpi('','Mang/hora',     ultimo.mang_hora.toFixed(2), `${anterior.mang_hora.toFixed(2)} mês ant. ${dd(ultimo,anterior,'mang_hora')}`, '')}
+      ${_kpi('','Ticket Médio',  fmtR(ticketMedio),           `${fmtR(ticketAnt)} mês ant. <span class="dash-delta ${dC(ticketMedio-ticketAnt)}">${dV(ticketMedio-ticketAnt)}</span>`, ticketMedio>ticketAnt?'kpi-ok':'kpi-amber')}
+      ${_kpi('','Maior Cliente', cliAT[0]?.cliente||'—',      fmtR(cliAT[0]?.faturamento||0), '')}
+      ${_kpi('','Mang/dia',      ultimo.mang_dia.toFixed(1),  `${anterior.mang_dia.toFixed(1)} mês ant. ${dd(ultimo,anterior,'mang_dia')}`, '')}
+      ${_kpi('','Último mês',    fmtR(ultimo.faturamento),    `${ultimo.mes} · ${ultimo.pedidos} pedidos`, '')}
     </div>
 
     <!-- BARRAS + CLIENTES -->
@@ -352,7 +352,7 @@ async function renderDashboard() {
           <div class="dash-mes-stat-lbl">Faturamento</div>
         </div>
         <div style="margin-left:auto;">
-          <input type="text" placeholder="🔍 Buscar pedido ou cliente..."
+          <input type="text" placeholder="Buscar pedido ou cliente..."
             oninput="dashFiltrarPedidos(this.value)"
             style="padding:6px 12px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:13px;
                    font-family:Inter,sans-serif;outline:none;width:240px;transition:border-color .15s;"
@@ -411,7 +411,7 @@ function _renderPedidosRows(peds, fmtRc) {
       ? `<button class="btn-fat-edit ${temFat ? 'tem-fat' : ''}"
           onclick="event.stopPropagation(); abrirModalFaturamento('${p.pedido}','${p.cliente.replace(/'/g,"\\'")}',${p.fat ?? null})"
           title="${temFat ? 'Editar faturamento' : 'Lançar faturamento'}">
-          💰 ${temFat ? 'Editar' : 'Lançar'}
+          ${temFat ? 'Editar' : 'Lançar'}
         </button>`
       : '';
 
@@ -495,7 +495,7 @@ function _dashModalPedido(p) {
         </div>
         ${isAdmin ? `<button class="btn-fat-edit ${(p.fat||0)>0?'tem-fat':''}" style="width:100%;justify-content:center;margin-top:8px;padding:10px;"
           onclick="document.getElementById('dash-ped-modal').remove(); abrirModalFaturamento('${p.pedido}','${p.cliente.replace(/'/g,"\\'")}',${p.fat??null})">
-          💰 ${(p.fat||0)>0?'Editar faturamento':'Lançar faturamento'}
+          ${(p.fat||0)>0?'Editar faturamento':'Lançar faturamento'}
         </button>` : ''}
       </div>
     </div>`;

@@ -79,6 +79,7 @@ function _serializar(p) {
   if (p.anexos?.embalagem?.filename) refs.emb = p.anexos.embalagem.filename;
   if (p.anexos?.corte?.filename)   refs.crt  = p.anexos.corte.filename;
   if (p._sepFilename)              refs.sep  = p._sepFilename;
+  if (p.laudos?.length)            refs.laudos = p.laudos.map(l => l.filename).filter(Boolean);
 
   const o = {
     id: p.id,
@@ -94,6 +95,14 @@ function _serializar(p) {
   if (p.amostragens_ts)           o.amst_t = p.amostragens_ts;
   if (p._iniciado)                o.ini    = 1;
   if (p.paginasOP?.length)        o.pags   = p.paginasOP;
+  if (p.checklist_inspecao)       o.cli    = p.checklist_inspecao;
+  if (p._marks && Object.keys(p._marks).some(k => p._marks[k]?.length)) o.mrks = p._marks;
+  if (p._ts_etapas && Object.keys(p._ts_etapas).length) o.tse = p._ts_etapas;
+  if (p._substPrensagem && Object.keys(p._substPrensagem).length) o.spp = p._substPrensagem;
+  if (p.tipo)                          o.tp  = p.tipo;
+  if (p.subEtapa)                      o.se  = p.subEtapa;
+  if (p.itensEmbalados?.length)        o.iem = p.itensEmbalados;
+  if (p.fotosEmbalagem?.length)        o.fot = p.fotosEmbalagem;
   return o;
 }
 
@@ -116,6 +125,14 @@ function _desserializar(raw) {
     amostragens_ts:      raw.amst_t    || null,
     _iniciado:           !!raw.ini,
     paginasOP:           raw.pags       || null,
+    checklist_inspecao:  raw.cli        || null,
+    _marks:              raw.mrks       || null,
+    _ts_etapas:          raw.tse        || null,
+    _substPrensagem:     raw.spp        || null,
+    tipo:                raw.tp         || null,
+    subEtapa:            raw.se         || null,
+    itensEmbalados:      raw.iem        || null,
+    fotosEmbalagem:      raw.fot        || null,
     anexos:              {},
   };
 
@@ -135,6 +152,9 @@ function _desserializar(raw) {
   }
   if (refs.sep) {
     p._sepFilename = refs.sep;
+  }
+  if (refs.laudos?.length) {
+    p.laudos = refs.laudos.map(f => ({ filename: f, data: null, _lazy: true }));
   }
   return p;
 }
@@ -179,6 +199,11 @@ async function salvarEstado() {
     const crt = p.anexos?.corte;
     if (crt?.data && !crt._salvo)
       if (await _salvarPdfFisico(crt.filename, crt.data)) crt._salvo = true;
+
+    // Laudos de Teste
+    for (const l of (p.laudos || []))
+      if (l.data && !l._salvo)
+        if (await _salvarPdfFisico(l.filename, l.data)) l._salvo = true;
 
     // Separacao
     if (p.pdfSepData && !p._sepSalvo) {

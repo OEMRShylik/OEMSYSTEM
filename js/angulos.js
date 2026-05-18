@@ -1,7 +1,7 @@
-// ══════════════════════════════════════════════════
-//  ÂNGULOS — Transferidor 360° com ponteiro arrastável + modelo 3D
-//  0° = baixo, 90° = direita, 180° = cima, 270° = esquerda
-// ══════════════════════════════════════════════════
+﻿// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+//  Ã‚NGULOS â€” Transferidor 360Â° com ponteiro arrastÃ¡vel + modelo 3D
+//  0Â° = baixo, 90Â° = direita, 180Â° = cima, 270Â° = esquerda
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 let currentAngulo = 0;
 let _angDragging  = false;
@@ -14,7 +14,7 @@ function renderAngulos() {
   updateRangeTrack(0);
 }
 
-// ── Range slider ──
+// â”€â”€ Range slider â”€â”€
 function updateRangeTrack(val) {
   const el = document.getElementById('ang-range');
   if (!el) return;
@@ -29,31 +29,38 @@ function selAngRange(val) {
   _angDrawAll();
 }
 
-// ── Resize ──
+// â”€â”€ Resize â”€â”€
 function resizeAngCanvas() {
   const canvas = document.getElementById('ang-canvas');
   const container = document.getElementById('ang-left-panel');
   if (!canvas || !container) return;
   const size = Math.min(container.clientWidth, container.clientHeight) * 0.92;
-  canvas.width  = size;
-  canvas.height = size;
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width  = Math.round(size * dpr);
+  canvas.height = Math.round(size * dpr);
+  canvas.style.width  = size + 'px';
+  canvas.style.height = size + 'px';
+  canvas._cssSize = size;
 }
 
-// ── Draw tudo ──
+// â”€â”€ Draw tudo â”€â”€
 function _angDrawAll() {
   resizeAngCanvas();
   _drawTransferidor();
   _draw3DHose();
 }
 
-// ═══════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 //  TRANSFERIDOR CANVAS
-// ═══════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 function _drawTransferidor() {
   const canvas = document.getElementById('ang-canvas');
   if (!canvas) return;
   const ctx = canvas.getContext('2d');
-  const W = canvas.width, H = canvas.height;
+  const dpr = window.devicePixelRatio || 1;
+  const W = canvas._cssSize || (canvas.width / dpr);
+  const H = W;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   ctx.clearRect(0, 0, W, H);
 
   const cx = W / 2, cy = H / 2;
@@ -64,14 +71,14 @@ function _drawTransferidor() {
   ctx.fillStyle = '#fff'; ctx.fill();
   ctx.strokeStyle = '#ccc'; ctx.lineWidth = 1.5; ctx.stroke();
 
-  // Graduação: 0° = baixo (Math.PI/2), sentido horário
-  // Ângulo 0° → bottom (π/2), 90° → right (0), 180° → top (-π/2), 270° → left (π)
-  // 0°=baixo, 90°=direita, 180°=cima, 270°=esquerda
+  // GraduaÃ§Ã£o: 0Â° = baixo (Math.PI/2), sentido horÃ¡rio
+  // Ã‚ngulo 0Â° â†’ bottom (Ï€/2), 90Â° â†’ right (0), 180Â° â†’ top (-Ï€/2), 270Â° â†’ left (Ï€)
+  // 0Â°=baixo, 90Â°=direita, 180Â°=cima, 270Â°=esquerda
   function angToRad(deg) {
     return Math.PI / 2 - deg * Math.PI / 180;
   }
 
-  // Ticks + labels — 0°=baixo, crescendo horário pela direita
+  // Ticks + labels â€” 0Â°=baixo, crescendo horÃ¡rio pela direita
   for (let deg = 0; deg < 360; deg++) {
     const a = angToRad(deg);
     const maj10 = deg % 10 === 0;
@@ -80,9 +87,9 @@ function _drawTransferidor() {
     const lw = maj10 ? 1.4 : maj5 ? 0.9 : 0.5;
 
     // Ponto na borda: cx + cos(a)*R, cy + sin(a)*R
-    // angToRad: a = π/2 - deg*π/180
-    // deg=0 → a=π/2 → cos=0, sin=1 → (cx, cy+R) = BAIXO ✓
-    // deg=90 → a=0 → cos=1, sin=0 → (cx+R, cy) = DIREITA ✓
+    // angToRad: a = Ï€/2 - deg*Ï€/180
+    // deg=0 â†’ a=Ï€/2 â†’ cos=0, sin=1 â†’ (cx, cy+R) = BAIXO âœ“
+    // deg=90 â†’ a=0 â†’ cos=1, sin=0 â†’ (cx+R, cy) = DIREITA âœ“
     const px1 = cx + Math.cos(a) * R;
     const py1 = cy + Math.sin(a) * R;   // +sin porque y cresce para baixo no canvas
     const px2 = cx + Math.cos(a) * (R - tickLen);
@@ -99,8 +106,8 @@ function _drawTransferidor() {
       const ly = cy + Math.sin(a) * lr;
       ctx.save();
       ctx.translate(lx, ly);
-      // Rotaciona o texto para ficar tangencial ao círculo, legível
-      // O ângulo 'a' aponta para fora — girar texto perpendicular a isso
+      // Rotaciona o texto para ficar tangencial ao cÃ­rculo, legÃ­vel
+      // O Ã¢ngulo 'a' aponta para fora â€” girar texto perpendicular a isso
       ctx.rotate(a - Math.PI / 2);
       ctx.font = `${deg % 30 === 0 ? '700 12px' : '500 9px'} Inter,sans-serif`;
       ctx.fillStyle = '#111';
@@ -110,7 +117,7 @@ function _drawTransferidor() {
     }
   }
 
-  // Arco do ângulo atual (0° → currentAngulo)
+  // Arco do Ã¢ngulo atual (0Â° â†’ currentAngulo)
   if (currentAngulo !== 0) {
     const aStart = angToRad(0);
     const aEnd   = angToRad(currentAngulo);
@@ -129,10 +136,10 @@ function _drawTransferidor() {
   ctx.fillStyle = '#eee'; ctx.fill();
   ctx.strokeStyle = '#bbb'; ctx.lineWidth = 1.5; ctx.stroke();
 
-  // ── Ponteiro FIXO (0° = baixo) — frente ──
+  // â”€â”€ Ponteiro FIXO (0Â° = baixo) â€” frente â”€â”€
   _drawPointerFixed(ctx, cx, cy, R);
 
-  // ── Ponteiro MÓVEL (currentAngulo) — atrás do fixo ──
+  // â”€â”€ Ponteiro MÃ“VEL (currentAngulo) â€” atrÃ¡s do fixo â”€â”€
   _drawPointerMobile(ctx, cx, cy, R, currentAngulo);
 
   // Hub central sobreposto
@@ -140,12 +147,12 @@ function _drawTransferidor() {
   ctx.fillStyle = '#fff'; ctx.fill();
   ctx.strokeStyle = '#aaa'; ctx.lineWidth = 1; ctx.stroke();
 
-  // ── Drag area ──
+  // â”€â”€ Drag area â”€â”€
   _setupAngDrag(canvas, cx, cy);
 }
 
 function _drawPointerFixed(ctx, cx, cy, R) {
-  // 0° = baixo → ângulo canvas = -π/2 (apontando para baixo)
+  // 0Â° = baixo â†’ Ã¢ngulo canvas = -Ï€/2 (apontando para baixo)
   // O terminal aponta para baixo com o corpo saindo para cima
   const angle = Math.PI / 2; // baixo
 
@@ -154,7 +161,7 @@ function _drawPointerFixed(ctx, cx, cy, R) {
     const w = h * (TERMINAL_IMG.naturalWidth / TERMINAL_IMG.naturalHeight);
     ctx.save();
     ctx.translate(cx, cy);
-    // Imagem aponta para cima (cabeça para cima) — girar 180° para apontar para baixo (0°)
+    // Imagem aponta para cima (cabeÃ§a para cima) â€” girar 180Â° para apontar para baixo (0Â°)
     // mas manter no centro vertical
     // Adiciona contorno preto (sombra)
     ctx.shadowColor = '#000';
@@ -168,8 +175,8 @@ function _drawPointerFixed(ctx, cx, cy, R) {
 }
 
 function _drawPointerMobile(ctx, cx, cy, R, deg) {
-  // angToRad: deg=0 → bottom, deg=90 → right
-  const radCanvas = -(deg * Math.PI / 180); // rotação no canvas (sentido horário visualmente)
+  // angToRad: deg=0 â†’ bottom, deg=90 â†’ right
+  const radCanvas = -(deg * Math.PI / 180); // rotaÃ§Ã£o no canvas (sentido horÃ¡rio visualmente)
 
   ctx.save();
   ctx.translate(cx, cy);
@@ -216,7 +223,7 @@ function _drawSimplePointer(ctx, cx, cy, angle, len, color) {
   ctx.restore();
 }
 
-// ── Drag para girar o ponteiro móvel ──
+// â”€â”€ Drag para girar o ponteiro mÃ³vel â”€â”€
 function _setupAngDrag(canvas, cx, cy) {
   // Remove listeners antigos
   canvas.onmousedown  = null; canvas.ontouchstart = null;
@@ -229,11 +236,11 @@ function _setupAngDrag(canvas, cx, cy) {
     const clientY = e.touches ? e.touches[0].clientY : e.clientY;
     const x = (clientX - rect.left) * scaleX - cx;
     const y = (clientY - rect.top)  * scaleY - cy;
-    // angToRad = π/2 - deg*π/180, então deg = (π/2 - θ)*180/π
-    // θ = atan2(dy, dx) onde dy = y no canvas (positivo para baixo = 0°)
+    // angToRad = Ï€/2 - deg*Ï€/180, entÃ£o deg = (Ï€/2 - Î¸)*180/Ï€
+    // Î¸ = atan2(dy, dx) onde dy = y no canvas (positivo para baixo = 0Â°)
     const theta = Math.atan2(y, x);
     let deg = Math.round(((Math.PI / 2 - theta) * 180 / Math.PI + 360) % 360);
-    deg = Math.round(deg / 5) * 5; // snap a cada 5°
+    deg = Math.round(deg / 5) * 5; // snap a cada 5Â°
     return deg;
   }
 
@@ -268,7 +275,7 @@ function _setupAngDrag(canvas, cx, cy) {
 
 
 
-// Integração com viewer3d
+// IntegraÃ§Ã£o com viewer3d
 function _draw3DHose() {
   if (typeof viewer3dInit === 'function') viewer3dInit('ang-hose-3d');
 }
@@ -285,3 +292,4 @@ window.addEventListener('resize', () => {
     _angDrawAll(); _resize3D();
   }
 });
+

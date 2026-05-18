@@ -31,6 +31,14 @@ var _COR_ETAPA = {
 function _dateStr(ano, mes, dia) {
   return ano + '-' + String(mes + 1).padStart(2,'0') + '-' + String(dia).padStart(2,'0');
 }
+function _qtdMangueiras(p) {
+  if (!p.paginasOP || !p.paginasOP.length) return null;
+  var total = 0, found = false;
+  p.paginasOP.forEach(function(pg) {
+    if ((pg.corte_mm || 0) > 0) { total += parseFloat(pg.item_qty) || 0; found = true; }
+  });
+  return found ? Math.round(total) : null;
+}
 function _celulaVazia() {
   var c = document.createElement('div');
   c.style.cssText = 'border-right:1px solid var(--border,#e5e7eb);border-bottom:1px solid var(--border,#e5e7eb);min-height:90px;background:#f8fafc;';
@@ -70,14 +78,17 @@ window.renderCalFull = function() {
 
   // Mapear pedidos por data de entrega
   var pedidosPorDia = {};
+  var mangueirasPorDia = {};
   var todosP = (typeof pedidos !== 'undefined') ? pedidos : [];
   todosP.forEach(function(p, idx) {
     if (!p.entrega) return;
     var partes = p.entrega.split('/');
     if (partes.length !== 3) return;
     var dataKey = partes[2] + '-' + partes[1].padStart(2,'0') + '-' + partes[0].padStart(2,'0');
-    if (!pedidosPorDia[dataKey]) pedidosPorDia[dataKey] = [];
-    pedidosPorDia[dataKey].push({p: p, idx: idx});
+    if (!pedidosPorDia[dataKey]) { pedidosPorDia[dataKey] = []; mangueirasPorDia[dataKey] = 0; }
+    var qtd = _qtdMangueiras(p);
+    pedidosPorDia[dataKey].push({p: p, idx: idx, qtdMang: qtd});
+    if (qtd) mangueirasPorDia[dataKey] += qtd;
   });
 
   root.innerHTML = '';
@@ -107,18 +118,32 @@ window.renderCalFull = function() {
     var ehPassado  = dataKey < hojeStr;
     var diaSemana  = (primeiroDia + dia - 1) % 7;
     var isWeekend  = diaSemana === 0 || diaSemana === 6;
-    var psDoDia    = pedidosPorDia[dataKey] || [];
+    var psDoDia        = pedidosPorDia[dataKey] || [];
+    var totalMangDia   = mangueirasPorDia[dataKey] || 0;
+    var temPedidos     = psDoDia.length > 0;
 
     var cell = document.createElement('div');
     var bgCor = ehHoje ? '#eff6ff' : (ehPassado || isWeekend) ? '#fafafa' : 'var(--white,#fff)';
     cell.style.cssText = 'border-right:1px solid var(--border,#e5e7eb);border-bottom:1px solid var(--border,#e5e7eb);padding:4px 4px 6px;min-height:90px;display:flex;flex-direction:column;gap:2px;background:' + bgCor + ';' + (ehHoje ? 'outline:2px solid #1d4ed8;outline-offset:-1px;' : '');
 
-    // Número do dia
+    // Linha superior: número do dia + total de mangueiras do dia
+    var topRow = document.createElement('div');
+    topRow.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:1px 2px 3px;';
+
     var numEl = document.createElement('div');
     var numCor = ehHoje ? '#fff' : ehPassado ? '#cbd5e1' : isWeekend ? '#94a3b8' : 'var(--text,#374151)';
-    numEl.style.cssText = 'font-size:12px;font-weight:700;font-family:Inter,sans-serif;text-align:right;padding:1px 2px 3px;' + (ehHoje ? 'background:#1d4ed8;color:#fff;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;margin-left:auto;' : 'color:' + numCor + ';');
+    numEl.style.cssText = 'font-size:12px;font-weight:700;font-family:Inter,sans-serif;' + (ehHoje ? 'background:#1d4ed8;color:#fff;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;flex-shrink:0;' : 'color:' + numCor + ';');
     numEl.textContent = dia;
-    cell.appendChild(numEl);
+    topRow.appendChild(numEl);
+
+    if (temPedidos && totalMangDia > 0) {
+      var totalEl = document.createElement('div');
+      totalEl.style.cssText = 'font-size:9px;font-weight:800;font-family:Inter,sans-serif;background:#1d4ed8;color:#fff;border-radius:4px;padding:1px 5px;white-space:nowrap;';
+      totalEl.title = 'Total de mangueiras do dia';
+      totalEl.textContent = totalMangDia + ' mang.';
+      topRow.appendChild(totalEl);
+    }
+    cell.appendChild(topRow);
 
     // Chips de pedidos
     psDoDia.forEach(function(item) {
@@ -133,12 +158,23 @@ window.renderCalFull = function() {
       clienteEl.style.cssText = 'font-size:11px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:Inter,sans-serif;';
       clienteEl.textContent = p.cliente || '—';
 
+      var infoRow = document.createElement('div');
+      infoRow.style.cssText = 'display:flex;align-items:center;justify-content:space-between;gap:4px;';
+
       var numPedido = document.createElement('div');
       numPedido.style.cssText = 'font-size:9px;font-weight:600;opacity:.7;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:"JetBrains Mono",monospace;';
       numPedido.textContent = '#' + p.id;
+      infoRow.appendChild(numPedido);
+
+      if (item.qtdMang) {
+        var qtdEl = document.createElement('div');
+        qtdEl.style.cssText = 'font-size:9px;font-weight:700;flex-shrink:0;opacity:.85;';
+        qtdEl.textContent = item.qtdMang + 'x';
+        infoRow.appendChild(qtdEl);
+      }
 
       chip.appendChild(clienteEl);
-      chip.appendChild(numPedido);
+      chip.appendChild(infoRow);
 
       chip.onclick = (function(i) {
         return function(e) {

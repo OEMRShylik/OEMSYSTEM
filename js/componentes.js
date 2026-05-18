@@ -333,9 +333,30 @@ function _extrairComponentesDaOP(paginasOP) {
     });
   }
 
-  // 3. Para cada página filha, calcular quantidades reais dos componentes
+  // 3. Incluir itens H* da página índice (corte_mm = 0): componentes comuns ao kit inteiro
+  if (pgIdx?.lista_itens?.length) {
+    pgIdx.lista_itens.forEach(it => {
+      const cod = (it.codigo || '').trim();
+      if (!cod || !/^H/i.test(cod)) return; // só itens começados com H
+      const qtdTotal = (parseFloat(it.quantidade) || 0) * qtdKits;
+      if (mapa[cod]) {
+        mapa[cod].quantidade += qtdTotal;
+      } else {
+        mapa[cod] = {
+          componente: cod,
+          descricao:  it.descricao || '',
+          quantidade: qtdTotal,
+          unidade:    _classificarUnidade(cod, it.unidade),
+        };
+      }
+    });
+  }
+
+  // 4. Para cada página, calcular quantidades reais dos componentes
+  //    Pula apenas a página de índice/resumo (pgIdx); demais páginas com corte=0
+  //    são acessórios válidos (ex: adaptadores HEA08M) e devem ser contabilizados.
   paginasOP.forEach(pg => {
-    if (pg.is_index) return;                  // pula o índice
+    if (pg === pgIdx) return;                 // pula só o resumo/índice
     if (!pg.lista_itens?.length) return;
 
     const codMang    = (pg.item_codigo || '').trim();
@@ -362,7 +383,7 @@ function _extrairComponentesDaOP(paginasOP) {
     });
   });
 
-  // 4. Fallback: se não achou página índice, tenta extração simples
+  // 5. Fallback: se não achou página índice, tenta extração simples
   //    filtrando só matéria prima (evita mostrar nada)
   if (!pgIdx && !Object.keys(mapa).length) {
     paginasOP.forEach(pg => {

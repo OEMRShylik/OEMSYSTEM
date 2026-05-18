@@ -1,17 +1,26 @@
 {
   "_meta": {
-    "total_registros": 1,
+    "total_registros": 2,
     "periodo": ""
   },
   "pedidos": [
     {
-      "pedido": "000005",
-      "cliente": "METARO",
-      "qtd": 102,
+      "pedido": "004610",
+      "cliente": "FEZER",
+      "qtd": 87,
       "fat": null,
-      "ano": 2025,
-      "mes": "07",
-      "mes_nome": "Julho"
+      "ano": 2026,
+      "mes": "05",
+      "mes_nome": "Maio"
+    },
+    {
+      "pedido": "004615",
+      "cliente": "PIERINO",
+      "qtd": 14,
+      "fat": null,
+      "ano": 2026,
+      "mes": "05",
+      "mes_nome": "Maio"
     }
   ]
 }

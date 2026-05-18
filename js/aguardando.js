@@ -129,8 +129,13 @@ window.addEventListener('load', function() {
       try {
         html = html.replace(/class="pedido-card([^"]*)"/, (_, r) =>
           `class="pedido-card${r} card-aguardando"`);
-        html = html.replace(/<div class="status-badge[^"]*">[^<]*<\/div>/,
-          `<div class="status-badge status-aguardando">⏳ AGUARDANDO</div>`);
+        // Insere badge no rodapé do card (antes do último </div>)
+        const lastDiv = html.lastIndexOf('</div>');
+        if (lastDiv !== -1) {
+          html = html.substring(0, lastDiv) +
+            `<div class="status-aguardando" style="margin-top:5px;text-align:center;border-radius:6px;padding:2px 6px;font-size:10px;font-weight:700;letter-spacing:.3px;">AGUARDANDO</div>` +
+            html.substring(lastDiv);
+        }
       } catch(e) {}
       return html;
     };
@@ -149,7 +154,7 @@ window.addEventListener('load', function() {
         const b = document.createElement('span');
         b.className   = 'kanban-aguard-count';
         b.title       = `${n} aguardando componente`;
-        b.textContent = `⏳ ${n}`;
+        b.textContent = `${n}`;
         hdr.appendChild(b);
       });
     };
@@ -166,7 +171,7 @@ window.addEventListener('load', function() {
 
       const b = document.getElementById('detalhe-status-badge');
       if (b && _isAguardando(p)) {
-        b.textContent = '⏳ Aguardando';
+        b.textContent = 'Aguardando';
         b.style.cssText += ';background:#fef9c3;color:#854d0e;border:1px solid #fde047;';
       }
 
@@ -220,7 +225,7 @@ function abrirSeparacao() {
         style="padding:10px 24px;background:#1a56db;color:#fff;border:none;border-radius:10px;
                font-size:14px;font-weight:700;font-family:Inter,sans-serif;cursor:pointer;
                display:flex;align-items:center;gap:8px;">
-        📎 Anexar PDF de Separação
+        Anexar PDF de Separação
       </button>
       <input type="file" id="upload-pdf-sep" accept=".pdf" style="display:none"
         onchange="anexarPdfSeparacao(event)">
@@ -236,6 +241,7 @@ function _htmlPainel(p, idx) {
   const abertas     = pendencias.filter(d => !d.resolvido);
   const resolvidas  = pendencias.filter(d => d.resolvido);
   const aguardando  = abertas.length > 0;
+  const bloqueado   = p.etapa === 'finalizado';
 
   const bg     = aguardando ? '#fef9c3' : '#f0fdf4';
   const border = aguardando ? '#fde047' : '#bbf7d0';
@@ -245,15 +251,15 @@ function _htmlPainel(p, idx) {
   return `
   <div style="margin:12px 14px 0;border-radius:12px;border:1.5px solid ${border};background:${bg};overflow:hidden;font-family:Inter,sans-serif;">
     <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:${hdrBg};border-bottom:1px solid ${border};">
-      <span style="font-size:18px;">${aguardando?'⏳':'✅'}</span>
+      <span style="font-size:18px;">${aguardando?'':'✓'}</span>
       <div style="flex:1;">
         <div style="font-size:12px;font-weight:800;color:${cor};letter-spacing:.4px;text-transform:uppercase;">FALTA DE ESTOQUE</div>
         <div style="font-size:11px;color:${cor};opacity:.75;">${aguardando?'Aguardando componente(s)':'Sem pendências abertas'}</div>
       </div>
-      <button onclick="abrirModalAguardando(${idx})"
+      ${(bloqueado || window._soLeitura) ? '' : `<button onclick="abrirModalAguardando(${idx})"
         style="padding:6px 13px;border:none;border-radius:8px;cursor:pointer;background:${aguardando?'#eab308':'#22c55e'};color:#fff;font-size:12px;font-weight:700;font-family:Inter,sans-serif;">
         + Registrar
-      </button>
+      </button>`}
     </div>
 
     ${abertas.length > 0 ? `
@@ -270,21 +276,23 @@ function _htmlPainel(p, idx) {
             <span style="font-size:12px;font-weight:800;color:#111;background:#fef9c3;border:1px solid #fde047;padding:2px 9px;border-radius:6px;font-family:'JetBrains Mono',monospace;letter-spacing:.5px;">${d.item}</span>
             <div style="display:flex;gap:6px;margin-left:auto;align-items:center;">
               <span style="font-size:11px;font-weight:600;color:#374151;background:#f1f5f9;padding:2px 8px;border-radius:6px;">Solicitado: <strong>${d.qtd_solicitada}</strong></span>
-              <span style="font-size:11px;font-weight:700;color:#dc2626;background:#fee2e2;padding:2px 8px;border-radius:6px;">Faltam: <strong>${d.qtd_faltante}</strong></span>
+              ${(()=>{const emp=parseInt(d.qtd_empenhada)||0;const falt=parseInt(d.qtd_faltante)||0;const rest=Math.max(0,falt-emp);return emp>0?`<span style="font-size:11px;font-weight:700;color:#166534;background:#dcfce7;padding:2px 8px;border-radius:6px;">Empenhado: <strong>${emp}</strong></span>`:'';})()}
+              <span style="font-size:11px;font-weight:700;color:#dc2626;background:#fee2e2;padding:2px 8px;border-radius:6px;">Faltam: <strong>${Math.max(0,(parseInt(d.qtd_faltante)||0)-(parseInt(d.qtd_empenhada)||0))}</strong></span>
             </div>
           </div>
-          ${d.comentario ? `<div style="font-size:12px;color:#374151;padding:5px 8px;background:#fffbeb;border-radius:6px;border-left:3px solid #fbbf24;">💬 ${d.comentario}</div>` : ''}
+          ${d.comentario ? `<div style="font-size:12px;color:#374151;padding:5px 8px;background:#fffbeb;border-radius:6px;border-left:3px solid #fbbf24;">${d.comentario}</div>` : ''}
           <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
             <div style="font-size:10px;color:#9ca3af;flex:1;">
-              ${d.registrado_por?`Registrado por: ${d.registrado_por}`:''}${d.data?` · ${d.data}`:''}
+              ${d.registrado_por?`Registrado por: ${d.registrado_por}${d.data?' · '+d.data:''}`:''}
+              ${d.editado_por?`<br>Editado por: ${d.editado_por}${d.data_edicao?' · '+d.data_edicao:''}`:''}
             </div>
-            <select onchange="alterarStatusEstoque('${estoqueId||''}',${idx},${gi},this.value)"
-              style="padding:4px 8px;border:1.5px solid ${statusCor[statusAtual]||'#e5e7eb'};border-radius:6px;font-size:11px;font-weight:700;font-family:Inter,sans-serif;color:${statusCor[statusAtual]||'#374151'};background:#fff;cursor:pointer;outline:none;">
-              <option value="Em Falta"             ${statusAtual==='Em Falta'            ?'selected':''}>🔴 Em Falta</option>
-              <option value="Comprado/Transferido"  ${statusAtual==='Comprado/Transferido' ?'selected':''}>🟡 Comprado/Transferido</option>
-              <option value="Lançado"               ${statusAtual==='Lançado'              ?'selected':''}>🟠 Lançado</option>
-              <option value="Empenhado"             ${statusAtual==='Empenhado'            ?'selected':''}>🟢 Empenhado</option>
-            </select>
+            <span style="padding:3px 9px;border-radius:6px;font-size:11px;font-weight:700;background:${statusCor[statusAtual]||'#e5e7eb'}22;color:${statusCor[statusAtual]||'#374151'};border:1.5px solid ${statusCor[statusAtual]||'#e5e7eb'}44;">
+              ${statusAtual}
+            </span>
+            ${(bloqueado || window._soLeitura) ? '' : `<button onclick="abrirModalEditarEstoque('${estoqueId||''}')"
+              style="padding:4px 10px;border:1.5px solid #e5e7eb;border-radius:6px;font-size:11px;font-weight:700;font-family:Inter,sans-serif;background:#fff;color:#374151;cursor:pointer;white-space:nowrap;">
+              Editar
+            </button>`}
           </div>
         </div>`;
       }).join('')}
@@ -301,9 +309,9 @@ function _htmlPainel(p, idx) {
         <div style="background:#f0fdf4;border:1.5px solid #bbf7d0;border-radius:10px;padding:10px 12px;margin-top:6px;display:flex;flex-direction:column;gap:4px;">
           <div style="display:flex;align-items:center;gap:8px;">
             <span style="font-size:12px;font-weight:800;font-family:monospace;color:#166534;background:#dcfce7;border:1px solid #86efac;padding:2px 8px;border-radius:6px;">${d.item}</span>
-            <span style="font-size:10px;font-weight:700;color:#166534;margin-left:auto;">✅ Empenhado</span>
+            <span style="font-size:10px;font-weight:700;color:#166534;margin-left:auto;">✓ Empenhado</span>
           </div>
-          ${d.comentario?`<div style="font-size:11px;color:#9ca3af;">💬 ${d.comentario}</div>`:''}
+          ${d.comentario?`<div style="font-size:11px;color:#9ca3af;">${d.comentario}</div>`:''}
         </div>`).join('')}
       </div>
     </div>` : ''}
@@ -318,18 +326,16 @@ function _htmlPainel(p, idx) {
         <div style="font-size:18px;font-weight:800;color:#fff;margin-top:2px;">Registrar Pendência</div>
       </div>
       <div style="padding:16px;display:flex;flex-direction:column;gap:11px;">
-        <div style="position:relative;">
+        <div>
           <label style="font-size:10px;font-weight:700;color:#6b7280;letter-spacing:.5px;text-transform:uppercase;font-family:Inter,sans-serif;">Item / Componente</label>
-          <div style="position:relative;margin-top:4px;">
-            <input id="ag-item-search" type="text" placeholder="Digite ou busque o componente..." autocomplete="off" spellcheck="false"
-              style="width:100%;box-sizing:border-box;padding:9px 36px 9px 11px;font-size:13px;font-weight:700;font-family:'JetBrains Mono',monospace;text-transform:uppercase;border:1.5px solid #e5e7eb;border-radius:8px;outline:none;"
-              oninput="_agAcInput(this.value)"
-              onkeydown="_agAcKey(event)"
-              onfocus="_agAcInput(this.value)">
-            <button onclick="_agAcClear()" title="Limpar"
-              style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#9ca3af;font-size:15px;line-height:1;padding:2px;">×</button>
-          </div>
-          <div id="ag-ac-drop" style="display:none;position:absolute;left:0;right:0;background:#fff;border:1.5px solid #93c5fd;border-top:none;border-radius:0 0 8px 8px;max-height:180px;overflow-y:auto;z-index:10000;box-shadow:0 4px 16px rgba(0,0,0,.12);"></div>
+          <select id="ag-item-listbox"
+            style="width:100%;box-sizing:border-box;margin-top:4px;border:1.5px solid #e5e7eb;border-radius:8px;
+                   font-family:'JetBrains Mono','Courier New',monospace;font-size:12px;font-weight:700;
+                   outline:none;background:#fafafa;padding:9px 10px;color:#111;cursor:pointer;"
+            onchange="_agListboxChange(this)"
+            onfocus="this.style.borderColor='#93c5fd'"
+            onblur="this.style.borderColor='#e5e7eb'">
+          </select>
           <input type="hidden" id="ag-item" value="">
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
@@ -352,7 +358,7 @@ function _htmlPainel(p, idx) {
         <div id="ag-erro" style="display:none;font-size:12px;color:#dc2626;font-family:Inter,sans-serif;padding:6px 10px;background:#fee2e2;border-radius:6px;"></div>
         <button onclick="salvarPendenciaAguardando()"
           style="width:100%;padding:12px;border:none;border-radius:10px;cursor:pointer;background:linear-gradient(135deg,#f59e0b,#b45309);color:#fff;font-size:14px;font-weight:700;font-family:Inter,sans-serif;">
-          ⏳ Registrar Pendência
+          Registrar Pendência
         </button>
       </div>
     </div>
@@ -370,13 +376,40 @@ function abrirModalAguardando(idx) {
   ['ag-qtd-sol','ag-qtd-falt','ag-comentario'].forEach(id => {
     const el = document.getElementById(id); if (el) el.value = '';
   });
-  _agAcClear();
+  const hiddenItem = document.getElementById('ag-item');
+  if (hiddenItem) hiddenItem.value = '';
+
+  // Popular listbox com componentes do pedido
+  const lb = document.getElementById('ag-item-listbox');
+  if (lb) {
+    lb.innerHTML = '<option value="" disabled selected style="color:#9ca3af;">— selecione um componente —</option>';
+    const catalogo = _catalogoPedido(idx);
+    catalogo.forEach(it => {
+      const opt = document.createElement('option');
+      opt.value = it.cod;
+      opt.dataset.qtd = it.quantidade != null ? it.quantidade : '';
+      const qtdStr = it.quantidade ? ' (' + Math.round(it.quantidade) + ')' : '';
+      const descStr = it.desc ? ' — ' + it.desc.substring(0, 35) : '';
+      opt.textContent = it.cod + descStr + qtdStr;
+      lb.appendChild(opt);
+    });
+    lb.selectedIndex = 0;
+  }
+
   const err = document.getElementById('ag-erro'); if (err) err.style.display = 'none';
   const modal = document.getElementById('modal-aguardando');
   if (modal) modal.style.display = 'flex';
-  setTimeout(() => {
-    const el = document.getElementById('ag-item-search'); if (el) el.focus();
-  }, 80);
+}
+
+function _agListboxChange(sel) {
+  const opt = sel.options[sel.selectedIndex];
+  if (!opt || !opt.value) return;
+  document.getElementById('ag-item').value = opt.value;
+  const el = document.getElementById('ag-qtd-sol');
+  if (el) {
+    const qtd = parseFloat(opt.dataset.qtd);
+    el.value = (isNaN(qtd) || qtd <= 0) ? '' : Math.round(qtd);
+  }
 }
 function fecharModalAguardando() {
   const m = document.getElementById('modal-aguardando'); if (m) m.style.display = 'none';
@@ -438,7 +471,7 @@ function salvarPendenciaAguardando() {
   if (typeof renderKanban  === 'function') renderKanban();
   if (typeof renderEstoque === 'function') renderEstoque();
   _injetarPainelNoDetalhe(_aguardIdx);
-  if (typeof _mostrarToast === 'function') _mostrarToast('⏳ Pendência registrada', '#f59e0b');
+  if (typeof _mostrarToast === 'function') _mostrarToast('Pendência registrada', '#f59e0b');
 }
 
 // ══════════════════════════════════════════════════
@@ -467,7 +500,7 @@ function alterarStatusEstoque(estoqueId, pedidoIdx, pendIdx, novoStatus) {
     }
     if (typeof salvarEstado === 'function') salvarEstado();
     if (typeof renderKanban === 'function') renderKanban();
-    if (typeof _mostrarToast=== 'function') _mostrarToast('✅ Empenhado! Card normalizado.', '#22c55e');
+    if (typeof _mostrarToast=== 'function') _mostrarToast('Empenhado! Card normalizado.', '#22c55e');
   } else {
     if (pend)  { pend.status = novoStatus; pend.editado_por = usuario; pend.data_edicao = agora; }
     if (reg)   { reg.status  = novoStatus; reg.editado_por  = usuario; reg.data_edicao  = agora; }
@@ -496,6 +529,9 @@ function _toggleResolvidas(idx) {
 //  8. TELA FALTA DE ESTOQUE
 // ══════════════════════════════════════════════════
 
+// Estado do filtro de status na tela de estoque (null = todos os ativos, string = status específico)
+window._estoqueStatusFiltro = window._estoqueStatusFiltro ?? null;
+
 function renderEstoque(filtro) {
   const root = document.getElementById('estoque-root');
   if (!root) return;
@@ -517,7 +553,11 @@ function renderEstoque(filtro) {
     'Empenhado':            {bg:'#dcfce7', color:'#166534', border:'#86efac', row:'#f0fdf4'},
   };
 
-  let regs = (window.ESTOQUE_DB || []).filter(r => r.status !== 'Empenhado');
+  // Filtro por status: null = todos ativos (exceto Empenhado), string = status específico
+  const statusFiltro = window._estoqueStatusFiltro;
+  let regs = (window.ESTOQUE_DB || []).filter(r =>
+    statusFiltro ? r.status === statusFiltro : r.status !== 'Empenhado'
+  );
   if (q) regs = regs.filter(r =>
     r.pedido.toLowerCase().includes(q) ||
     r.cliente.toLowerCase().includes(q) ||
@@ -535,8 +575,38 @@ function renderEstoque(filtro) {
     return empA - empB;
   });
 
+  // Contagens por status para os badges dos botões de filtro
+  const todos = window.ESTOQUE_DB || [];
+  const _cnt = s => todos.filter(r => r.status === s).length;
+  const cntAtivos   = todos.filter(r => r.status !== 'Empenhado').length;
+  const cntFalta    = _cnt('Em Falta');
+  const cntComprado = _cnt('Comprado/Transferido');
+  const cntLancado  = _cnt('Lançado');
+  const cntEmp      = _cnt('Empenhado');
+
+  const _btnFiltro = (label, valor, cnt, cor) => {
+    const ativo = statusFiltro === valor || (valor === null && statusFiltro === null);
+    return `<button onclick="window._estoqueStatusFiltro=${valor===null?'null':`'${valor}'`};renderEstoque()"
+      style="padding:6px 13px;border-radius:20px;font-size:11px;font-weight:700;font-family:Inter,sans-serif;cursor:pointer;white-space:nowrap;
+             border:1.5px solid ${ativo?cor:'#e5e7eb'};
+             background:${ativo?cor+'22':'#fff'};
+             color:${ativo?cor:'#6b7280'};">
+      ${label} ${cnt>0?`<span style="background:${ativo?cor:'#e5e7eb'};color:${ativo?'#fff':'#374151'};border-radius:10px;padding:0 6px;font-size:10px;">${cnt}</span>`:''}
+    </button>`;
+  };
+
   root.innerHTML = `
   <div style="padding:14px 16px;display:flex;flex-direction:column;gap:12px;max-width:1400px;margin:0 auto;">
+
+    <!-- Barra de filtros por status -->
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+      ${_btnFiltro('Todos os ativos', null,          cntAtivos,   '#374151')}
+      ${_btnFiltro('Em Falta',        'Em Falta',    cntFalta,    '#dc2626')}
+      ${_btnFiltro('Comprado',        'Comprado/Transferido', cntComprado, '#ca8a04')}
+      ${_btnFiltro('Lançado',         'Lançado',     cntLancado,  '#ea580c')}
+      ${_btnFiltro('Empenhado',       'Empenhado',   cntEmp,      '#16a34a')}
+    </div>
+
     <div style="background:#fff;border:1px solid #e5e7eb;border-radius:12px;overflow:hidden;">
       <div style="overflow-x:auto;">
         <table style="width:100%;border-collapse:collapse;font-family:Inter,sans-serif;font-size:13px;">
@@ -548,14 +618,14 @@ function renderEstoque(filtro) {
               <th style="padding:10px 12px;text-align:left;font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.6px;white-space:nowrap;">Componente</th>
               <th style="padding:10px 12px;text-align:right;font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.6px;white-space:nowrap;">Solicitado</th>
               <th style="padding:10px 12px;text-align:right;font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.6px;white-space:nowrap;">Faltante</th>
-              <th style="padding:10px 12px;text-align:left;font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.6px;">Observação</th>
+              <th style="padding:10px 12px;text-align:left;font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.6px;">Histórico</th>
               <th style="padding:10px 12px;text-align:center;font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.6px;white-space:nowrap;">Status</th>
             </tr>
           </thead>
           <tbody>
             ${regs.length === 0 ? `
             <tr><td colspan="8" style="padding:32px;text-align:center;color:#9ca3af;font-size:13px;">
-              ${q ? 'Nenhum resultado para "'+filtro+'"' : 'Nenhuma falta de estoque registrada'}
+              ${q ? 'Nenhum resultado para "'+filtro+'"' : statusFiltro ? 'Nenhum item com status "'+statusFiltro+'"' : 'Nenhuma falta de estoque registrada'}
             </td></tr>` :
             regs.map(r => {
               const c  = STATUS_COR[r.status] || STATUS_COR['Em Falta'];
@@ -571,25 +641,26 @@ function renderEstoque(filtro) {
                 <td style="padding:9px 12px;color:#374151;white-space:nowrap;">${r.entrega||'—'}</td>
                 <td style="padding:9px 12px;">
                   <span style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;background:rgba(0,0,0,.06);padding:2px 8px;border-radius:5px;color:#111;">${r.item}</span>
+                  ${r.observacao ? `<div style="font-size:11px;color:#374151;margin-top:2px;">${r.observacao}</div>` : ''}
                 </td>
                 <td style="padding:9px 12px;text-align:right;font-weight:700;color:#374151;">${r.qtd_solicitada}</td>
                 <td style="padding:9px 12px;text-align:right;font-weight:700;color:${empenhado?'#22c55e':'#dc2626'};">
-                  ${empenhado ? '✅' : r.qtd_faltante}
+                  ${empenhado ? '✓' : r.qtd_faltante}
                 </td>
-                <td style="padding:9px 12px;max-width:220px;">
-                  <div style="font-size:12px;color:#374151;">${r.observacao||'—'}</div>
-                  <div style="font-size:10px;color:#6b7280;margin-top:2px;">
-                    ${r.registrado_por ? `Por: ${r.registrado_por}${r.data_registro?' · '+r.data_registro:''}` : ''}
+                <td style="padding:9px 12px;max-width:200px;">
+                  <div style="font-size:10px;color:#6b7280;line-height:1.6;">
+                    ${r.registrado_por ? `<span>Registrado por: <strong>${r.registrado_por}</strong>${r.data_registro?' · '+r.data_registro:''}</span>` : ''}
+                    ${r.editado_por    ? `<br><span style="color:#1a56db;">Editado por: <strong>${r.editado_por}</strong>${r.data_edicao?' · '+r.data_edicao:''}</span>` : ''}
                   </div>
                 </td>
                 <td style="padding:9px 12px;text-align:center;white-space:nowrap;">
                   <div style="display:flex;align-items:center;gap:6px;justify-content:center;">
                     <span style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;background:${c.bg};color:${c.color};border:1.5px solid ${c.border};border-radius:6px;font-size:11px;font-weight:700;">
-                      ${r.status==='Em Falta'?'🔴':r.status==='Comprado/Transferido'?'🟡':r.status==='Lançado'?'🟠':'🟢'} ${r.status}
+                      ${r.status}
                     </span>
-                    ${empenhado ? '' : `<button onclick="abrirModalEditarEstoque('${id}')"
+                    ${(empenhado || window._soLeitura) ? '' : `<button onclick="abrirModalEditarEstoque('${id}')"
                       style="padding:4px 9px;border:1.5px solid #e5e7eb;border-radius:6px;font-size:11px;font-weight:700;font-family:Inter,sans-serif;background:#fff;color:#374151;cursor:pointer;white-space:nowrap;">
-                      ✏️ Editar
+                      Editar
                     </button>`}
                   </div>
                 </td>
@@ -703,6 +774,7 @@ function abrirTelaEstoque() {
   const searchEl = document.getElementById('kanban-search-bar');
   if (btnNovo)  btnNovo.style.display  = 'none';
   if (searchEl) searchEl.style.display = 'none';
+  window._estoqueStatusFiltro = null;
   renderEstoque('');
 }
 
@@ -726,6 +798,42 @@ function voltarDeEstoque() {
 // ══════════════════════════════════════════════════
 
 window._AG_CATALOGO = null;
+
+// Catálogo restrito ao pedido: extrai componentes do próprio paginasOP
+function _catalogoPedido(idx) {
+  const p = (typeof pedidos !== 'undefined') ? pedidos[idx] : null;
+  if (!p?.paginasOP?.length) return [];
+
+  const pgIdx = p.paginasOP.find(pg => pg.is_index);
+
+  // Total do pedido = soma de item_qty das páginas de mangueira (corte > 0)
+  const totalPedido = p.paginasOP
+    .filter(pg => pg !== pgIdx && pg.corte_mm > 0)
+    .reduce((acc, pg) => acc + (parseFloat(pg.item_qty) || 0), 0) || (parseFloat(pgIdx?.item_qty) || 1);
+
+  const map = {};
+
+  p.paginasOP.forEach(pg => {
+    let fator;
+    if (pg === pgIdx) {
+      fator = totalPedido;          // índice principal: aplica ao pedido inteiro
+    } else if (pg.corte_mm > 0) {
+      fator = parseFloat(pg.item_qty) || 1;  // página de mangueira: qtd direta
+    } else {
+      fator = totalPedido;          // páginas acessórias (corte=0): aplica ao pedido inteiro
+    }
+
+    (pg.lista_itens || []).forEach(it => {
+      const cod = (it.codigo || '').trim().toUpperCase();
+      if (!cod || /^\d/.test(cod)) return;
+      const qtd = (parseFloat(it.quantidade) || 0) * fator;
+      if (map[cod]) map[cod].quantidade += qtd;
+      else map[cod] = { cod, tipo: 'Componente', desc: (it.descricao || '').trim(), quantidade: qtd };
+    });
+  });
+
+  return Object.values(map).sort((a, b) => a.cod.localeCompare(b.cod));
+}
 
 function _agCatalogo() {
   if (window._AG_CATALOGO) return window._AG_CATALOGO;
@@ -763,7 +871,8 @@ function _agAcInput(q) {
   _agAcSelecionado = null;
   document.getElementById('ag-item').value = '';
   const search   = (q||'').toUpperCase().trim();
-  const catalogo = _agCatalogo();
+  // Usa catálogo restrito ao pedido quando possível
+  const catalogo = (_aguardIdx >= 0) ? _catalogoPedido(_aguardIdx) : _agCatalogo();
   const drop     = document.getElementById('ag-ac-drop');
   if (!drop) return;
   if (!search) { drop.style.display = 'none'; _agAcIdxAtivo = -1; return; }
@@ -775,13 +884,14 @@ function _agAcInput(q) {
       Item não encontrado. <span style="font-weight:700;color:#111;">Enter para usar "${search}"</span></div>`;
     drop.style.display = 'block'; _agAcIdxAtivo = -1; return;
   }
-  const TIPO_COR = { 'Mangueira':'#3b82f6','Terminal':'#8b5cf6','Capa':'#10b981' };
+  const TIPO_COR = { 'Mangueira':'#3b82f6','Terminal':'#8b5cf6','Capa':'#10b981','Componente':'#6b7280' };
   drop.innerHTML = matches.map((it, i) => {
     const q2 = search.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
     const destaque = it.cod.replace(new RegExp(q2,'i'), m => `<strong style="color:#1a56db">${m}</strong>`);
-    return `<div class="ag-ac-item" data-idx="${i}" data-cod="${it.cod}"
+    const qtdAttr  = it.quantidade != null ? ` data-qtd="${it.quantidade}"` : '';
+    return `<div class="ag-ac-item" data-idx="${i}" data-cod="${it.cod}"${qtdAttr}
       style="padding:7px 12px;cursor:pointer;border-top:1px solid #f1f5f9;display:flex;align-items:center;gap:8px;"
-      onmousedown="_agAcSelect('${it.cod}','${it.desc.replace(/'/g,"&#39;")}')">
+      onmousedown="_agAcSelect('${it.cod}','${it.desc.replace(/'/g,"&#39;")}',${it.quantidade ?? ''})">
       <span style="font-size:10px;font-weight:700;color:${TIPO_COR[it.tipo]||'#6b7280'};background:${TIPO_COR[it.tipo]||'#6b7280'}18;padding:1px 6px;border-radius:4px;white-space:nowrap;flex-shrink:0;">${it.tipo}</span>
       <span style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:#111;">${destaque}</span>
       ${it.desc ? `<span style="font-size:11px;color:#9ca3af;margin-left:auto;white-space:nowrap;">${it.desc}</span>` : ''}
@@ -791,12 +901,17 @@ function _agAcInput(q) {
   drop.style.display = 'block';
 }
 
-function _agAcSelect(cod, desc) {
+function _agAcSelect(cod, desc, qtd) {
   document.getElementById('ag-item').value       = cod;
   document.getElementById('ag-item-search').value = cod;
   const drop = document.getElementById('ag-ac-drop');
   if (drop) drop.style.display = 'none';
   _agAcIdxAtivo = -1;
+  // Auto-preenche Qtd Solicitada com a quantidade total do componente no pedido
+  if (qtd !== undefined && qtd !== '' && parseFloat(qtd) > 0) {
+    const qtdSolEl = document.getElementById('ag-qtd-sol');
+    if (qtdSolEl && !qtdSolEl.value) qtdSolEl.value = Math.round(parseFloat(qtd));
+  }
 }
 
 function _agAcKey(e) {
@@ -847,15 +962,24 @@ function _injetarPainelNoDetalhe(idx) {
   const conteudo = document.getElementById('detalhe-conteudo');
   if (!p || !conteudo) return;
 
+  // Em aprovação: recarrega o painel inteiro (que já inclui a seção de estoque)
+  if (p.subEtapa === 'aprovacao' && typeof _mostrarPainelAprovacao === 'function') {
+    _mostrarPainelAprovacao(idx);
+    return;
+  }
+
+  // Painel só visível em separação e inspeção
+  const _etapaPermite = ['separacao', 'inspecao'].includes(p.etapa);
+  const antigo = document.getElementById('painel-aguardando');
+  if (antigo) antigo.remove();
+  if (!_etapaPermite) return;
+
   if (!Array.isArray(window.ESTOQUE_DB) || window.ESTOQUE_DB.length === 0) {
     try {
       const local = localStorage.getItem('oem_estoque_db_v2');
       if (local) { window.ESTOQUE_DB = JSON.parse(local); _sincronizarPendencias(); }
     } catch(_) {}
   }
-
-  const antigo = document.getElementById('painel-aguardando');
-  if (antigo) antigo.remove();
 
   const wrap = document.createElement('div');
   wrap.id    = 'painel-aguardando';
@@ -885,6 +1009,8 @@ function abrirModalEditarEstoque(estoqueId) {
   modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9999;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(3px);';
   modal.onclick = e => { if (e.target === modal) modal.remove(); };
 
+  const _qtdFalt = parseInt(reg.qtd_faltante) || 0;
+
   modal.innerHTML = `
     <div style="background:#fff;border-radius:16px;width:380px;max-width:95vw;overflow:hidden;box-shadow:0 24px 60px rgba(0,0,0,.22);animation:upcIn .18s ease;">
       <div style="background:linear-gradient(135deg,#1a56db,#0e3fa8);padding:18px 18px 14px;position:relative;">
@@ -903,17 +1029,33 @@ function abrirModalEditarEstoque(estoqueId) {
           <select id="eed-status"
             style="width:100%;box-sizing:border-box;padding:9px 11px;margin-top:4px;font-size:13px;font-weight:700;font-family:Inter,sans-serif;border:1.5px solid #e5e7eb;border-radius:8px;outline:none;cursor:pointer;"
             onchange="_eedAtualizarCorStatus(this)">
-            <option value="Em Falta"             ${reg.status==='Em Falta'            ?'selected':''}>🔴 Em Falta</option>
-            <option value="Comprado/Transferido"  ${reg.status==='Comprado/Transferido' ?'selected':''}>🟡 Comprado/Transferido</option>
-            <option value="Lançado"               ${reg.status==='Lançado'              ?'selected':''}>🟠 Lançado</option>
-            <option value="Empenhado"             ${reg.status==='Empenhado'            ?'selected':''}>🟢 Empenhado</option>
+            <option value="Em Falta"             ${reg.status==='Em Falta'            ?'selected':''}>Em Falta</option>
+            <option value="Comprado/Transferido"  ${reg.status==='Comprado/Transferido' ?'selected':''}>Comprado/Transferido</option>
+            <option value="Lançado"               ${reg.status==='Lançado'              ?'selected':''}>Lançado</option>
+            <option value="Empenhado"             ${reg.status==='Empenhado'            ?'selected':''}>Empenhado</option>
           </select>
         </div>
+
+        <!-- Quantidade Faltante: somente leitura -->
         <div>
           <label style="font-size:10px;font-weight:700;color:#6b7280;letter-spacing:.5px;text-transform:uppercase;font-family:Inter,sans-serif;">Quantidade Faltante</label>
-          <input id="eed-qtd-falt" type="number" min="0" value="${reg.qtd_faltante||0}"
-            style="width:100%;box-sizing:border-box;padding:9px 11px;margin-top:4px;font-size:14px;font-weight:700;border:1.5px solid #e5e7eb;border-radius:8px;outline:none;font-family:Inter,sans-serif;">
+          <div id="eed-qtd-falt-display"
+            style="padding:9px 11px;margin-top:4px;font-size:14px;font-weight:700;border:1.5px solid #e5e7eb;border-radius:8px;background:#f8fafc;color:#374151;font-family:Inter,sans-serif;">
+            ${_qtdFalt}
+          </div>
         </div>
+
+        <!-- Quantidade Empenhada: editável, max = qtd_faltante -->
+        <div>
+          <label style="font-size:10px;font-weight:700;color:#166534;letter-spacing:.5px;text-transform:uppercase;font-family:Inter,sans-serif;">Quantidade Empenhada</label>
+          <input id="eed-qtd-emp" type="number" min="0" max="${_qtdFalt}" placeholder="0"
+            oninput="_eedRecalcularFaltando(${_qtdFalt})"
+            style="width:100%;box-sizing:border-box;padding:9px 11px;margin-top:4px;font-size:14px;font-weight:700;border:1.5px solid #86efac;border-radius:8px;outline:none;font-family:Inter,sans-serif;background:#f0fdf4;color:#166534;">
+          <div id="eed-hint" style="font-size:10px;color:#6b7280;margin-top:3px;font-family:Inter,sans-serif;">
+            Máximo: ${_qtdFalt} · Ao empenhar o total, o registro será finalizado automaticamente.
+          </div>
+        </div>
+
         <div>
           <label style="font-size:10px;font-weight:700;color:#6b7280;letter-spacing:.5px;text-transform:uppercase;font-family:Inter,sans-serif;">Observação</label>
           <textarea id="eed-obs" rows="2"
@@ -922,13 +1064,42 @@ function abrirModalEditarEstoque(estoqueId) {
         <div id="eed-erro" style="display:none;font-size:12px;color:#dc2626;font-family:Inter,sans-serif;padding:6px 10px;background:#fee2e2;border-radius:6px;"></div>
         <button onclick="_salvarEdicaoEstoque('${estoqueId}')"
           style="width:100%;padding:11px;border:none;border-radius:10px;cursor:pointer;background:linear-gradient(135deg,#1a56db,#0e3fa8);color:#fff;font-size:14px;font-weight:700;font-family:Inter,sans-serif;">
-          💾 Salvar Alterações
+          Salvar Alterações
         </button>
       </div>
     </div>`;
 
   document.body.appendChild(modal);
   _eedAtualizarCorStatus(modal.querySelector('#eed-status'));
+}
+
+function _eedRecalcularFaltando(qtdFalt) {
+  const empInput  = document.getElementById('eed-qtd-emp');
+  const faltDisp  = document.getElementById('eed-qtd-falt-display');
+  const hint      = document.getElementById('eed-hint');
+  if (!empInput) return;
+  let emp = parseInt(empInput.value) || 0;
+  if (emp < 0)       { emp = 0; empInput.value = ''; }
+  if (emp > qtdFalt) { emp = qtdFalt; empInput.value = qtdFalt; }
+  const faltando = qtdFalt - emp;
+  const completo = faltando === 0 && emp > 0;
+  if (faltDisp) {
+    faltDisp.textContent = faltando;
+    faltDisp.style.color = completo ? '#166534' : '#374151';
+    faltDisp.style.background = completo ? '#dcfce7' : '#f8fafc';
+    faltDisp.style.borderColor = completo ? '#86efac' : '#e5e7eb';
+  }
+  if (hint) {
+    hint.textContent = completo
+      ? 'Total empenhado — o registro será finalizado ao salvar.'
+      : emp > 0
+        ? `Máximo: ${qtdFalt} · Restará: ${faltando}`
+        : `Máximo: ${qtdFalt} · Ao empenhar o total, o registro será finalizado automaticamente.`;
+  }
+  const sel = document.getElementById('eed-status');
+  if (sel && completo)  sel.value = 'Empenhado';
+  else if (sel && !completo && sel.value === 'Empenhado') sel.value = 'Em Falta';
+  if (sel) _eedAtualizarCorStatus(sel);
 }
 
 function _eedAtualizarCorStatus(sel) {
@@ -948,17 +1119,22 @@ function _salvarEdicaoEstoque(estoqueId) {
   const reg = (window.ESTOQUE_DB||[]).find(r => r.id === estoqueId);
   if (!reg) return;
 
-  const novoStatus = document.getElementById('eed-status').value;
-  const novaQtd    = parseInt(document.getElementById('eed-qtd-falt').value) || 0;
   const novaObs    = (document.getElementById('eed-obs').value||'').trim();
   const usuario    = _usuarioAtual();
   const agora      = _agora();
 
-  reg.qtd_faltante = novaQtd;
-  reg.observacao   = novaObs;
-  reg.editado_por  = usuario;
-  reg.data_edicao  = agora;
-  reg.status       = novoStatus;
+  const qtdFalt    = parseInt(reg.qtd_faltante) || 0;
+  const qtdEmp     = Math.min(Math.max(parseInt(document.getElementById('eed-qtd-emp')?.value) || 0, 0), qtdFalt);
+  const autoEmpenh = qtdEmp >= qtdFalt && qtdFalt > 0;
+  const novoStatus = autoEmpenh ? 'Empenhado' : document.getElementById('eed-status').value;
+  const novaFalt   = qtdFalt - qtdEmp;
+
+  reg.qtd_faltante  = novaFalt;
+  reg.qtd_empenhada = 0;
+  reg.observacao    = novaObs;
+  reg.editado_por   = usuario;
+  reg.data_edicao   = agora;
+  reg.status        = novoStatus;
 
   if (novoStatus === 'Empenhado') {
     reg.concluido_por  = usuario;
@@ -975,16 +1151,16 @@ function _salvarEdicaoEstoque(estoqueId) {
     }
     if (typeof salvarEstado === 'function') salvarEstado();
     if (typeof renderKanban === 'function') renderKanban();
-    if (typeof _mostrarToast === 'function') _mostrarToast('✅ Empenhado!', '#22c55e');
+    if (typeof _mostrarToast === 'function') _mostrarToast('Empenhado!', '#22c55e');
   } else {
     if (typeof pedidos !== 'undefined') {
       const p = pedidos.find(p => p.id === reg.pedido);
       if (p && Array.isArray(p.pendencias)) {
         const pend = p.pendencias.find(d => d._estoqueId === estoqueId);
-        if (pend) { pend.status = novoStatus; pend.qtd_faltante = novaQtd; pend.comentario = novaObs; }
+        if (pend) { pend.status = novoStatus; pend.qtd_faltante = novaFalt; pend.qtd_empenhada = 0; pend.comentario = novaObs; pend.editado_por = usuario; pend.data_edicao = agora; }
       }
     }
-    if (typeof _mostrarToast === 'function') _mostrarToast('✅ Registro atualizado', '#1a56db');
+    if (typeof _mostrarToast === 'function') _mostrarToast('Registro atualizado', '#1a56db');
   }
 
   _salvarEstoque();
@@ -1043,25 +1219,62 @@ function _reordenarChipsCalendario() {
 window._pedidoEmAndamento = false;
 window._proximaAcao       = null;
 
+
+// ── Labels dinâmicos por etapa ────────────────────
+const _ETAPA_ACAO_LABEL = {
+  separacao:  'Inspeção',
+  inspecao:   'Inspeção',
+  corte:      'Corte',
+  prensagem:  'Prensagem',
+  embalagem:  'Embalagem',
+  finalizado: 'Finalizado',
+};
+
+function _labelIniciar(p) {
+  const _vizEtapa      = window._etapaVizualizacao;
+  const _emModoFantasma = _vizEtapa && _vizEtapa !== p?.etapa;
+  const etapa = _emModoFantasma ? _vizEtapa : (p?.etapa || 'separacao');
+  const nome  = _ETAPA_ACAO_LABEL[etapa] || etapa;
+  // Em modo fantasma, nunca é "Retomar" — são pendências de uma etapa anterior
+  const foiIniciado = !_emModoFantasma && p?._iniciado;
+  if (foiIniciado) return `Retomar ${nome}`;
+  return `Iniciar ${nome}`;
+}
+
+function _labelConcluir(etapa) {
+  const nome = _ETAPA_ACAO_LABEL[etapa] || etapa;
+  return `✓ Concluir ${nome}`;
+}
+
 function _btnIniciar() {
   const idx = window._agCurrentIdx ?? window.currentPedidoIdx;
   const p   = typeof pedidos !== 'undefined' ? pedidos[idx] : null;
   if (!p) return;
 
-  // Ao iniciar, mover para INSPEÇÃO (não para Corte)
-  if (p.etapa === 'separacao') {
+  // Pedido em aprovação: não permite iniciar
+  if (p.subEtapa === 'aprovacao') return;
+
+  // Pedido finalizado: não permite ação
+  if (p.etapa === 'finalizado') {
+    if (typeof _mostrarToast === 'function') _mostrarToast('Este pedido já está concluído.', '#6b7280');
+    return;
+  }
+
+  const _emModoFantasma = window._etapaVizualizacao && window._etapaVizualizacao !== p.etapa;
+
+  // Ao iniciar pela primeira vez (Separação), mover para INSPEÇÃO — mas não em modo fantasma
+  if (!_emModoFantasma && p.etapa === 'separacao') {
     p.etapa = 'inspecao';
+    window._etapaVizualizacao = 'inspecao'; // mantém em sincronia para _renderAmostragens
     if (typeof salvarEstado === 'function') salvarEstado();
     if (typeof renderKanban  === 'function') renderKanban();
   }
 
   _setModoAndamento(true, idx);
 
-  // Mostrar OP dentro do fluxo de iniciar
   if (typeof abrirIniciarPedido === 'function') {
     abrirIniciarPedido();
   } else {
-    // Fallback: abre OP diretamente
     if (typeof abrirOP === 'function') abrirOP();
   }
 }
@@ -1099,21 +1312,21 @@ function _mostrarAvisoSaida() {
   modal.innerHTML = `
     <div style="background:#fff;border-radius:16px;width:340px;max-width:92vw;overflow:hidden;box-shadow:0 24px 60px rgba(0,0,0,.25);animation:upcIn .18s ease;font-family:Inter,sans-serif;">
       <div style="background:linear-gradient(135deg,#f59e0b,#b45309);padding:20px 18px 16px;">
-        <div style="font-size:18px;font-weight:800;color:#fff;">⚠️ Pedido em andamento</div>
+        <div style="font-size:18px;font-weight:800;color:#fff;">Pedido em andamento</div>
         <div style="font-size:13px;color:rgba(255,255,255,.85);margin-top:4px;">Você está com um pedido iniciado. Deseja realmente sair?</div>
       </div>
       <div style="padding:16px;display:flex;flex-direction:column;gap:10px;">
         <div style="font-size:13px;color:#374151;padding:10px 12px;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;">
-          💾 O progresso do item atual será salvo automaticamente.
+          O progresso do item atual será salvo automaticamente.
         </div>
         <div style="display:flex;gap:10px;">
           <button onclick="_confirmarSaida(true)"
             style="flex:1;padding:11px;border:none;border-radius:10px;cursor:pointer;background:#ef4444;color:#fff;font-size:14px;font-weight:700;">
-            ✅ Sim, sair
+            Sim, sair
           </button>
           <button onclick="_confirmarSaida(false)"
             style="flex:1;padding:11px;border:1.5px solid #e5e7eb;border-radius:10px;cursor:pointer;background:#fff;color:#374151;font-size:14px;font-weight:700;">
-            ❌ Não, continuar
+            Não, continuar
           </button>
         </div>
       </div>
@@ -1136,31 +1349,50 @@ function _confirmarSaida(sair) {
 function _setModoAndamento(emAndamento, idx) {
   window._pedidoEmAndamento = emAndamento;
   const p = typeof pedidos !== 'undefined' ? pedidos[idx] : null;
-  const btnIniciar = document.getElementById('btn-iniciar-pedido');
-  const btnOP      = document.getElementById('btn-op');
-  const btnSep     = document.getElementById('btn-separacao');
-  const btnEtiq    = document.getElementById('btn-etiq-pedido');
-  const btnEmb     = document.getElementById('btn-etiq-embalagem');
-  const btnComp    = document.getElementById('btn-componentes');
+  const btnIniciar   = document.getElementById('btn-iniciar-pedido');
+  const btnBaixarOP  = document.getElementById('btn-baixar-op');
+  const btnLaudo     = document.getElementById('btn-laudo');
+  const btnRelatorio = document.getElementById('btn-relatorio-pedido');
+  const btnOP        = document.getElementById('btn-op');
+  const btnSep       = document.getElementById('btn-separacao');
+  const btnEtiq      = document.getElementById('btn-etiq-pedido');
+  const btnEmb       = document.getElementById('btn-etiq-embalagem');
+  const btnComp      = document.getElementById('btn-componentes');
+
+  const finalizado = p?.etapa === 'finalizado';
+
+  if (finalizado) {
+    [btnSep, btnEtiq, btnEmb, btnComp].forEach(b => { if (b) b.style.display = ''; });
+    if (btnOP)        btnOP.style.display        = 'none';
+    if (btnBaixarOP)  btnBaixarOP.style.display  = '';
+    if (btnLaudo)     btnLaudo.style.display      = '';
+    if (btnRelatorio) btnRelatorio.style.display  = '';
+    if (btnIniciar)   btnIniciar.style.display    = 'none';
+    return;
+  }
+
+  if (btnRelatorio) btnRelatorio.style.display = 'none';
+  if (btnOP)        btnOP.style.display        = 'none';
 
   if (emAndamento) {
-    // Em andamento: oculta ações externas, mostra OP dentro do fluxo
     [btnSep, btnEtiq, btnEmb, btnComp].forEach(b => { if (b) b.style.display = 'none'; });
-    // btn-op fica oculto na barra mas disponível dentro do abrirIniciarPedido
-    if (btnOP) btnOP.style.display = 'none';
-    if (btnIniciar) {
-      btnIniciar.innerHTML = '⏸ Retomar Pedido';
-      btnIniciar.style.background = '#059669';
-    }
-    if (p) { p._iniciado = true; if (typeof salvarEstado === 'function') salvarEstado(); }
+    if (btnBaixarOP) btnBaixarOP.style.display = 'none';
+    if (btnLaudo)    btnLaudo.style.display    = 'none';
+    if (btnIniciar)  btnIniciar.style.display  = 'none';
+    // Marcar iniciado só fora do modo fantasma, para não corromper o label ao retornar
+    const _emModoFantasma = window._etapaVizualizacao && window._etapaVizualizacao !== p?.etapa;
+    if (p && !_emModoFantasma) { p._iniciado = true; if (typeof salvarEstado === 'function') salvarEstado(); }
   } else {
-    // Fora do andamento: restaura botões normais (sem btn-op na barra)
+    // Desativar marcador ao sair de etapa que não o usa
+    const _etapaMarcador = ['separacao', 'inspecao', 'corte'].includes(p?.etapa);
+    if (!_etapaMarcador && typeof _marcadorAtivo !== 'undefined' && _marcadorAtivo && typeof _toggleMarcador === 'function') _toggleMarcador();
     [btnSep, btnEtiq, btnEmb, btnComp].forEach(b => { if (b) b.style.display = ''; });
-    if (btnOP) btnOP.style.display = 'none'; // OP sempre oculto na barra principal
-    if (btnIniciar) {
-      const foiIniciado = p && p._iniciado;
-      btnIniciar.innerHTML = foiIniciado ? '▶ Retomar Pedido' : '▶ Iniciar Pedido';
-      btnIniciar.style.background = '#1a56db';
+    if (btnBaixarOP) btnBaixarOP.style.display = '';
+    if (btnLaudo)    btnLaudo.style.display    = '';
+    if (btnIniciar && p) {
+      btnIniciar.style.display = '';
+      btnIniciar.innerHTML = _labelIniciar(p);
+      btnIniciar.style.background = p._iniciado ? '#059669' : '#1a56db';
     }
   }
 }
@@ -1174,7 +1406,16 @@ function _setModoAndamento(emAndamento, idx) {
       _apOrig(idx);
       window._pedidoEmAndamento = false;
       window._proximaAcao = null;
-      setTimeout(() => _setModoAndamento(false, idx), 50);
+      setTimeout(() => {
+        _setModoAndamento(false, idx);
+        // Atualiza label do botão conforme etapa atual do pedido
+        const p = typeof pedidos !== 'undefined' ? pedidos[idx] : null;
+        const btnIniciar = document.getElementById('btn-iniciar-pedido');
+        if (btnIniciar && p) {
+          btnIniciar.innerHTML = _labelIniciar(p);
+          btnIniciar.style.background = p._iniciado ? '#059669' : '#1a56db';
+        }
+      }, 50);
     };
   }, 200);
 })();

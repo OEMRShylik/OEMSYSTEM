@@ -8,64 +8,125 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <link rel="stylesheet" href="css/styles.css">
 <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 
 
 
-<script src="js/auth.js"></script>
+<script src="js/auth.js?v=2"></script>
 </head>
 <body>
 
 <!-- LOGIN -->
-<div id="login-screen">
-  <div class="login-card">
-    <div class="login-logo">
-      <img src="assets/hylik_os.png" alt="HYLIK OS" style="height:56px;display:block;object-fit:contain;filter:brightness(0) invert(1);">
-      <div class="login-logo-text" style="color:rgba(255,255,255,.55);font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;margin-top:6px;">| OEM SYSTEM</div>
-    </div>
-    <div class="login-tabs">
-      <div class="login-tab active" id="tab-qr" onclick="loginSwitchTab('qr')">📷 QR Code</div>
-      <div class="login-tab" id="tab-pass" onclick="loginSwitchTab('pass')">🔑 Usuário / Senha</div>
-    </div>
-    <div id="login-qr-panel" class="login-qr-panel">
-      <div class="login-qr-box" id="login-qr-box">
-        <video id="qr-video" style="width:100%;height:100%;object-fit:cover;border-radius:12px;display:none;" playsinline autoplay muted></video>
-        <canvas id="qr-canvas" style="display:none;"></canvas>
-        <div id="qr-placeholder" style="display:flex;flex-direction:column;align-items:center;gap:8px;">
-          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="rgba(100,140,255,.6)" stroke-width="1.5"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-          <span style="font-size:11px;color:rgba(100,140,255,.7);text-align:center;padding:0 12px;">Iniciando câmera…</span>
-        </div>
+<div id="login-screen" style="position:fixed;inset:0;overflow:hidden;z-index:9999;">
+
+  <!-- Camera full-screen -->
+  <video id="qr-video" playsinline autoplay muted
+    style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:none;z-index:0;"></video>
+  <canvas id="qr-canvas" style="display:none;"></canvas>
+
+  <!-- Placeholder background -->
+  <div id="qr-placeholder" style="position:absolute;inset:0;z-index:0;
+    background:linear-gradient(160deg,#0f172a 0%,#1e293b 65%,#0c2340 100%);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;">
+    <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="rgba(100,140,255,.35)" stroke-width="1.4">
+      <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+      <circle cx="12" cy="13" r="4"/>
+    </svg>
+    <span style="font-size:12px;color:rgba(255,255,255,.25);font-family:Inter,sans-serif;">Iniciando câmera…</span>
+  </div>
+
+  <!-- Logo (topo) -->
+  <div style="position:absolute;top:0;left:0;right:0;z-index:2;pointer-events:none;
+    display:flex;justify-content:center;padding-top:44px;">
+    <div style="display:flex;flex-direction:row;align-items:center;gap:12px;">
+      <img src="assets/hylik_os.png" alt="HYLIK OS"
+        style="height:58px;object-fit:contain;display:block;filter:brightness(0) invert(1);">
+      <div style="color:#fff;font-size:16px;font-weight:800;letter-spacing:1.5px;font-family:Inter,sans-serif;white-space:nowrap;">
+        | OEM SYSTEM
       </div>
-      <div class="login-qr-hint" id="qr-hint">Aponte para o QR Code do crachá</div>
     </div>
-    <div id="login-pass-panel" class="login-pass-panel" style="display:none;">
+  </div>
+
+  <!-- Scan frame (sobreposição escura com janela central) -->
+  <div style="position:absolute;inset:0;z-index:1;pointer-events:none;
+    display:flex;align-items:center;justify-content:center;">
+    <div style="position:relative;width:clamp(200px,58vmin,255px);height:clamp(200px,58vmin,255px);">
+      <!-- Sombra que cria o efeito de furo -->
+      <div style="position:absolute;inset:0;box-shadow:0 0 0 100vmax rgba(0,0,0,.58);border-radius:6px;"></div>
+      <!-- Cantos: TL -->
+      <div style="position:absolute;top:-1px;left:-1px;width:28px;height:28px;
+        border-top:3px solid rgba(255,255,255,.9);border-left:3px solid rgba(255,255,255,.9);border-radius:4px 0 0 0;"></div>
+      <!-- TR -->
+      <div style="position:absolute;top:-1px;right:-1px;width:28px;height:28px;
+        border-top:3px solid rgba(255,255,255,.9);border-right:3px solid rgba(255,255,255,.9);border-radius:0 4px 0 0;"></div>
+      <!-- BL -->
+      <div style="position:absolute;bottom:-1px;left:-1px;width:28px;height:28px;
+        border-bottom:3px solid rgba(255,255,255,.9);border-left:3px solid rgba(255,255,255,.9);border-radius:0 0 0 4px;"></div>
+      <!-- BR -->
+      <div style="position:absolute;bottom:-1px;right:-1px;width:28px;height:28px;
+        border-bottom:3px solid rgba(255,255,255,.9);border-right:3px solid rgba(255,255,255,.9);border-radius:0 0 4px 0;"></div>
+    </div>
+  </div>
+
+  <!-- Rodapé: hint + erro + botão -->
+  <div style="position:absolute;bottom:0;left:0;right:0;z-index:2;
+    display:flex;flex-direction:column;align-items:center;gap:12px;padding:20px 28px 52px;">
+    <div id="qr-hint" style="font-size:13px;color:rgba(255,255,255,.8);text-align:center;
+      font-family:Inter,sans-serif;font-weight:500;background:rgba(0,0,0,.32);
+      padding:6px 18px;border-radius:20px;backdrop-filter:blur(4px);">
+      Aponte para o QR Code do crachá
+    </div>
+    <div id="login-error" style="font-size:12px;color:#fca5a5;min-height:16px;
+      text-align:center;font-family:Inter,sans-serif;"></div>
+    <button onclick="abrirLoginForm()"
+      style="padding:15px 40px;background:rgba(255,255,255,.14);color:#fff;
+        border:1.5px solid rgba(255,255,255,.28);border-radius:14px;font-size:14px;
+        font-weight:700;cursor:pointer;font-family:Inter,sans-serif;
+        backdrop-filter:blur(10px);letter-spacing:.3px;transition:background .2s;"
+      onmouseenter="this.style.background='rgba(255,255,255,.22)'"
+      onmouseleave="this.style.background='rgba(255,255,255,.14)'">
+      Entrar com Login
+    </button>
+  </div>
+
+  <!-- Painel de login por senha (desliza de baixo) -->
+  <div id="login-form-overlay"
+    onclick="if(event.target===this)fecharLoginForm()"
+    style="display:none;position:absolute;inset:0;z-index:10;
+      align-items:flex-end;justify-content:center;
+      background:rgba(0,0,0,.45);backdrop-filter:blur(5px);">
+    <div style="background:#fff;border-radius:22px 22px 0 0;width:100%;max-width:460px;
+      padding:20px 28px 52px;font-family:Inter,sans-serif;box-shadow:0 -8px 40px rgba(0,0,0,.2);">
+      <!-- Indicador de arraste -->
+      <div style="width:40px;height:4px;background:#e5e7eb;border-radius:2px;margin:0 auto 22px;"></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+        <div style="font-size:17px;font-weight:800;color:#111;">Entrar com senha</div>
+        <button onclick="fecharLoginForm()"
+          style="background:none;border:none;font-size:22px;cursor:pointer;color:#9ca3af;line-height:1;padding:0;">✕</button>
+      </div>
       <div class="login-field">
         <label>Usuário</label>
-        <input type="text" id="login-user-input" placeholder="Digite seu usuário" autocomplete="username" style="text-transform:uppercase;" oninput="this.value=this.value.toUpperCase()">
+        <input type="text" id="login-user-input" placeholder="Digite seu usuário" autocomplete="username">
       </div>
       <div class="login-field">
         <label>Senha</label>
-        <input type="password" id="login-pass-input" placeholder="Digite sua senha" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
+        <input type="password" id="login-pass-input" placeholder="Digite sua senha"
+          autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
       </div>
-      <div class="login-error" id="login-error"></div>
-      <button class="login-btn" onclick="doLogin()">Entrar</button>
+      <div class="login-error" id="login-error-form"></div>
+      <button class="login-btn" onclick="doLogin()" style="margin-top:6px;">Entrar</button>
     </div>
   </div>
+
 </div>
 
 <div class="app-body">
 
 <!-- SIDEBAR -->
 <aside id="sidebar">
-  <div class="user-block" style="flex-direction:column;align-items:center;padding:10px 6px 6px;gap:3px;">
-    <div class="user-avatar" id="user-initials" title="Usuário" onclick="openUserProfile()">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
-      <span class="nav-tooltip" id="user-tooltip">—</span>
-    </div>
-    <div id="user-name-label">—</div>
-    <div id="user-sector-badge"></div>
-  </div>
 
-  <div class="nav-item" id="nav-dashboard" style="display:none;" onclick="navTo('dashboard',this)">
+
+<div class="nav-item" id="nav-dashboard" style="display:none;" onclick="navTo('dashboard',this)">
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
       <rect x="3" y="3" width="7" height="7" rx="1.2"/>
       <rect x="14" y="3" width="7" height="7" rx="1.2"/>
@@ -96,10 +157,16 @@
   </div>
   <div class="nav-item" onclick="navTo('angulos',this)">
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M3 21h18"/>
-      <path d="M3 21 L12 4"/>
-      <path d="M6.5 21 A9 9 0 0 1 19.5 21" fill="none"/>
-      <circle cx="12" cy="4" r="1" fill="currentColor" stroke="none"/>
+      <!-- base -->
+      <line x1="1" y1="20" x2="23" y2="20"/>
+      <!-- semicírculo do transferidor -->
+      <path d="M1 20 A11 11 0 0 1 23 20"/>
+      <!-- centro -->
+      <circle cx="12" cy="20" r="1.2" fill="currentColor" stroke="none"/>
+      <!-- ponteiro de ângulo ~55° -->
+      <line x1="12" y1="20" x2="18.5" y2="11.5"/>
+      <!-- tick 90° no topo -->
+      <line x1="12" y1="9" x2="12" y2="12"/>
     </svg>
     <span class="nav-tooltip">Ângulos</span>
   </div>
@@ -111,39 +178,62 @@
     <span class="nav-tooltip">Medida de Corte</span>
   </div>
 
+  <div class="nav-item" onclick="navTo('laudos',this)">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+      <polyline points="14 2 14 8 20 8"/>
+      <polyline points="9 15 11 17 15 13"/>
+    </svg>
+    <span class="nav-tooltip">Laudos de Teste</span>
+  </div>
+
+  <div class="nav-item" id="nav-usuarios" style="display:none;" onclick="navTo('usuarios',this)">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+      <circle cx="9" cy="7" r="4"/>
+      <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+      <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+    </svg>
+    <span class="nav-tooltip">Usuários</span>
+  </div>
+
   <div style="flex:1;"></div>
-  <button id="logout-btn" onclick="doLogout()" title="Sair">
-    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-    Sair
-  </button>
 </aside>
 
 <!-- MAIN -->
 <div id="main">
 
   <!-- TOPBAR GLOBAL -->
-  <div id="app-topbar" style="display:flex;align-items:center;gap:10px;padding:10px 16px;background:var(--white);border-bottom:1px solid var(--border);flex-shrink:0;">
-    <div style="display:flex;align-items:center;gap:10px;white-space:nowrap;">
-      <!-- Logo HYLIK OS -->
-      <img src="assets/hylik_os.png" alt="HYLIK OS" style="height:30px;display:block;object-fit:contain;">
-      <span style="font-size:13px;font-weight:700;color:#6b7280;letter-spacing:.3px;white-space:nowrap;">| OEM SYSTEM</span>
+  <div id="app-topbar" style="display:flex;align-items:center;padding:7px 16px;background:var(--white);border-bottom:1px solid var(--border);flex-shrink:0;position:relative;">
+    <!-- Esquerda: logo + título da tela -->
+    <div style="display:flex;align-items:center;gap:8px;flex:1;min-width:0;">
+      <img src="assets/hylik_os.png" alt="HYLIK OS" style="height:26px;display:block;object-fit:contain;flex-shrink:0;">
+      <span style="font-size:12px;font-weight:700;color:#9ca3af;letter-spacing:.3px;white-space:nowrap;flex-shrink:0;">| OEM SYSTEM</span>
+      <div style="width:1px;height:16px;background:var(--border);flex-shrink:0;"></div>
+      <div id="topbar-screen-title" style="font-size:13px;font-weight:600;color:#374151;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></div>
     </div>
-    <div style="width:1px;height:16px;background:var(--border);flex-shrink:0;"></div>
-    <div id="topbar-screen-title" style="font-size:13px;font-weight:600;color:#374151;display:none;"></div>
-    <div style="flex:1;"></div>
-    <div id="date-left" style="font-size:12px;color:var(--text2);white-space:nowrap;"></div>
-    <div style="width:1px;height:16px;background:var(--border);flex-shrink:0;"></div>
-    <button id="btn-novo-pedido-top" class="btn-novo" style="padding:8px 16px;font-size:13px;" onclick="document.getElementById('upload-pdf-novo').click()">+ Novo Pedido</button>
-    <button id="btn-limpar-dados" title="Limpar todos os pedidos e dados"
-      onclick="_confirmarLimpeza()"
-      style="display:none;padding:7px 13px;font-size:12px;font-weight:700;
-             background:#fee2e2;color:#991b1b;border:1.5px solid #fca5a5;
-             border-radius:7px;cursor:pointer;font-family:Inter,sans-serif;
-             transition:background .15s;white-space:nowrap;">
-      🗑 Limpar Dados
-    </button>
-
-    <input type="file" id="upload-pdf-novo" accept=".pdf" style="display:none" onchange="handleNovoPedidoPDF(event)">
+    <!-- Centro: data e hora (absolutamente centrado) -->
+    <div id="date-left" style="position:absolute;left:50%;transform:translateX(-50%);font-size:12px;color:var(--text2);white-space:nowrap;pointer-events:none;"></div>
+    <!-- Direita: usuário | setor + botões -->
+    <div style="display:flex;align-items:center;gap:10px;flex:1;justify-content:flex-end;">
+      <span id="topbar-user-text" onclick="openUserProfile()" style="font-size:12px;font-weight:600;color:#374151;white-space:nowrap;cursor:pointer;" onmouseenter="this.style.color='#0891b2'" onmouseleave="this.style.color='#374151'">— | —</span>
+      <button onclick="doLogout()" style="display:flex;align-items:center;gap:5px;padding:5px 11px;background:none;border:1px solid #e5e7eb;border-radius:6px;font-size:12px;font-weight:600;color:#6b7280;cursor:pointer;font-family:Inter,sans-serif;transition:all .15s;white-space:nowrap;" onmouseenter="this.style.background='#fef2f2';this.style.color='#dc2626';this.style.borderColor='#fca5a5'" onmouseleave="this.style.background='none';this.style.color='#6b7280';this.style.borderColor='#e5e7eb'">
+        <span style="font-size:13px;line-height:1;">✕</span> Sair
+      </button>
+      <button id="btn-novo-pedido-top" class="btn-novo"
+        style="padding:6px 16px;font-size:12px;border-radius:8px;"
+        onclick="document.getElementById('upload-pdf-novo').click()">+ Novo Pedido</button>
+      <button id="btn-limpar-dados" title="Limpar todos os pedidos e dados"
+        onclick="_confirmarLimpeza()"
+        style="display:none;padding:5px 12px;font-size:12px;font-weight:600;
+               background:#fff;color:#dc2626;border:1.5px solid #ef4444;
+               border-radius:8px;cursor:pointer;font-family:Inter,sans-serif;
+               transition:all .15s;white-space:nowrap;"
+        onmouseenter="this.style.background='#fef2f2'" onmouseleave="this.style.background='#fff'">
+        Limpar Dados
+      </button>
+      <input type="file" id="upload-pdf-novo" accept=".pdf" style="display:none" onchange="handleNovoPedidoPDF(event)">
+    </div>
   </div>
 
   <!-- DASHBOARD -->
@@ -154,19 +244,23 @@
   <!-- PEDIDOS -->
   <div class="screen active" id="screen-pedidos">
     
-    <div id="kanban-search-bar" style="display:flex;align-items:center;gap:10px;padding:8px 16px;background:var(--white);border-bottom:1px solid var(--border);flex-shrink:0;flex-wrap:nowrap;overflow:hidden;">
-      <div style="display:flex;align-items:center;gap:7px;background:var(--bg);border:1px solid var(--border);border-radius:20px;padding:5px 14px;flex:1;max-width:400px;">
-        <span style="color:var(--text3);font-size:13px;">🔍</span>
-        <input type="text" id="search-input" placeholder="Buscar..." oninput="searchPedidos()" style="border:none;background:none;outline:none;font-family:Inter,sans-serif;font-size:13px;color:var(--text);width:100%;">
-      </div>
+    <div id="kanban-search-bar" style="display:flex;align-items:center;gap:8px;padding:6px 16px;background:var(--white);border-bottom:1px solid var(--border);flex-shrink:0;">
       <button onclick="abrirTelaCalendario()"
-        style="padding:5px 12px;background:#dbeafe;color:#1e40af;border:1.5px solid #93c5fd;border-radius:20px;font-size:12px;font-weight:700;font-family:Inter,sans-serif;cursor:pointer;white-space:nowrap;flex-shrink:0;transition:all .15s;">
-        📅 CALENDÁRIO
+        style="padding:5px 14px;background:#fff;color:#0891b2;border:1.5px solid #0891b2;border-radius:8px;font-size:12px;font-weight:600;font-family:Inter,sans-serif;cursor:pointer;white-space:nowrap;flex-shrink:0;transition:all .15s;"
+        onmouseenter="this.style.background='#e0f9ff'" onmouseleave="this.style.background='#fff'">
+        Calendário
       </button>
       <button id="btn-falta-estoque" onclick="abrirTelaEstoque()"
-        style="padding:5px 12px;background:#fee2e2;color:#991b1b;border:1.5px solid #fca5a5;border-radius:20px;font-size:12px;font-weight:700;font-family:Inter,sans-serif;cursor:pointer;white-space:nowrap;flex-shrink:0;transition:all .15s;">
-        📦 FALTA DE ESTOQUE
+        style="padding:5px 14px;background:#fff;color:#92400e;border:1.5px solid #f59e0b;border-radius:8px;font-size:12px;font-weight:600;font-family:Inter,sans-serif;cursor:pointer;white-space:nowrap;flex-shrink:0;transition:all .15s;"
+        onmouseenter="this.style.background='#fffbeb'" onmouseleave="this.style.background='#fff'">
+        Falta de Estoque
       </button>
+      <div style="flex:1;"></div>
+      <div style="display:flex;align-items:center;gap:6px;background:#f8fafc;border:1px solid var(--border);border-radius:8px;padding:5px 12px;min-width:160px;max-width:260px;">
+        <input type="text" id="search-input" placeholder="Pesquisar" oninput="searchPedidos()"
+          style="border:none;background:none;outline:none;font-family:Inter,sans-serif;font-size:12px;color:var(--text);width:100%;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      </div>
     </div>
     <div class="kanban-area" id="kanban-area"></div>
   </div>
@@ -195,6 +289,39 @@
     <div id="cal-root" style="flex:1;overflow-y:auto;background:var(--bg,#f9fafb);display:flex;flex-direction:column;"></div>
   </div>
 
+  <!-- GESTÃO DE USUÁRIOS (Admin only) -->
+  <div class="screen" id="screen-usuarios" style="flex-direction:column;overflow:hidden;">
+    <div style="display:flex;align-items:center;gap:12px;padding:10px 16px;background:var(--white);border-bottom:1px solid var(--border);flex-shrink:0;">
+      <div style="flex:1;">
+        <div style="font-size:14px;font-weight:800;color:var(--text);font-family:Inter,sans-serif;">Gestão de Usuários</div>
+        <div style="font-size:11px;color:var(--text2);font-family:Inter,sans-serif;">Cadastrar, editar e excluir usuários do sistema</div>
+      </div>
+    </div>
+    <div id="usuarios-root" style="flex:1;overflow-y:auto;background:var(--bg,#f9fafb);"></div>
+  </div>
+
+  <!-- ARQUIVO DE PEDIDOS -->
+  <div class="screen" id="screen-arquivo" style="flex-direction:column;overflow:hidden;">
+    <div style="display:flex;align-items:center;gap:12px;padding:10px 16px;background:var(--white);border-bottom:1px solid var(--border);flex-shrink:0;">
+      <button onclick="navTo('pedidos', document.querySelector('.nav-item[data-screen=pedidos]') || document.querySelector('.nav-item[onclick*=pedidos]'))"
+        style="display:flex;align-items:center;gap:5px;padding:6px 12px;background:#f3f4f6;border:1px solid #e5e7eb;border-radius:8px;font-size:13px;font-weight:700;color:#374151;cursor:pointer;font-family:Inter,sans-serif;flex-shrink:0;transition:background .15s;"
+        onmouseover="this.style.background='#e5e7eb'" onmouseout="this.style.background='#f3f4f6'">
+        ← Voltar
+      </button>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:14px;font-weight:800;color:var(--text);font-family:Inter,sans-serif;">Arquivo de Pedidos</div>
+        <div id="arquivo-total" style="font-size:11px;color:var(--text2);font-family:Inter,sans-serif;">—</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:7px;background:var(--bg);border:1px solid var(--border);border-radius:20px;padding:5px 14px;max-width:260px;">
+        <span style="color:var(--text3);font-size:13px;">&#x1F50D;</span>
+        <input type="text" id="arquivo-search" placeholder="Buscar por número, cliente..."
+          oninput="_renderArquivo(this.value)"
+          style="border:none;background:none;outline:none;font-family:Inter,sans-serif;font-size:13px;color:var(--text);width:100%;">
+      </div>
+    </div>
+    <div id="arquivo-root" style="flex:1;overflow-y:auto;background:var(--bg,#f9fafb);"></div>
+  </div>
+
   <!-- FALTA DE ESTOQUE -->
   <div class="screen" id="screen-estoque">
     <!-- Header -->
@@ -205,7 +332,7 @@
         <div style="font-size:11px;color:var(--text2);font-family:Inter,sans-serif;">Todos os pedidos com componentes pendentes</div>
       </div>
       <div style="display:flex;align-items:center;gap:8px;background:var(--bg);border:1px solid var(--border);border-radius:20px;padding:5px 14px;">
-        <span style="color:var(--text3);font-size:13px;">🔍</span>
+        <span style="color:var(--text3);font-size:13px;">&#x1F50D;</span>
         <input type="text" id="estoque-search" placeholder="Buscar pedido, item, cliente..."
           oninput="renderEstoque(this.value)"
           style="border:none;background:none;outline:none;font-family:Inter,sans-serif;font-size:13px;color:var(--text);width:220px;">
@@ -233,14 +360,14 @@
         style="background:#1a56db;color:#fff;border-color:#1a56db;">
         ▶ Iniciar Pedido
       </button>
-      <!-- btn-op: oculto aqui, aparece dentro do Iniciar Pedido -->
+      <!-- btn-op: oculto, mantido para compatibilidade -->
       <button id="btn-op" onclick="_btnSair('op')"
         style="display:none;background:#fff;color:#374151;">
         📄 Ordem de Produção
       </button>
       <button id="btn-separacao" onclick="_btnSair('sep')"
         style="background:#fff;color:#374151;">
-        🏷️ Separação
+        &#x1F4E4; Separação
       </button>
       <button id="btn-etiq-pedido" onclick="_btnSair('etiq')"
         style="background:#fff;color:#374151;">
@@ -254,10 +381,23 @@
         style="background:#fff;color:#374151;">
         🔩 Componentes
       </button>
+      <!-- Exibir OP: abre o visualizador de PDF -->
+      <button id="btn-baixar-op" onclick="abrirOP()"
+        style="display:none;background:#fff;color:#374151;">
+        📄 Exibir OP
+      </button>
+      <button id="btn-laudo" onclick="abrirLaudo()"
+        style="display:none;background:#fff;color:#374151;">
+        📋 Laudo de Teste
+      </button>
+      <button id="btn-relatorio-pedido" onclick="_gerarRelatorio()"
+        style="display:none;background:#059669;color:#fff;border-color:#059669;">
+        📄 Relatório do Pedido
+      </button>
     </div>
 
     <!-- Área de conteúdo dinâmico -->
-    <div id="detalhe-conteudo" style="flex:1;overflow-y:auto;background:var(--bg,#f9fafb);"></div>
+    <div id="detalhe-conteudo" style="flex:1;overflow:hidden;display:flex;flex-direction:column;background:var(--bg,#f9fafb);"></div>
 
   </div>
 
@@ -535,33 +675,40 @@
   </div>
 
   <script src="js/dados.js"></script>
-<script src="js/calendario.js"></script>
+<script src="js/calendario.js?v=2"></script>
 <script src="js/medida_corte.js"></script>
+
+  <!-- LAUDOS DE TESTE -->
+  <div class="screen" id="screen-laudos" style="flex-direction:column;overflow:hidden;">
+    <div id="laudos-root" style="flex:1;overflow-y:auto;padding:20px;font-family:Inter,sans-serif;"></div>
+    <input type="file" id="upload-laudo-global" accept=".pdf" style="display:none" onchange="_laudosUploadChange(event)">
+  </div>
 
 </div><!-- /main -->
 </div><!-- /app-body -->
 
 <!-- Scripts -->
-<script src="js/storage.js"></script>
+<script src="js/storage.js?v=12"></script>
 <link rel="stylesheet" href="css/dashboard.css">
-<script src="js/app.js"></script>
-<script src="js/dashboard.js"></script>
-<script src="js/dashboard_componentes.js"></script>
-<script src="js/dashboard_faturamento.js"></script>
-<script src="js/pedidos.js"></script>
-<script src="js/aguardando.js"></script>
-<script src="js/novo_pedido.js"></script>
+<script src="js/app.js?v=17"></script>
+<script src="js/dashboard.js?v=12"></script>
+<script src="js/dashboard_componentes.js?v=12"></script>
+<script src="js/dashboard_faturamento.js?v=12"></script>
+<script src="js/pedidos.js?v=45"></script>
+<script src="js/aguardando.js?v=18"></script>
+<script src="js/novo_pedido.js?v=12"></script>
+<script src="js/laudos.js?v=1"></script>
 <script src="js/medidas.js"></script>
 <script src="js/descasque.js"></script>
 <script src="js/viewer3d.js"></script>
 <script src="js/perfil.js"></script>
 
-<!-- ═══════════════════════════════════════════════
+<!-- ======?======?======?======?======?======?======?======?======?======?======?======?======?======?======?======?======?======?======?======?======?======?======?======?======?======?======?======?======?======?======?======?======?======?======?======?======?======?======?======?======?======?======?======?======?======?======?
      CORREÇÕES — scripts que estavam faltando
-     ═══════════════════════════════════════════════ -->
+     ======?======?======?======?======?======?======?======?======?======?======?======?======?======?======?======?======?======?======?======?======?======?======?======?======?======?======?======?======?======?======?======?======?======?======?======?======?======?======?======?======?======?======?======?======?======?======? -->
 
 <!-- 1. angulos.js: tela de ângulos não funcionava pois este arquivo nunca foi incluído -->
-<script src="js/angulos.js"></script>
+<script src="js/angulos.js?v=2"></script>
 
 <!-- 2. dados_oem.js: extensões de setores/permissões -->
 <script src="js/dados_oem.js"></script>
@@ -569,10 +716,49 @@
 <!-- 3. componentes.js: tabela de componentes do pedido -->
 <script src="js/componentes.js"></script>
 
+<!-- 4. archive.js: view de pedidos finalizados arquivados -->
+<script src="js/archive.js"></script>
+
+<!-- 5. usuarios.js: gestão de usuários (Admin only) -->
+<script src="js/usuarios.js?v=6"></script>
+
 <!-- 3. Chama init() após todos os scripts carregarem.
         init() existia em app.js mas nunca era invocada,
         causando prensagem, descasque e kanban vazios. -->
 <script>
+// Resize observer: redimensiona canvas do transferidor no mobile sem distorção
+(function() {
+  function _fixAngCanvas() {
+    const canvas = document.getElementById('ang-canvas');
+    const panel  = document.getElementById('ang-left-panel');
+    if (!canvas || !panel) return;
+    if (window.innerWidth > 768) return; // só mobile
+    const size = Math.min(panel.clientWidth * 0.92, 380);
+    if (size < 10) return;
+    // Ajusta o atributo width/height do canvas preservando a proporção 1:1
+    canvas.style.width  = size + 'px';
+    canvas.style.height = size + 'px';
+    // Re-renderiza se a função existir
+    if (typeof _angDrawAll === 'function') _angDrawAll();
+  }
+  window.addEventListener('resize', _fixAngCanvas);
+  // Dispara após carregar e ao navegar para a tela de ângulos
+  setTimeout(_fixAngCanvas, 500);
+  const _origNavTo = window.navTo;
+  document.addEventListener('DOMContentLoaded', () => {
+    // Patch navTo para disparar fix ao abrir ângulos
+    const checkNavTo = setInterval(() => {
+      if (typeof window.navTo !== 'function') return;
+      clearInterval(checkNavTo);
+      const __orig = window.navTo;
+      window.navTo = function(name, el) {
+        __orig(name, el);
+        if (name === 'angulos') setTimeout(_fixAngCanvas, 80);
+      };
+    }, 200);
+  });
+})();
+
 (function () {
   function _init() {
     if (typeof init === 'function') {
@@ -786,3 +972,4 @@
 
 </body>
 </html>
+

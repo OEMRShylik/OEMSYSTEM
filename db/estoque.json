@@ -1,4 +1,20 @@
 {
   "_meta": {},
-  "registros": []
+  "registros": [
+    {
+      "id": "004615_HALMN16MJ12_1779068983423",
+      "pedido": "004615",
+      "cliente": "PIERINO GOTTI",
+      "entrega": "13/05/2026",
+      "item": "HALMN16MJ12",
+      "qtd_solicitada": 98,
+      "qtd_faltante": 1,
+      "observacao": "",
+      "status": "Em Falta",
+      "registrado_por": "Giovane Felipeli",
+      "data_registro": "17/05/2026 22:49",
+      "concluido_por": null,
+      "data_conclusao": null
+    }
+  ]
 }

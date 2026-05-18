@@ -143,9 +143,11 @@ def _draw_single_label(c: canvas.Canvas, job: LabelJob):
         c.drawString(10, y, line)
         y -= 10
     date_text = _date_to_mmyyyy(job.date_str)
+    c.setFont('Helvetica-Bold', 10)
+    if job.pedido:
+        c.drawString(10, 6, f'PEDIDO: #{job.pedido}')
     if date_text:
-        c.setFont('Helvetica-Bold', 10)
-        c.drawString(10, 6, date_text)
+        c.drawRightString(LABEL_W - 10, 6, date_text)
 
 def _render_jobs_to_pdf(jobs: List[LabelJob]) -> bytes:
     buf = io.BytesIO()

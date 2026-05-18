@@ -19,7 +19,7 @@ OP_RE = re.compile(r'NRO OP\s*:\s*(\d+)', re.IGNORECASE)
 DATE_RE = re.compile(r'Data Entrega\s*:\s*([0-9]{2}/[0-9]{2}/[0-9]{4})', re.IGNORECASE)
 ITEM_RE = re.compile(r'ITEM A PRODUZIR\s*:\s*([\w.\-]+)', re.IGNORECASE)
 QTY_RE = re.compile(r'QUANTIDADE\s*:\s*([\d.,]+)', re.IGNORECASE)
-CUT_RE = re.compile(r'TAMANHO DE CORTE \(Em Milímetros\):\s*([\d.,]+)', re.IGNORECASE)
+CUT_RE = re.compile(r'TAMANHO DE CORTE[^:]*:\s*([\d.,]+)', re.IGNORECASE)
 DESC_RE = re.compile(
     r'(?:PRODUTO ACABADO\s*:\s*[\w.\-]+\s+)?QUANTIDADE\s*:\s*[\d.,]+\s*\n(.+?)\nTAMANHO DE CORTE',
     re.IGNORECASE | re.DOTALL,

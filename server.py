@@ -62,6 +62,585 @@ def favicon():
         return send_from_directory(str(ico.parent), 'favicon.ico', mimetype='image/x-icon')
     return Response(status=204)
 
+@app.route('/gerar_relatorio', methods=['POST', 'OPTIONS'])
+def gerar_relatorio():
+    if request.method == 'OPTIONS': return '', 204
+    try:
+        from reportlab.lib.pagesizes import A4
+        from reportlab.lib.colors import HexColor, black, white
+        from reportlab.pdfgen import canvas as rl_canvas
+        from reportlab.lib.units import mm
+        from datetime import datetime, timezone, timedelta
+        import re as _re
+
+        body      = request.get_json(force=True)
+        pedido    = body.get('pedido', '')
+        cliente   = body.get('cliente', '')
+        entrega   = body.get('entrega', '')
+        paginas   = body.get('paginas', [])
+        amost_db  = body.get('amostragens', {})
+        checklist  = body.get('checklist_inspecao') or {}
+        ts_etapas    = body.get('ts_etapas') or {}
+        laudos       = body.get('laudos') or []
+        fotos_emb    = body.get('fotos_embalagem') or []
+
+        BRT = timezone(timedelta(hours=-3))
+
+        def fmt_dt(iso):
+            if not iso: return '—', '—'
+            try:
+                dt = datetime.fromisoformat(iso.replace('Z', '+00:00')).astimezone(BRT)
+                return dt.strftime('%d/%m/%Y'), dt.strftime('%H:%M')
+            except Exception:
+                return str(iso)[:10], str(iso)[11:16]
+
+        buf = io.BytesIO()
+        W, H = A4
+
+        c = rl_canvas.Canvas(buf, pagesize=A4)
+
+        BLUE  = HexColor('#1a56db')
+        GREEN = HexColor('#059669')
+        RED   = HexColor('#dc2626')
+        GRAY  = HexColor('#6b7280')
+        LGRAY = HexColor('#f3f4f6')
+        DGRAY = HexColor('#374151')
+        MONO  = 'Courier'
+        SANS  = 'Helvetica'
+
+        logo_path = None
+        for lp in [BASE_DIR / 'assets' / 'logo_hylik.png', BASE_DIR / 'py' / 'logo_hylik.png']:
+            if lp.exists():
+                logo_path = str(lp)
+                break
+
+        def draw_header(c, pedido, cliente, entrega, pagina_num, total_pags):
+            c.setFillColor(BLUE)
+            c.rect(0, H - 52, W, 52, fill=1, stroke=0)
+            if logo_path:
+                try:
+                    c.drawImage(logo_path, 14*mm, H - 44, width=30*mm, height=18*mm,
+                                preserveAspectRatio=True, mask='auto')
+                except Exception:
+                    pass
+            c.setFillColor(white)
+            c.setFont(SANS + '-Bold', 13)
+            c.drawString(52*mm, H - 22, f'Relatório de Produção  —  Pedido #{pedido}')
+            c.setFont(SANS, 9)
+            c.drawString(52*mm, H - 34, f'Cliente: {cliente}   |   Entrega: {entrega}')
+            c.setFont(SANS, 8)
+            c.drawRightString(W - 12*mm, H - 22, f'Página {pagina_num} / {total_pags}')
+
+        # ── Página 1: Checklist de Inspeção ──────────────────────────────────
+        def draw_checklist_page(c):
+            draw_header(c, pedido, cliente, entrega, 1, '—')
+            y = H - 68
+
+            # Título
+            c.setFillColor(GREEN)
+            c.rect(12*mm, y - 4, W - 24*mm, 20, fill=1, stroke=0)
+            c.setFillColor(white)
+            c.setFont(SANS + '-Bold', 11)
+            c.drawCentredString(W / 2, y + 5, 'CHECKLIST DE INSPEÇÃO')
+            y -= 28
+
+            # Info geral
+            data_ini, hora_ini = fmt_dt(checklist.get('ts_inicio'))
+            data_fim, hora_fim = fmt_dt(checklist.get('ts_fim'))
+            usuario = checklist.get('usuario') or '—'
+            operadores = checklist.get('operadores') or {}
+
+            info_rows = [
+                ('Operador responsável', usuario),
+                ('Início da inspeção', f'{data_ini}  {hora_ini}'),
+                ('Fim da inspeção',    f'{data_fim}  {hora_fim}'),
+            ]
+            c.setFillColor(LGRAY)
+            c.rect(12*mm, y - len(info_rows)*14 - 4, W - 24*mm, len(info_rows)*14 + 6, fill=1, stroke=0)
+            for label, val in info_rows:
+                c.setFillColor(DGRAY)
+                c.setFont(SANS + '-Bold', 8.5)
+                c.drawString(15*mm, y, label + ':')
+                c.setFont(SANS, 8.5)
+                c.drawString(75*mm, y, val)
+                y -= 14
+            y -= 10
+
+            # Tabela do checklist
+            GRUPOS = [
+                ('TERMINAL', [
+                    'CONEXÕES SEM OXIDAÇÃO',
+                    'TERMINAIS SEM OBSTRUÇÃO',
+                    'CHAVE DO SEXTAVADO IGUAL PARA TODO O KIT',
+                    'DIÂMETRO DA ROSCA CONFORME TABELA',
+                    'VEDAÇÃO DA ROSCA',
+                    'TERMINAL GIRATÓRIO DESTRAVADO',
+                    'DIÂMETRO DA ESPIGA CONFORME DIÂMETRO DA MANGUEIRA',
+                    "PRESENÇA DO ANEL O'RING/ANEL DE VEDAÇÃO, DUREZA E MEDIDAS CONFORMES",
+                ]),
+                ('CAPA', [
+                    'CAPAS SEM OXIDAÇÃO',
+                    'GRAVAÇÃO DAS CAPAS COM LOTE/CÓDIGO',
+                    'CAPAS COM GARRAS',
+                    'CAPA INTEGRAS EM TODO SEU CORPO',
+                ]),
+                ('CONJUNTO', [
+                    'KIT CONFORME PEDIDO',
+                    'ETIQUETA ADESIVA NA EMBALAGEM DO KIT',
+                    'QUANTIDADE INSPECIONADA CONFORME ORDEM',
+                ]),
+                ('EMBALAGEM', [
+                    'CÓDIGO/NOME DO CLIENTE',
+                    'COMPONENTES CORRESPONDENTE COM A DESCRIÇÃO DO ITEM',
+                ]),
+            ]
+            itens_cl = checklist.get('itens') or {}
+
+            row_h = 13
+            col_c    = W - 72*mm
+            col_nc   = W - 61*mm
+            col_na   = W - 50*mm
+            col_ins  = W - 37*mm
+
+            # Cabeçalho da tabela
+            c.setFillColor(BLUE)
+            c.rect(12*mm, y - row_h, W - 24*mm, row_h, fill=1, stroke=0)
+            c.setFillColor(white)
+            c.setFont(SANS + '-Bold', 7.5)
+            c.drawString(15*mm, y - 9, 'GRUPO')
+            c.drawString(35*mm, y - 9, 'REQUISITO')
+            c.drawCentredString(col_c,  y - 9, 'C')
+            c.drawCentredString(col_nc, y - 9, 'NC')
+            c.drawCentredString(col_na, y - 9, 'NA')
+            c.drawCentredString(col_ins, y - 9, 'RESPONSÁVEL')
+            y -= row_h
+
+            for grupo, itens in GRUPOS:
+                insp = operadores.get(grupo, '—')
+                y_grupo_start = y  # salva topo do grupo para desenhar label depois
+
+                for gi, item in enumerate(itens):
+                    val = itens_cl.get(item, '')
+                    bg = HexColor('#f9fafb') if gi % 2 == 0 else white
+                    c.setFillColor(bg)
+                    c.rect(12*mm, y - row_h + 2, W - 24*mm, row_h, fill=1, stroke=0)
+
+                    c.setFillColor(DGRAY)
+                    c.setFont(SANS, 7)
+                    txt = item if len(item) <= 60 else item[:57] + '…'
+                    c.drawString(35*mm, y - 8, txt)
+
+                    # Status
+                    cor_map = {'C': GREEN, 'NC': RED, 'NA': GRAY}
+                    for v, cx in [('C', col_c), ('NC', col_nc), ('NA', col_na)]:
+                        if val == v:
+                            c.setFillColor(cor_map[v])
+                            c.circle(cx, y - 6, 4, fill=1, stroke=0)
+                        else:
+                            c.setStrokeColor(HexColor('#d1d5db'))
+                            c.setLineWidth(0.5)
+                            c.circle(cx, y - 6, 4, fill=0, stroke=1)
+
+                    y -= row_h
+                    if y < 30*mm:
+                        c.showPage()
+                        draw_header(c, pedido, cliente, entrega, '—', '—')
+                        y = H - 68
+
+                # Desenha label do grupo e inspetor APÓS todos os backgrounds do grupo
+                gy = y_grupo_start - 8 - row_h * (len(itens) - 1) / 2
+                if gy > 20*mm:
+                    c.setFillColor(DGRAY)
+                    c.setFont(SANS + '-Bold', 7)
+                    c.drawString(13*mm, gy, grupo)
+                    c.setFont(SANS, 6)
+                    c.drawCentredString(col_ins, gy, insp)
+
+                # Linha separadora entre grupos
+                c.setStrokeColor(HexColor('#e5e7eb'))
+                c.setLineWidth(0.5)
+                c.line(12*mm, y + 2, W - 12*mm, y + 2)
+
+            c.showPage()
+
+        # ── Item box ─────────────────────────────────────────────────────────
+        def draw_item_box(c, pg):
+            y_top = H - 75
+
+            item_code = pg.get('item_codigo') or '—'
+            item_qty  = pg.get('item_qty')
+            descricao = _re.sub(r'^QUANTIDADE\s*:\s*[\d.,]+\s*', '',
+                                (pg.get('descricao') or ''), flags=_re.IGNORECASE).strip()
+            corte_mm  = pg.get('corte_mm')
+            is_index  = pg.get('is_index', False)
+            lista     = pg.get('lista_itens') or []
+
+            corte_fmt = ''
+            if corte_mm and not is_index:
+                corte_fmt = f'{float(corte_mm):,.7f}'.replace(',', 'X').replace('.', ',').replace('X', '.')
+
+            info_fields = []
+            for lbl, key in [
+                ('Tipo de Corte',        'tipo_corte'),
+                ('Angulo de Montagem',   'angulo'),
+                ('Embalagem Individual', 'embalagem'),
+                ('Forma de Embalagem',   'forma_emb'),
+                ('Gravacao Capa',        'gravacao'),
+                ('ID Extra',             'id_extra'),
+                ('OBS',                  'obs'),
+            ]:
+                val = pg.get(key, '') or ''
+                if key == 'id_extra':
+                    # Ignora se o regex capturou erroneamente "OBS" ou "OBS :"
+                    if _re.match(r'^OBS\s*:?\s*$', val, _re.IGNORECASE):
+                        val = ''
+                if key == 'obs':
+                    val = _re.sub(r'Total\s+de\s+PIS\s*:\s*\d+', '', val, flags=_re.IGNORECASE)
+                    val = _re.sub(r'Aten[çc][aã]o[!.]*', '', val, flags=_re.IGNORECASE)
+                    val = val.strip()
+                if val:
+                    info_fields.append((lbl, val))
+
+            row_h  = 13
+            trow_h = 14
+
+            n_hdr    = 1 + (1 if descricao else 0) + (1 if corte_fmt else 0)
+            sec_hdr  = n_hdr * row_h + 14
+            sec_tbl  = (len(lista) + 1) * trow_h + 6 if lista else 0
+            sec_sep  = 8
+            # Pré-calcula linhas de cada campo (quebra de linha automática)
+            _info_font_size = 9
+            _val_max_w = (W - 24*mm) - 65*mm - 4  # largura disponível para o valor
+            def _split_val(text):
+                words = str(text).split()
+                lines, cur = [], ''
+                for w in words:
+                    test = (cur + ' ' + w).strip()
+                    if c.stringWidth(test, SANS, _info_font_size) <= _val_max_w:
+                        cur = test
+                    else:
+                        if cur: lines.append(cur)
+                        cur = w
+                if cur: lines.append(cur)
+                return lines or ['']
+            info_lines = [(_l, _v, _split_val(_v)) for _l, _v in info_fields]
+            _total_info_rows = sum(len(ls) for _, _, ls in info_lines)
+            sec_info = (15 + _total_info_rows * 13) if info_lines else 0
+            total_h  = sec_hdr + sec_tbl + sec_sep + sec_info + 4
+
+            bx = 12*mm
+            bw = W - 24*mm
+            by = y_top - total_h
+
+            # Fundo branco + cabeçalho cinza
+            c.setFillColor(white)
+            c.roundRect(bx, by, bw, total_h, 4, fill=1, stroke=0)
+            c.setFillColor(LGRAY)
+            c.rect(bx, y_top - sec_hdr, bw, sec_hdr, fill=1, stroke=0)
+
+            y = y_top - 8
+
+            # ITEM A PRODUZIR | QUANTIDADE
+            c.setFillColor(DGRAY)
+            c.setFont(SANS + '-Bold', 9.5)
+            c.drawString(15*mm, y, f'ITEM A PRODUZIR:  {item_code}')
+            if item_qty is not None:
+                c.drawRightString(W - 15*mm, y, f'QUANTIDADE:  {float(item_qty):.2f}')
+            y -= row_h
+
+            # Descrição
+            if descricao:
+                c.setFont(SANS, 8.5)
+                c.setFillColor(HexColor('#1f2937'))
+                if len(descricao) > 100: descricao = descricao[:97] + '…'
+                c.drawString(15*mm, y, descricao)
+                y -= row_h
+
+            # Tamanho de Corte
+            if corte_fmt:
+                c.setFillColor(HexColor('#991b1b'))
+                lbl_corte = 'TAMANHO DE CORTE (Em Milimetros):  '
+                c.setFont(SANS + '-Bold', 8.5)
+                lbl_w = c.stringWidth(lbl_corte, SANS + '-Bold', 8.5)
+                c.drawString(15*mm, y, lbl_corte)
+                c.setFont(SANS + '-Bold', 9.8)
+                c.drawString(15*mm + lbl_w, y, corte_fmt)
+                c.setFillColor(DGRAY)
+                y -= row_h
+
+            y -= 4
+
+            # ── Tabela de componentes ─────────────────────────────────────────
+            if lista:
+                cx = [15*mm, 42*mm, 59*mm, 90*mm]
+
+                # Cabeçalho da tabela
+                c.setFillColor(HexColor('#e5e7eb'))
+                c.rect(bx, y - trow_h + 3, bw, trow_h, fill=1, stroke=0)
+                c.setFillColor(DGRAY)
+                c.setFont(SANS + '-Bold', 9)
+                c.drawString(cx[0], y - 5, 'QTD')
+                c.drawString(cx[1], y - 5, 'UN')
+                c.drawString(cx[2], y - 5, 'CÓDIGO')
+                c.drawString(cx[3], y - 5, 'DESCRIÇÃO')
+                y -= trow_h
+
+                for ri, it in enumerate(lista):
+                    bg = white if ri % 2 == 0 else HexColor('#f9fafb')
+                    c.setFillColor(bg)
+                    c.rect(bx, y - trow_h + 3, bw, trow_h, fill=1, stroke=0)
+                    c.setFillColor(DGRAY)
+                    qty_s = f"{float(it.get('quantidade') or 0):.6f}" if it.get('quantidade') is not None else ''
+                    c.setFont(MONO, 9)
+                    c.drawString(cx[0], y - 5, qty_s)
+                    c.setFont(SANS, 9)
+                    c.drawString(cx[1], y - 5, str(it.get('unidade', '')))
+                    c.setFont(MONO, 9)
+                    c.drawString(cx[2], y - 5, str(it.get('codigo', '')))
+                    c.setFont(SANS, 9)
+                    d = str(it.get('descricao', ''))
+                    if len(d) > 52: d = d[:49] + '…'
+                    c.drawString(cx[3], y - 5, d)
+                    y -= trow_h
+
+                # Borda da tabela
+                c.setStrokeColor(HexColor('#d1d5db'))
+                c.setLineWidth(0.4)
+                c.rect(bx, y + 3, bw, trow_h * (len(lista) + 1), fill=0, stroke=1)
+                y -= 2
+
+            # ── Separador ────────────────────────────────────────────────────
+            c.setStrokeColor(HexColor('#d1d5db'))
+            c.setLineWidth(0.5)
+            c.line(bx, y, bx + bw, y)
+            y -= 6
+
+            # ── INFORMAÇÃO PRODUTO (REGISTRO MESTRE) ─────────────────────────
+            if info_lines:
+                c.setFont(SANS + '-Bold', 10)
+                c.setFillColor(DGRAY)
+                c.drawString(15*mm, y, 'INFORMAÇÃO PRODUTO (REGISTRO MESTRE):')
+                y -= 13
+                for lbl, val, val_lines in info_lines:
+                    c.setFont(SANS, _info_font_size)
+                    c.setFillColor(HexColor('#6b7280'))
+                    c.drawString(15*mm, y, f'{lbl} :')
+                    c.setFillColor(DGRAY)
+                    for li, line in enumerate(val_lines):
+                        c.drawString(75*mm, y, line)
+                        if li < len(val_lines) - 1:
+                            y -= 13
+                    y -= 13
+
+            # Borda externa (por cima de tudo)
+            c.setStrokeColor(HexColor('#d1d5db'))
+            c.setLineWidth(0.6)
+            c.roundRect(bx, by, bw, total_h, 4, fill=0, stroke=1)
+
+            return y - 4
+
+        # ── Amostragens ───────────────────────────────────────────────────────
+        def draw_amostragens(c, amost, y_start):
+            if not amost or not amost.get('amostras'):
+                c.setFillColor(GRAY)
+                c.setFont(SANS, 9)
+                c.drawString(12*mm, y_start - 14, 'Sem amostragens registradas.')
+                return
+            amostras = amost['amostras']
+            c.setFillColor(DGRAY)
+            c.setFont(SANS + '-Bold', 12)
+            c.drawString(12*mm, y_start - 12, 'Amostragens')
+            y = y_start - 32
+            headers = ['#', 'Corte (mm)', 'Prensagem (mm)', 'Conf./Embalagem']
+            x_cols  = [12*mm, 26*mm, 78*mm, 130*mm]
+            row_h   = 16
+            c.setFillColor(BLUE)
+            c.rect(12*mm, y - 2, W - 24*mm, row_h, fill=1, stroke=0)
+            c.setFillColor(white)
+            c.setFont(SANS + '-Bold', 10)
+            for i, h in enumerate(headers):
+                c.drawString(x_cols[i] + 2, y + 4, h)
+            y -= row_h
+            for ri, am in enumerate(amostras):
+                c.setFillColor(HexColor('#f9fafb') if ri % 2 == 0 else white)
+                c.rect(12*mm, y - 2, W - 24*mm, row_h, fill=1, stroke=0)
+                c.setFillColor(DGRAY)
+                c.setFont(MONO, 10)
+                c.drawString(x_cols[0] + 2, y + 4, str(ri + 1))
+                c.drawString(x_cols[1] + 2, y + 4, am.get('corte', '') or '—')
+                c.drawString(x_cols[2] + 2, y + 4, am.get('prensagem', '') or '—')
+                c.drawString(x_cols[3] + 2, y + 4, am.get('conferencia', '') or '—')
+                y -= row_h
+            table_h = row_h * (len(amostras) + 1)
+            c.setStrokeColor(HexColor('#e5e7eb'))
+            c.setLineWidth(0.5)
+            c.rect(12*mm, y, W - 24*mm, table_h + 2, fill=0, stroke=1)
+
+            # Operadores e timestamps por processo
+            op_corte = amost.get('operador_corte', '')
+            op_prens = amost.get('operador_prensagem', '')
+            op_conf  = amost.get('operador_conferencia', '')
+            op_geral = amost.get('operador', '')
+
+            procs = [
+                ('Corte',        op_corte, 'corte'),
+                ('Prensagem',    op_prens, 'prensagem'),
+                ('Conferência',  op_conf,  'embalagem'),
+            ]
+            has_proc = any(op or ts_etapas.get(k + '_inicio') for _, op, k in procs)
+
+            y_op = y - 8
+            if not has_proc:
+                # Fallback: operador geral
+                if op_geral:
+                    c.setFont(SANS + '-Bold', 9)
+                    c.setFillColor(GREEN)
+                    c.drawString(12*mm, y_op, f'Operador: {op_geral}')
+            else:
+                # Tabela compacta por processo
+                fp_h = 14
+                # Cabeçalho
+                c.setFillColor(HexColor('#f3f4f6'))
+                c.rect(12*mm, y_op - 2, W - 24*mm, fp_h, fill=1, stroke=0)
+                c.setFont(SANS + '-Bold', 8)
+                c.setFillColor(DGRAY)
+                c.drawString(14*mm, y_op + 3,   'PROCESSO')
+                c.drawString(45*mm, y_op + 3,   'OPERADOR')
+                c.drawString(103*mm, y_op + 3,  'INÍCIO')
+                c.drawString(148*mm, y_op + 3,  'FIM')
+                y_op -= fp_h
+
+                for label, operador, key in procs:
+                    ini_d, ini_h = fmt_dt(ts_etapas.get(key + '_inicio'))
+                    fim_d, fim_h = fmt_dt(ts_etapas.get(key + '_fim'))
+                    if not operador and ini_d == '—':
+                        continue
+                    c.setFillColor(white)
+                    c.rect(12*mm, y_op - 2, W - 24*mm, fp_h, fill=1, stroke=0)
+                    c.setFont(SANS + '-Bold', 8)
+                    c.setFillColor(GREEN)
+                    c.drawString(14*mm, y_op + 3, label)
+                    c.setFont(SANS + '-Bold', 9)
+                    c.setFillColor(DGRAY)
+                    c.drawString(45*mm,  y_op + 3, operador or '—')
+                    c.setFont(SANS, 8)
+                    c.drawString(103*mm, y_op + 3, f'{ini_d}  {ini_h}' if ini_d != '—' else '—')
+                    c.drawString(148*mm, y_op + 3, f'{fim_d}  {fim_h}' if fim_d != '—' else '—')
+                    y_op -= fp_h
+
+                # Borda da tabela de processos
+                rows_drawn = sum(1 for _, op, k in procs
+                                 if op or ts_etapas.get(k + '_inicio'))
+                if rows_drawn:
+                    total_h = fp_h * (rows_drawn + 1) + 2
+                    c.setStrokeColor(HexColor('#e5e7eb'))
+                    c.setLineWidth(0.5)
+                    c.rect(12*mm, y_op - 2, W - 24*mm, total_h, fill=0, stroke=1)
+
+        # ── Monta o PDF ───────────────────────────────────────────────────────
+        itens = paginas if paginas else []
+        total_item_pags = len(itens) if itens else 1
+
+        # Página 1: checklist (se existir)
+        if checklist:
+            draw_checklist_page(c)
+
+        if not itens:
+            draw_header(c, pedido, cliente, entrega, 1, 1)
+            c.setFont(SANS, 12)
+            c.drawCentredString(W/2, H/2, 'Nenhum item encontrado neste pedido.')
+            c.showPage()
+        else:
+            offset = 2 if checklist else 1
+            for i, pg in enumerate(itens):
+                pg_idx_str = str(i)
+                amost = amost_db.get(pg_idx_str) or amost_db.get(int(pg_idx_str) if pg_idx_str.isdigit() else -1)
+                draw_header(c, pedido, cliente, entrega, i + offset, total_item_pags + offset - 1)
+                y_after_item = draw_item_box(c, pg)
+                is_idx = pg.get('is_index', False)
+                has_real_item = bool(pg.get('item_codigo')) or (pg.get('corte_mm') or 0) > 0
+                if not is_idx and has_real_item:
+                    draw_amostragens(c, amost, y_after_item - 8)
+                elif is_idx:
+                    c.setFillColor(HexColor('#6b7280'))
+                    c.setFont(SANS, 8)
+                    c.drawString(15*mm, y_after_item - 14, '— Página de índice / Kit —')
+                c.showPage()
+
+        c.save()
+        report_bytes = buf.getvalue()
+
+        # ── Anexa laudos de teste ─────────────────────────────────────────────
+        if laudos:
+            try:
+                try:
+                    from pypdf import PdfWriter, PdfReader
+                except ImportError:
+                    from PyPDF2 import PdfWriter, PdfReader
+                writer = PdfWriter()
+                for page in PdfReader(io.BytesIO(report_bytes)).pages:
+                    writer.add_page(page)
+                for laudo in laudos:
+                    raw = laudo.get('data', '')
+                    pad = 4 - len(raw) % 4
+                    lbytes = base64.b64decode(raw + ('=' * pad if pad != 4 else ''))
+                    for page in PdfReader(io.BytesIO(lbytes)).pages:
+                        writer.add_page(page)
+                merged = io.BytesIO()
+                writer.write(merged)
+                report_bytes = merged.getvalue()
+            except Exception as e_merge:
+                print(f'[relatorio] merge laudos: {e_merge}')
+
+        # ── Anexa fotos de embalagem ──────────────────────────────────────────
+        if fotos_emb:
+            try:
+                try:
+                    from pypdf import PdfWriter, PdfReader
+                except ImportError:
+                    from PyPDF2 import PdfWriter, PdfReader
+                from reportlab.lib.pagesizes import A4 as _A4, landscape as _landscape
+                from reportlab.pdfgen import canvas as _rc
+                from reportlab.lib.units import mm as _mm
+
+                writer_f = PdfWriter()
+                for page in PdfReader(io.BytesIO(report_bytes)).pages:
+                    writer_f.add_page(page)
+
+                _PAGE_LAND = _landscape(_A4)
+                for foto_fn in fotos_emb:
+                    safe_f = ''.join(c for c in foto_fn if c.isalnum() or c in '._-')
+                    foto_path = FOTOS_DIR / safe_f
+                    if not foto_path.exists():
+                        continue
+                    Wf, Hf = _PAGE_LAND
+                    foto_buf = io.BytesIO()
+                    cf = _rc.Canvas(foto_buf, pagesize=_PAGE_LAND)
+                    cf.setFont('Helvetica-Bold', 11)
+                    cf.drawCentredString(Wf / 2, Hf - 12 * _mm, f'Registro Fotográfico — {safe_f}')
+                    margin = 12 * _mm
+                    cf.drawImage(str(foto_path), margin, margin,
+                                 Wf - 2 * margin, Hf - 2 * margin - 18 * _mm,
+                                 preserveAspectRatio=True, anchor='c')
+                    cf.showPage()
+                    cf.save()
+                    for page in PdfReader(io.BytesIO(foto_buf.getvalue())).pages:
+                        writer_f.add_page(page)
+
+                merged_f = io.BytesIO()
+                writer_f.write(merged_f)
+                report_bytes = merged_f.getvalue()
+            except Exception as e_fotos:
+                print(f'[relatorio] fotos embalagem: {e_fotos}')
+
+        pdf_b64 = base64.b64encode(report_bytes).decode()
+        return jsonify({'ok': True, 'pdf': pdf_b64})
+
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({'erro': str(e)}), 500
+
+
 @app.route('/<path:filename>')
 def static_files(filename):
     safe_path = (BASE_DIR / filename).resolve()
@@ -151,7 +730,10 @@ def _extract_meta(pdf_bytes):
 #  ESTADO
 # ══════════════════════════════════════════════════
 
-ESTADO_FILE = BASE_DIR / 'oem_estado.json'
+ESTADO_FILE   = BASE_DIR / 'oem_estado.json'
+USUARIOS_FILE = BASE_DIR / 'oem_usuarios.json'
+FOTOS_DIR     = BASE_DIR / 'fotos'
+FOTOS_DIR.mkdir(exist_ok=True)
 
 @app.route("/salvar_estado", methods=["OPTIONS", "POST"])
 def salvar_estado():
@@ -172,6 +754,55 @@ def carregar_estado():
         if ESTADO_FILE.exists():
             return ESTADO_FILE.read_text(encoding='utf-8'), 200, {"Content-Type": "application/json"}
         return jsonify({}), 404
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# ══════════════════════════════════════════════════
+#  FOTOS DE EMBALAGEM
+# ══════════════════════════════════════════════════
+
+@app.route('/salvar_foto', methods=['OPTIONS', 'POST'])
+def salvar_foto():
+    if request.method == 'OPTIONS': return '', 204
+    try:
+        body = request.get_json(force=True)
+        filename = (body.get('filename') or '').strip()
+        data_b64 = body.get('data', '')
+        if not filename or not data_b64:
+            return jsonify({'erro': 'filename e data são obrigatórios'}), 400
+        safe = ''.join(c for c in filename if c.isalnum() or c in '._-')
+        if not safe:
+            return jsonify({'erro': 'filename inválido'}), 400
+        img_bytes = base64.b64decode(data_b64 + '==')
+        (FOTOS_DIR / safe).write_bytes(img_bytes)
+        return jsonify({'ok': True, 'filename': safe})
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
+
+
+# ══════════════════════════════════════════════════
+#  USUÁRIOS (overrides + extras + senhas + deleted)
+# ══════════════════════════════════════════════════
+
+@app.route("/salvar_usuarios", methods=["OPTIONS", "POST"])
+def salvar_usuarios():
+    if request.method == "OPTIONS": return "", 204
+    try:
+        body = request.get_data(as_text=True)
+        USUARIOS_FILE.write_text(body, encoding='utf-8')
+        return jsonify({"ok": True})
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/carregar_usuarios", methods=["GET"])
+def carregar_usuarios():
+    try:
+        if USUARIOS_FILE.exists():
+            return USUARIOS_FILE.read_text(encoding='utf-8'), 200, {"Content-Type": "application/json"}
+        return jsonify({}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 

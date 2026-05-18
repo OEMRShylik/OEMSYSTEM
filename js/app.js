@@ -23,11 +23,13 @@ async function init() {
   updatePrClock();
   buildPrMang();
   renderDescasque();
+  // Carrega dados de usuários do servidor (overrides, extras, senhas)
+  if (typeof _carregarUsuariosServidor === 'function') {
+    await _carregarUsuariosServidor();
+  }
+
   try {
-    const carregou = await carregarEstado();
-    if (carregou && pedidos.length > 0) {
-      _mostrarToast('📂 ' + pedidos.length + ' pedido(s) carregado(s)', '#1a56db');
-    }
+    await carregarEstado();
   } catch(e) {
     console.warn('Erro ao carregar estado:', e);
   }
@@ -55,6 +57,9 @@ const SCREEN_TITLES = {
   'descasque':    'Descasque',
   'angulos':      'Ângulos de Montagem',
   'medida-corte': 'Medida de Corte',
+  'arquivo':      'Arquivo de Pedidos',
+  'usuarios':     'Gestão de Usuários',
+  'laudos':       'Laudos de Teste',
 };
 
 function _aplicarPermissoes() {
@@ -84,7 +89,7 @@ function navTo(name, el) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById('screen-' + name).classList.add('active');
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-  el.classList.add('active');
+  if (el) el.classList.add('active');
   currentScreen = name;
 
   _updateTopbar(name);
@@ -94,6 +99,15 @@ function navTo(name, el) {
   }
   if (name === 'angulos') {
     requestAnimationFrame(() => { _angDrawAll(); });
+  }
+  if (name === 'arquivo') {
+    if (typeof _renderArquivo === 'function') _renderArquivo('');
+  }
+  if (name === 'usuarios') {
+    if (typeof _renderUsuarios === 'function') _renderUsuarios();
+  }
+  if (name === 'laudos') {
+    if (typeof renderLaudos === 'function') renderLaudos();
   }
 }
 
@@ -128,14 +142,33 @@ const ETAPAS = [
 let _dragSrcIdx  = -1;
 let _dragPedidoId = '';
 
+const LIMITE_FINALIZADOS = 4;
+
 function renderKanban(filter='') {
   const area = document.getElementById('kanban-area');
   area.innerHTML = '';
+  const _isAdminKanban = typeof currentUser !== 'undefined' &&
+    (currentUser?.setor === 'Admin' || currentUser?.permissoes?.all === true);
   ETAPAS.forEach((etapa, etapaIdx) => {
-    const cards = pedidos.filter(p =>
+    let cards = pedidos.filter(p =>
       p.etapa === etapa.key &&
+      (_isAdminKanban || p.subEtapa !== 'aprovacao') &&
       (!filter || p.cliente.toLowerCase().includes(filter) || p.id.includes(filter))
     );
+
+    // Coluna FINALIZADOS: limitar aos 5 mais recentes; demais vão para o arquivo
+    let arquivadosCount = 0;
+    if (etapa.key === 'finalizado') {
+      cards.sort((a, b) => {
+        const ta = a.amostragens_ts ? new Date(a.amostragens_ts).getTime() : 0;
+        const tb = b.amostragens_ts ? new Date(b.amostragens_ts).getTime() : 0;
+        return tb - ta;
+      });
+      const totalFin = pedidos.filter(p => p.etapa === 'finalizado').length;
+      arquivadosCount = Math.max(0, totalFin - LIMITE_FINALIZADOS);
+      cards = cards.slice(0, LIMITE_FINALIZADOS);
+    }
+
     const col = document.createElement('div');
     col.className = 'kanban-col';
     col.dataset.etapa    = etapa.key;
@@ -155,11 +188,35 @@ function renderKanban(filter='') {
       if (p) { p.etapa = etapa.key; renderKanban(filter); salvarEstado(); }
     });
 
+    const btnArquivo = arquivadosCount > 0
+      ? `<button onclick="navTo('arquivo',document.querySelector('.nav-item[onclick*=arquivo]'))"
+           style="font-size:10px;font-weight:700;color:#6b7280;background:#f3f4f6;
+                  border:1px solid #e5e7eb;border-radius:10px;padding:2px 9px;
+                  cursor:pointer;font-family:Inter,sans-serif;white-space:nowrap;
+                  transition:all .12s;flex-shrink:0;"
+           onmouseover="this.style.background='#e5e7eb'"
+           onmouseout="this.style.background='#f3f4f6'">
+           📁 ${arquivadosCount} arquivado${arquivadosCount > 1 ? 's' : ''}
+         </button>`
+      : '';
+
+    // Phantom cards: pedidos em etapas posteriores que têm itens pulados pendentes aqui
+    const _phantomCards = ['corte','prensagem'].includes(etapa.key)
+      ? pedidos.filter(p =>
+          p.etapa !== etapa.key &&
+          (_isAdminKanban || p.subEtapa !== 'aprovacao') &&
+          _phantomEtapas(p).includes(etapa.key) &&
+          (!filter || p.cliente.toLowerCase().includes(filter) || p.id.includes(filter))
+        ).map(p => renderCardFantasma(p, etapa.key)).join('')
+      : '';
+
     col.innerHTML = `
-      <div class="kanban-col-header">
-        <div class="kanban-col-title">${etapa.label} <span class="kanban-count">${cards.length}</span></div>
+      <div class="kanban-col-header" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+        <div class="kanban-col-title" style="flex:1;">${etapa.label} <span class="kanban-count">${cards.length}</span></div>
+        ${btnArquivo}
       </div>
       ${cards.map(p => renderCard(p, etapaIdx)).join('')}
+      ${_phantomCards}
     `;
     area.appendChild(col);
 
@@ -180,12 +237,57 @@ function renderKanban(filter='') {
   renderCalendario();
 }
 
-function renderCard(p, etapaIdx) {
+// Retorna lista de etapas onde o pedido tem itens pulados ainda pendentes
+function _phantomEtapas(p) {
+  if (!p.paginasOP) return [];
+  const pgs = p.paginasOP;
+  const result = [];
+  if (p.etapa !== 'corte' && pgs.some(pg => !pg.is_index && pg._pulado_corte && !pg._cortado))
+    result.push('corte');
+  if (p.etapa !== 'prensagem' && pgs.some(pg => !pg.is_index && pg._pulado_prensagem && !pg._prensado))
+    result.push('prensagem');
+  return result;
+}
+
+function renderCardFantasma(p, etapaFantasma) {
   const idxReal  = pedidos.indexOf(p);
-  const draggable = !p.processing && p.etapa !== 'finalizado';
+  const pgs      = p.paginasOP || [];
+  const pendentes = etapaFantasma === 'corte'
+    ? pgs.filter(pg => !pg.is_index && pg._pulado_corte    && !pg._cortado).length
+    : pgs.filter(pg => !pg.is_index && pg._pulado_prensagem && !pg._prensado).length;
+  const etapaLabel = etapaFantasma === 'corte' ? 'Corte' : 'Prensagem';
+  return `<div class="pedido-card"
+    style="border:2px dashed #f59e0b;background:#fffbeb;cursor:pointer;"
+    onclick="abrirPedidoFantasma(${idxReal},'${etapaFantasma}')">
+    <div class="pedido-card-top">
+      <div class="pedido-num">#${p.id}</div>
+      <div style="font-size:9px;font-weight:700;padding:2px 7px;border-radius:20px;background:#fef3c7;color:#92400e;border:1px solid #fbbf24;white-space:nowrap;">⏭ ${pendentes} pendente${pendentes>1?'s':''}</div>
+    </div>
+    <div class="pedido-cliente">${p.cliente}</div>
+    <div style="font-size:10px;color:#92400e;font-weight:600;margin-top:2px;font-family:Inter,sans-serif;">Pendências de ${etapaLabel}</div>
+    <div class="pedido-entrega">${p.entrega ? 'Entrega: '+p.entrega : ''}</div>
+  </div>`;
+}
+
+function abrirPedidoFantasma(idx, etapaForcar) {
+  window._forcarEtapa = etapaForcar;
+  abrirPedido(idx);
+}
+
+function renderCard(p, etapaIdx) {
+  const _isAdminCard = typeof currentUser !== 'undefined' &&
+    (currentUser?.setor === 'Admin' || currentUser?.permissoes?.all === true);
+
+  // Cards em aprovação ficam ocultos para não-admin
+  if (p.subEtapa === 'aprovacao' && !_isAdminCard) return '';
+
+  const idxReal  = pedidos.indexOf(p);
+  const draggable = !p.processing && p.etapa !== 'finalizado' && !p.subEtapa;
 
   let topRight = '';
-  if (p.processing) {
+  if (p.subEtapa === 'aprovacao') {
+    topRight = '';
+  } else if (p.processing) {
     topRight = `<div class="pedido-processing"><span class="spinner"></span> Processando</div>`;
   } else if (p.etapa === 'finalizado') {
     topRight = `<div class="status-finalizado">✅</div>`;
@@ -194,6 +296,10 @@ function renderCard(p, etapaIdx) {
     const statusLabel = {'em-dia':'EM DIA','atrasado':'ATRASADO','pronto':'PRONTO'};
     topRight = `<div class="status-badge ${statusMap[p.status]||''}">${statusLabel[p.status]||p.status}</div>`;
   }
+
+  const _aprovBadge = p.subEtapa === 'aprovacao'
+    ? `<div class="status-badge" style="background:#fef3c7;color:#92400e;border:1px solid #fbbf24;font-size:9px;padding:2px 7px;margin-top:5px;text-align:center;border-radius:6px;">🔒 APROVAÇÃO</div>`
+    : '';
 
   return `<div class="pedido-card ${p.processing?'processing':''}"
     draggable="${draggable}"
@@ -205,7 +311,13 @@ function renderCard(p, etapaIdx) {
       ${topRight}
     </div>
     <div class="pedido-cliente">${p.cliente}</div>
+    ${(p.tipo && p.subEtapa === 'aprovacao') ? (() => {
+      const _tipoMap = {'mangueira-kit':'📦 Kit','mangueira-avulso':'🔧 Avulso','pecas':'⚙️ Peças','mangueira':'🔧 Avulso'};
+      const _tipoClr = {'mangueira-kit':'#dbeafe;color:#1e40af','mangueira-avulso':'#f3f4f6;color:#374151','pecas':'#dcfce7;color:#166534','mangueira':'#f3f4f6;color:#374151'};
+      return `<div style="font-size:9px;font-weight:700;padding:1px 6px;border-radius:5px;display:inline-block;background:${_tipoClr[p.tipo]||'#f3f4f6;color:#374151'};margin-top:2px;">${_tipoMap[p.tipo]||p.tipo}</div>`;
+    })() : ''}
     <div class="pedido-entrega">${p.entrega ? 'Entrega: '+p.entrega : ''}</div>
+    ${_aprovBadge}
   </div>`;
 }
 
@@ -316,10 +428,13 @@ async function _executarLimpeza() {
   if (typeof _mostrarToast === 'function') _mostrarToast('🗑 Limpando dados...', '#6b7280');
 
   // ── Chaves do localStorage que NUNCA devem ser removidas ──
-  // Exatamente as chaves usadas pelo auth.js:
-  //   'oem_senhas' → senhas customizadas por usuário (saveSenha/loadSenhas)
-  //   'oem_audit'  → log de auditoria de login/logout
-  const AUTH_KEYS = new Set(['oem_senhas', 'oem_audit']);
+  const AUTH_KEYS = new Set([
+    'oem_senhas',           // senhas customizadas por usuário
+    'oem_audit',            // log de auditoria
+    'oem_users_overrides',  // nomes/setores editados pelo admin (sobrenomes, etc.)
+    'oem_users_extras',     // usuários adicionados pelo admin
+    'oem_users_deleted',    // usuários desativados/removidos pelo admin
+  ]);
   const _ehChaveAuth = k => AUTH_KEYS.has(k);
 
   // 1. Zerar estado em memória
@@ -385,6 +500,20 @@ async function _executarLimpeza() {
   renderKanban();
   if (typeof _mostrarToast === 'function') _mostrarToast('✅ Dados limpos com sucesso', '#059669');
 }
+
+// ── Auto-refresh do kanban a cada 10 minutos ─────────────────────────────────
+(function _iniciarAutoRefresh() {
+  const INTERVALO_MS = 10 * 60 * 1000;
+  setInterval(async () => {
+    // Só atualiza se estiver na tela de pedidos (kanban), não dentro de uma OP
+    const detalhe = document.getElementById('screen-detalhe');
+    if (detalhe && detalhe.classList.contains('active')) return;
+    try {
+      await carregarEstado();
+      renderKanban();
+    } catch(e) { console.warn('[auto-refresh] falha:', e); }
+  }, INTERVALO_MS);
+})();
 
 // Habilitar botão ao digitar LIMPAR (oninput do HTML chama isso)
 function _enableLimparBtn() {

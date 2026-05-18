@@ -37,6 +37,7 @@ async function handleNovoPedidoPDF(event) {
     cliente:     info.cliente || '(sem nome)',
     entrega:     info.entregaStr || '',
     etapa:       'separacao',
+    subEtapa:    'aprovacao',
     status,
     pdfB64:      b64,
     entregaDate: info.entregaDate,
