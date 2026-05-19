@@ -1,26 +1,53 @@
 {
   "_meta": {
-    "total_registros": 2,
+    "total_registros": 5,
     "periodo": ""
   },
   "pedidos": [
     {
-      "pedido": "004610",
-      "cliente": "FEZER",
-      "qtd": 87,
-      "fat": null,
-      "ano": 2026,
-      "mes": "05",
-      "mes_nome": "Maio"
+      "pedido": "000005",
+      "cliente": "METARO",
+      "qtd": 102,
+      "fat": 3096.12,
+      "ano": 2025,
+      "mes": "07",
+      "mes_nome": "Julho"
     },
     {
-      "pedido": "004615",
-      "cliente": "PIERINO",
-      "qtd": 14,
+      "pedido": "000015",
+      "cliente": "PHD",
+      "qtd": 58,
       "fat": null,
-      "ano": 2026,
-      "mes": "05",
-      "mes_nome": "Maio"
+      "ano": 2025,
+      "mes": "07",
+      "mes_nome": "Julho"
+    },
+    {
+      "pedido": "000024",
+      "cliente": "GELGAS",
+      "qtd": 12,
+      "fat": null,
+      "ano": 2025,
+      "mes": "07",
+      "mes_nome": "Julho"
+    },
+    {
+      "pedido": "000028",
+      "cliente": "METARO",
+      "qtd": 65,
+      "fat": null,
+      "ano": 2025,
+      "mes": "07",
+      "mes_nome": "Julho"
+    },
+    {
+      "pedido": "000047",
+      "cliente": "CONVICTA",
+      "qtd": 0,
+      "fat": null,
+      "ano": 2025,
+      "mes": "07",
+      "mes_nome": "Julho"
     }
   ]
 }

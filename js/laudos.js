@@ -4,13 +4,25 @@
 
 let _laudosUploadPedidoId = null;
 
+// Estado dos filtros
+window._laudosFiltroTipo = window._laudosFiltroTipo ?? 'com'; // 'com' | 'sem'
+window._laudosVisiveis   = window._laudosVisiveis   ?? 10;
+
+const LAUDOS_POR_PAGINA = 10;
+
 function renderLaudos(filtro) {
   const root = document.getElementById('laudos-root');
   if (!root) return;
 
-  const q = (filtro || '').toLowerCase().trim();
+  const q = (filtro !== undefined
+    ? filtro
+    : (document.getElementById('laudos-search')?.value || '')
+  ).toLowerCase().trim();
 
-  // Coletar todos os laudos de todos os pedidos
+  const tipoFiltro = window._laudosFiltroTipo;
+  const maxVis     = window._laudosVisiveis;
+
+  // ── Coletar todas as linhas ──────────────────────
   const linhas = [];
   (typeof pedidos !== 'undefined' ? pedidos : []).forEach(p => {
     const laudos = p.laudos || [];
@@ -21,21 +33,44 @@ function renderLaudos(filtro) {
     }
   });
 
-  // Filtro
-  const filtradas = q
+  // ── Filtro por busca ─────────────────────────────
+  const buscadas = q
     ? linhas.filter(({ p }) =>
         p.id.toLowerCase().includes(q) ||
         (p.cliente || '').toLowerCase().includes(q))
     : linhas;
 
-  const comLaudo    = filtradas.filter(r => r.laudo);
-  const semLaudo    = filtradas.filter(r => !r.laudo);
-  const exibir      = [...comLaudo, ...semLaudo];
+  const comLaudo = buscadas.filter(r =>  r.laudo);
+  const semLaudo = buscadas.filter(r => !r.laudo);
 
-  const totalLaudos = comLaudo.length;
+  const cntCom = comLaudo.length;
+  const cntSem = semLaudo.length;
 
+  // ── Aplicar filtro de tipo ───────────────────────
+  const exibirTodos = tipoFiltro === 'com' ? comLaudo : semLaudo;
+
+  // ── Paginação ────────────────────────────────────
+  const exibir   = exibirTodos.slice(0, maxVis);
+  const temMais  = exibirTodos.length > maxVis;
+  const restante = exibirTodos.length - maxVis;
+
+  // ── Botão de filtro ──────────────────────────────
+  const _btnFiltro = (label, valor, cnt, cor) => {
+    const ativo = tipoFiltro === valor;
+    return `<button onclick="window._laudosFiltroTipo='${valor}';window._laudosVisiveis=${LAUDOS_POR_PAGINA};renderLaudos()"
+      style="padding:6px 14px;border-radius:20px;font-size:11px;font-weight:700;font-family:Inter,sans-serif;
+             cursor:pointer;white-space:nowrap;transition:all .15s;
+             border:1.5px solid ${ativo ? cor : '#e5e7eb'};
+             background:${ativo ? cor + '22' : '#fff'};
+             color:${ativo ? cor : '#6b7280'};">
+      ${label}${cnt > 0 ? `<span style="margin-left:5px;background:${ativo ? cor : '#e5e7eb'};color:${ativo ? '#fff' : '#374151'};
+        border-radius:10px;padding:0 6px;font-size:10px;">${cnt}</span>` : ''}
+    </button>`;
+  };
+
+  // ── Linhas da tabela ─────────────────────────────
   const linhasHTML = exibir.map(({ p, laudo, li }) => {
-    const pidx = (typeof pedidos !== 'undefined') ? pedidos.indexOf(p) : -1;
+    const pidx     = (typeof pedidos !== 'undefined') ? pedidos.indexOf(p) : -1;
     const temLaudo = !!laudo;
     const filename = laudo ? laudo.filename : '—';
     const etapaLabel = {
@@ -43,18 +78,26 @@ function renderLaudos(filtro) {
       prensagem: 'Prensagem', embalagem: 'Embalagem', finalizado: 'Finalizado',
     }[p.etapa] || p.etapa || '—';
 
-    return `<tr style="border-bottom:1px solid #f3f4f6;${!temLaudo ? 'opacity:.55;' : ''}">
-      <td style="padding:10px 12px;font-size:12px;font-weight:800;font-family:'Courier New',monospace;white-space:nowrap;color:#1a56db;">#${p.id}</td>
-      <td style="padding:10px 12px;font-size:12px;font-weight:600;color:#111;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${p.cliente || '—'}</td>
+    return `
+    <tr style="border-bottom:1px solid rgba(0,0,0,.05);">
+      <td style="padding:10px 12px;">
+        <a onclick="irParaPedido('${p.id}')" style="font-size:12px;font-weight:800;
+          font-family:'Courier New',monospace;color:#1a56db;cursor:pointer;">#${p.id}</a>
+      </td>
+      <td style="padding:10px 12px;font-size:12px;font-weight:700;color:#111;
+        max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${p.cliente || '—'}</td>
       <td style="padding:10px 12px;font-size:11px;color:#6b7280;white-space:nowrap;">${p.entrega || '—'}</td>
       <td style="padding:10px 12px;">
-        <span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;
-          background:${temLaudo ? '#f0fdf4' : '#f9fafb'};color:${temLaudo ? '#059669' : '#9ca3af'};
+        <span style="font-size:10px;font-weight:700;padding:2px 9px;border-radius:20px;
+          background:${temLaudo ? '#f0fdf4' : '#f9fafb'};
+          color:${temLaudo ? '#059669' : '#9ca3af'};
           border:1px solid ${temLaudo ? '#86efac' : '#e5e7eb'};">
           ${etapaLabel}
         </span>
       </td>
-      <td style="padding:10px 12px;font-size:11px;color:#374151;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:'Courier New',monospace;">
+      <td style="padding:10px 12px;font-size:11px;color:#374151;
+        max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+        font-family:'Courier New',monospace;">
         ${temLaudo
           ? `<span title="${filename}">${filename}</span>`
           : '<span style="color:#d1d5db;">Sem laudo</span>'}
@@ -63,19 +106,23 @@ function renderLaudos(filtro) {
         <div style="display:flex;gap:6px;align-items:center;">
           ${temLaudo ? `
           <button onclick="_laudosVer(${pidx},${li})"
-            style="padding:5px 12px;background:#eff6ff;color:#1a56db;border:1px solid #bfdbfe;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif;">
+            style="padding:5px 11px;background:#eff6ff;color:#1a56db;border:1px solid #bfdbfe;
+              border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif;">
             Ver PDF
           </button>
           <button onclick="_laudosGerarRelatorio(${pidx})"
-            style="padding:5px 12px;background:#f0fdf4;color:#059669;border:1px solid #86efac;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif;">
+            style="padding:5px 11px;background:#f0fdf4;color:#059669;border:1px solid #86efac;
+              border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif;">
             Relatório
           </button>
           <button onclick="_laudosRemover(${pidx},${li})"
-            style="padding:5px 8px;background:#fee2e2;color:#dc2626;border:1px solid #fecaca;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif;">
+            style="padding:5px 8px;background:#fee2e2;color:#dc2626;border:1px solid #fecaca;
+              border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif;">
             ✕
           </button>` : ''}
           <button onclick="_laudosUpload('${p.id}')"
-            style="padding:5px 12px;background:#fff;color:#6b7280;border:1px solid #d1d5db;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif;">
+            style="padding:5px 11px;background:#fff;color:#6b7280;border:1px solid #d1d5db;
+              border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif;">
             + Laudo
           </button>
         </div>
@@ -84,43 +131,72 @@ function renderLaudos(filtro) {
   }).join('');
 
   root.innerHTML = `
-    <div style="max-width:1100px;margin:0 auto;">
-      <!-- Header -->
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px;">
-        <div>
-          <div style="font-size:20px;font-weight:800;color:#111;">Laudos de Teste</div>
-          <div style="font-size:12px;color:#6b7280;margin-top:2px;">${totalLaudos} laudo${totalLaudos !== 1 ? 's' : ''} registrado${totalLaudos !== 1 ? 's' : ''}</div>
-        </div>
-        <input type="text" placeholder="Buscar por pedido ou cliente…" value="${filtro || ''}"
-          oninput="renderLaudos(this.value)"
-          style="padding:8px 14px;border:1.5px solid #e5e7eb;border-radius:9px;font-size:13px;
-                 font-family:Inter,sans-serif;outline:none;width:260px;color:#111;">
+  <div style="padding:14px 16px;display:flex;flex-direction:column;gap:12px;max-width:1100px;margin:0 auto;">
+
+    <!-- Barra de filtros + busca -->
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+      ${_btnFiltro('Com Laudo', 'com', cntCom, '#059669')}
+      ${_btnFiltro('Sem Laudo', 'sem', cntSem, '#6b7280')}
+      <div style="margin-left:auto;">
+        <input id="laudos-search" type="text" placeholder="Buscar pedido ou cliente…" value="${q}"
+          oninput="window._laudosVisiveis=${LAUDOS_POR_PAGINA};renderLaudos(this.value)"
+          style="padding:6px 13px;border:1.5px solid #e5e7eb;border-radius:20px;font-size:12px;
+                 font-family:Inter,sans-serif;outline:none;width:220px;color:#111;background:#fff;">
+      </div>
+    </div>
+
+    <!-- Tabela -->
+    <div style="background:#fff;border-radius:12px;border:1px solid #e5e7eb;overflow:hidden;">
+      ${exibir.length === 0 ? `
+        <div style="padding:48px;text-align:center;color:#9ca3af;font-family:Inter,sans-serif;">
+          <div style="font-size:36px;margin-bottom:10px;">${tipoFiltro === 'com' ? '📄' : '📭'}</div>
+          <div style="font-size:14px;font-weight:700;color:#374151;margin-bottom:4px;">
+            ${q ? `Nenhum resultado para "${q}"` : tipoFiltro === 'com' ? 'Nenhum laudo registrado' : 'Todos os pedidos têm laudo'}
+          </div>
+          <div style="font-size:12px;color:#9ca3af;">
+            ${!q && tipoFiltro === 'com' ? 'Faça upload de laudos dentro de cada pedido' : ''}
+          </div>
+        </div>` : `
+      <div style="overflow-x:auto;">
+        <table style="width:100%;border-collapse:collapse;font-family:Inter,sans-serif;">
+          <thead>
+            <tr style="background:#f8fafc;border-bottom:2px solid #e5e7eb;">
+              <th style="padding:10px 12px;text-align:left;font-size:10px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.6px;white-space:nowrap;">Pedido</th>
+              <th style="padding:10px 12px;text-align:left;font-size:10px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.6px;">Cliente</th>
+              <th style="padding:10px 12px;text-align:left;font-size:10px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.6px;white-space:nowrap;">Entrega</th>
+              <th style="padding:10px 12px;text-align:left;font-size:10px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.6px;">Etapa</th>
+              <th style="padding:10px 12px;text-align:left;font-size:10px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.6px;">Arquivo</th>
+              <th style="padding:10px 12px;text-align:left;font-size:10px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.6px;">Ações</th>
+            </tr>
+          </thead>
+          <tbody>${linhasHTML}</tbody>
+        </table>
       </div>
 
-      <!-- Tabela -->
-      <div style="background:#fff;border-radius:14px;border:1px solid #e5e7eb;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.05);">
-        ${exibir.length === 0 ? `
-          <div style="padding:60px;text-align:center;color:#9ca3af;">
-            <div style="font-size:40px;margin-bottom:12px;"></div>
-            <div style="font-size:15px;font-weight:700;color:#374151;">Nenhum pedido encontrado</div>
-          </div>` : `
-        <div style="overflow-x:auto;">
-          <table style="width:100%;border-collapse:collapse;">
-            <thead>
-              <tr style="background:#f8fafc;border-bottom:2px solid #e5e7eb;">
-                <th style="padding:10px 12px;text-align:left;font-size:10px;font-weight:700;color:#6b7280;font-family:Inter,sans-serif;white-space:nowrap;">PEDIDO</th>
-                <th style="padding:10px 12px;text-align:left;font-size:10px;font-weight:700;color:#6b7280;font-family:Inter,sans-serif;">CLIENTE</th>
-                <th style="padding:10px 12px;text-align:left;font-size:10px;font-weight:700;color:#6b7280;font-family:Inter,sans-serif;white-space:nowrap;">ENTREGA</th>
-                <th style="padding:10px 12px;text-align:left;font-size:10px;font-weight:700;color:#6b7280;font-family:Inter,sans-serif;">ETAPA</th>
-                <th style="padding:10px 12px;text-align:left;font-size:10px;font-weight:700;color:#6b7280;font-family:Inter,sans-serif;">ARQUIVO</th>
-                <th style="padding:10px 12px;text-align:left;font-size:10px;font-weight:700;color:#6b7280;font-family:Inter,sans-serif;">AÇÕES</th>
-              </tr>
-            </thead>
-            <tbody>${linhasHTML}</tbody>
-          </table>
-        </div>`}
-      </div>
-    </div>`;
+      ${temMais ? `
+      <div style="padding:12px 16px;border-top:1px solid #f3f4f6;text-align:center;">
+        <button onclick="window._laudosVisiveis=window._laudosVisiveis+${LAUDOS_POR_PAGINA};renderLaudos()"
+          style="padding:8px 24px;background:#f8fafc;color:#374151;border:1.5px solid #e5e7eb;
+            border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif;
+            transition:background .15s;"
+          onmouseenter="this.style.background='#f0f2f5'" onmouseleave="this.style.background='#f8fafc'">
+          Mostrar mais (${Math.min(restante, LAUDOS_POR_PAGINA)} de ${restante} restantes)
+        </button>
+      </div>` : ''}
+      `}
+    </div>
+
+    <!-- Contador -->
+    <div style="font-size:11px;color:#9ca3af;font-family:Inter,sans-serif;text-align:right;">
+      Exibindo ${exibir.length} de ${exibirTodos.length} ${tipoFiltro === 'com' ? 'com laudo' : 'sem laudo'}
+    </div>
+  </div>`;
+
+  // Restaura foco na busca sem travar a digitação
+  if (filtro !== undefined) {
+    const si = document.getElementById('laudos-search');
+    if (si) { si.focus(); si.setSelectionRange(si.value.length, si.value.length); }
+  }
 }
 
 async function _laudosVer(pidx, li) {
@@ -128,7 +204,7 @@ async function _laudosVer(pidx, li) {
   const l = p?.laudos?.[li];
   if (!l) return;
   if (typeof _mostrarToast === 'function') _mostrarToast('Carregando PDF…', '#1a56db');
-  const data = l.data || (typeof getAnexoData === 'function' ? await getAnexoData(l) : null);
+  const data = l.data || (typeof getAnexoData === 'function' ? await getAnexoData(l, p?.id) : null);
   if (!data) { if (typeof _mostrarToast === 'function') _mostrarToast('PDF não encontrado.', '#ef4444'); return; }
   _laudosAbrirViewer(l.filename, data);
 }
@@ -179,7 +255,7 @@ async function _laudosGerarRelatorio(pidx) {
   try {
     const laudosPayload = [];
     for (const l of (p.laudos || [])) {
-      const data = typeof getAnexoData === 'function' ? await getAnexoData(l) : null;
+      const data = typeof getAnexoData === 'function' ? await getAnexoData(l, p.id) : null;
       if (data) laudosPayload.push({ filename: l.filename || '', data });
     }
     const _checklist = p.checklist_inspecao ? { ...p.checklist_inspecao } : null;
@@ -218,7 +294,7 @@ function _laudosRemover(pidx, li) {
   p.laudos.forEach((l, n) => { l.filename = 'LAUDO_' + (n + 1) + '_' + p.id + '.pdf'; });
   if (typeof salvarEstado === 'function') salvarEstado();
   if (typeof _mostrarToast === 'function') _mostrarToast('Laudo removido.', '#6b7280');
-  renderLaudos(document.querySelector('#laudos-root input')?.value);
+  renderLaudos();
 }
 
 function _laudosUpload(pedidoId) {
@@ -248,7 +324,7 @@ function _laudosUploadChange(event) {
     if (typeof salvarEstado === 'function') salvarEstado();
     if (typeof _mostrarToast === 'function') _mostrarToast('Laudo ' + n + ' anexado!', '#1a56db');
     _laudosUploadPedidoId = null;
-    renderLaudos(document.querySelector('#laudos-root input')?.value);
+    renderLaudos();
   };
   reader.readAsDataURL(file);
   event.target.value = '';

@@ -7,8 +7,10 @@ import base64
 import io
 import json as _json_mod
 import os
+import queue as _queue_mod
 import re
 import sys
+import threading as _threading_mod
 import traceback
 from pathlib import Path
 
@@ -41,9 +43,56 @@ app = Flask(__name__)
 app.config["MAX_CONTENT_LENGTH"] = 200 * 1024 * 1024
 app.config["JSON_SORT_KEYS"] = False
 
-# Diretório para PDFs físicos (storage v2)
-PDF_DIR = BASE_DIR / "data" / "pdfs"
+# ── SSE: broadcast instantâneo para todos os clientes conectados ──────────────
+_sse_clients: list = []
+_sse_lock = _threading_mod.Lock()
+
+def _sse_broadcast(msg: str = 'update'):
+    """Envia uma mensagem SSE para todos os clientes conectados."""
+    with _sse_lock:
+        for q in list(_sse_clients):
+            try:
+                q.put_nowait(msg)
+            except Exception:
+                pass
+
+@app.route('/eventos')
+def eventos():
+    """Endpoint SSE — mantém a conexão aberta e empurra eventos para o cliente."""
+    from flask import Response, stream_with_context
+
+    def _gerar():
+        q = _queue_mod.Queue()
+        with _sse_lock:
+            _sse_clients.append(q)
+        try:
+            yield 'data: conectado\n\n'
+            while True:
+                try:
+                    msg = q.get(timeout=25)
+                    yield f'data: {msg}\n\n'
+                except _queue_mod.Empty:
+                    yield ': ping\n\n'   # keepalive para evitar timeout de proxies
+        finally:
+            with _sse_lock:
+                if q in _sse_clients:
+                    _sse_clients.remove(q)
+
+    return Response(
+        stream_with_context(_gerar()),
+        mimetype='text/event-stream',
+        headers={
+            'Cache-Control': 'no-cache',
+            'X-Accel-Buffering': 'no',
+            'Connection': 'keep-alive',
+        }
+    )
+
+# Diretório raiz para PDFs — cada pedido em data/{pedido_id}/
+PDF_DIR      = BASE_DIR / "data"
+PDF_DIR_LEGACY = BASE_DIR / "data" / "pdfs"   # leitura de dados antigos
 PDF_DIR.mkdir(parents=True, exist_ok=True)
+PDF_DIR_LEGACY.mkdir(parents=True, exist_ok=True)
 
 
 # ══════════════════════════════════════════════════
@@ -743,6 +792,7 @@ def salvar_estado():
         data = _json_mod.loads(body)
         ESTADO_FILE.write_text(body, encoding='utf-8')
         print(f"[estado] Salvo: {len(body):,} bytes  pedidos={len(data.get('peds') or data.get('pedidos',[]))}")
+        _sse_broadcast('update')   # notifica todos os clientes SSE em tempo real
         return jsonify({"ok": True})
     except Exception as e:
         traceback.print_exc()
@@ -811,6 +861,16 @@ def carregar_usuarios():
 #  PDFs FÍSICOS (storage v2)
 # ══════════════════════════════════════════════════
 
+def _safe_pdf_path(filename):
+    """Sanitiza filename com subpastas: '000005/000005.pdf' → Path('000005/000005.pdf').
+    Cada componente é sanitizado individualmente para evitar path traversal."""
+    parts = Path(filename).parts
+    safe_parts = [''.join(c for c in p if c.isalnum() or c in '._-') for p in parts]
+    safe_parts = [p for p in safe_parts if p]
+    if not safe_parts:
+        return None
+    return Path(*safe_parts)
+
 @app.route("/salvar_pdf", methods=["OPTIONS", "POST"])
 def salvar_pdf():
     if request.method == "OPTIONS": return "", 204
@@ -820,15 +880,16 @@ def salvar_pdf():
         data_b64 = body.get("data", "")
         if not filename or not data_b64:
             return jsonify({"erro": "filename e data são obrigatórios"}), 400
-        safe = ''.join(c for c in filename if c.isalnum() or c in '._-')
-        if not safe:
+        rel = _safe_pdf_path(filename)
+        if not rel:
             return jsonify({"erro": "Nome inválido"}), 400
-        dest = PDF_DIR / safe
+        dest = PDF_DIR / rel
+        dest.parent.mkdir(parents=True, exist_ok=True)
         if dest.exists():
             return jsonify({"ok": True, "cached": True})
         raw = base64.b64decode(data_b64)
         dest.write_bytes(raw)
-        print(f"[pdf] salvo {safe} {len(raw)//1024}KB")
+        print(f"[pdf] salvo {rel} {len(raw)//1024}KB")
         return jsonify({"ok": True, "cached": False})
     except Exception as e:
         traceback.print_exc()
@@ -837,12 +898,18 @@ def salvar_pdf():
 @app.route("/pdf/<path:filename>", methods=["GET"])
 def servir_pdf(filename):
     try:
-        safe = ''.join(c for c in filename if c.isalnum() or c in '._-')
-        dest = PDF_DIR / safe
+        rel = _safe_pdf_path(filename)
+        if not rel:
+            return jsonify({"erro": "Nome inválido"}), 400
+        dest = PDF_DIR / rel
+        # Fallback para dados antigos em data/pdfs/
+        if not dest.exists():
+            flat = rel.name
+            dest = PDF_DIR_LEGACY / flat
         if not dest.exists():
             return jsonify({"erro": "Não encontrado"}), 404
         raw = dest.read_bytes()
-        return jsonify({"data": base64.b64encode(raw).decode(), "filename": safe})
+        return jsonify({"data": base64.b64encode(raw).decode(), "filename": rel.name})
     except Exception as e:
         return jsonify({"erro": str(e)}), 500
 
@@ -860,17 +927,31 @@ COMPONENTS_FILE = BASE_DIR / 'db' / 'components.json'
 @app.route("/limpar_pdfs", methods=["OPTIONS", "POST"])
 def limpar_pdfs():
     if request.method == "OPTIONS": return "", 204
+    import shutil
     try:
+        body = request.get_json(force=True) or {}
+        pedido_id = ''.join(c for c in (body.get("pedido_id") or "") if c.isalnum() or c in '_-')
         removidos = 0
         erros = []
-        for f in PDF_DIR.iterdir():
-            if f.is_file():
+        if pedido_id:
+            # Remove apenas a pasta deste pedido
+            pasta = PDF_DIR / pedido_id
+            if pasta.exists() and pasta.is_dir():
                 try:
-                    f.unlink()
-                    removidos += 1
+                    shutil.rmtree(pasta)
+                    removidos = 1
                 except Exception as e:
-                    erros.append(str(f.name))
-        print(f"[limpar_pdfs] {removidos} arquivo(s) removido(s), {len(erros)} erro(s)")
+                    erros.append(str(e))
+        else:
+            # Remove todas as pastas de pedidos (subpastas numéricas) e legado
+            for item in list(PDF_DIR.iterdir()):
+                if item.is_dir():
+                    try:
+                        shutil.rmtree(item)
+                        removidos += 1
+                    except Exception as e:
+                        erros.append(str(item.name))
+        print(f"[limpar_pdfs] {removidos} pasta(s) removida(s), {len(erros)} erro(s)")
         return jsonify({"ok": True, "removidos": removidos, "erros": erros})
     except Exception as e:
         traceback.print_exc()
@@ -1015,6 +1096,10 @@ def processar():
 
     pedido_id = result["meta"].get("pedido") or Path(filename).stem
 
+    # Pasta exclusiva deste pedido
+    pedido_dir = PDF_DIR / pedido_id
+    pedido_dir.mkdir(parents=True, exist_ok=True)
+
     # 2. Organizar OP
     try:
         org_bytes, _, ordered_groups = reorder_pdf(pdf_bytes)
@@ -1023,8 +1108,7 @@ def processar():
             "data": _b64(org_bytes),
             "summary": summarize(ordered_groups),
         }
-        # Salva fisicamente
-        (PDF_DIR / f"{pedido_id}.pdf").write_bytes(org_bytes)
+        (pedido_dir / f"{pedido_id}.pdf").write_bytes(org_bytes)
         print(f"[op_org] ok {len(org_bytes):,} bytes")
     except Exception as e:
         traceback.print_exc()
@@ -1039,7 +1123,7 @@ def processar():
             for d in label_docs
         ]
         for d in label_docs:
-            (PDF_DIR / d["file_name"]).write_bytes(d["pdf_bytes"])
+            (pedido_dir / d["file_name"]).write_bytes(d["pdf_bytes"])
         print(f"[modulo] {len(label_docs)} doc(s)")
     except Exception as e:
         traceback.print_exc()
@@ -1053,7 +1137,7 @@ def processar():
             "filename": emb_doc["file_name"],
             "data": _b64(emb_doc["pdf_bytes"]),
         }
-        (PDF_DIR / emb_doc["file_name"]).write_bytes(emb_doc["pdf_bytes"])
+        (pedido_dir / emb_doc["file_name"]).write_bytes(emb_doc["pdf_bytes"])
         print(f"[embalagem] ok")
     except Exception as e:
         traceback.print_exc()
@@ -1067,7 +1151,7 @@ def processar():
             "filename": corte_doc["file_name"],
             "data": _b64(corte_doc["pdf_bytes"]),
         }
-        (PDF_DIR / corte_doc["file_name"]).write_bytes(corte_doc["pdf_bytes"])
+        (pedido_dir / corte_doc["file_name"]).write_bytes(corte_doc["pdf_bytes"])
         print(f"[corte] ok")
     except Exception as e:
         traceback.print_exc()
@@ -1187,6 +1271,58 @@ def registrar_pedido_report():
         return jsonify({'erro': str(e)}), 500
 
 
+@app.route('/excluir_pedido_report', methods=['OPTIONS', 'POST'])
+def excluir_pedido_report():
+    """
+    Remove um pedido do report.json (dashboard).
+    Body: { pedido_id: str }
+    """
+    if request.method == 'OPTIONS': return '', 204
+    try:
+        body      = request.get_json(force=True) or {}
+        pedido_id = str(body.get('pedido_id', '')).strip()
+        if not pedido_id:
+            return jsonify({'erro': 'pedido_id obrigatório'}), 400
+        report = _load_report()
+        antes  = len(report['pedidos'])
+        report['pedidos'] = [p for p in report['pedidos'] if p.get('pedido') != pedido_id]
+        removidos = antes - len(report['pedidos'])
+        _save_report(report)
+        print(f'[report] excluído #{pedido_id}: {removidos} registro(s) removido(s)')
+        return jsonify({'ok': True, 'pedido_id': pedido_id, 'removidos': removidos})
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({'erro': str(e)}), 500
+
+
+@app.route('/atualizar_qtd_report', methods=['OPTIONS', 'POST'])
+def atualizar_qtd_report():
+    """
+    Atualiza a quantidade de mangueiras de um pedido no report.json.
+    Body: { pedido: str, qtd: int }
+    """
+    if request.method == 'OPTIONS': return '', 204
+    try:
+        body   = request.get_json(force=True) or {}
+        pedido = str(body.get('pedido', '')).strip()
+        qtd    = int(body.get('qtd', 0))
+        if not pedido:
+            return jsonify({'erro': 'pedido obrigatório'}), 400
+        report = _load_report()
+        existente = next((p for p in report['pedidos'] if p['pedido'] == pedido), None)
+        if existente:
+            existente['qtd'] = qtd
+        else:
+            # Cria registro mínimo se ainda não existir
+            report['pedidos'].append({'pedido': pedido, 'qtd': qtd, 'fat': None, 'cliente': '', 'ano': 0, 'mes': '', 'mes_nome': ''})
+        _save_report(report)
+        print(f'[report] qtd atualizada #{pedido}: {qtd}')
+        return jsonify({'ok': True, 'pedido': pedido, 'qtd': qtd})
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({'erro': str(e)}), 500
+
+
 @app.route('/atualizar_faturamento', methods=['OPTIONS', 'POST'])
 def atualizar_faturamento():
     """
@@ -1264,4 +1400,4 @@ if __name__ == "__main__":
     print(f"  Rede local: http://{local_ip}:5050")
     print("=" * 55)
 
-    app.run(host="0.0.0.0", port=5050, debug=True, use_reloader=False)
+    app.run(host="0.0.0.0", port=5050, debug=True, use_reloader=False, threaded=True)

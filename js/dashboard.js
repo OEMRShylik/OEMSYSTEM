@@ -351,12 +351,11 @@ async function renderDashboard() {
           <div class="dash-mes-stat-val">${fmtR(totFatMes)}</div>
           <div class="dash-mes-stat-lbl">Faturamento</div>
         </div>
-        <div style="margin-left:auto;">
+        <div style="margin-left:auto;display:flex;align-items:center;gap:6px;background:#f8fafc;border:1px solid #e5e7eb;border-radius:8px;padding:5px 12px;min-width:160px;max-width:260px;">
           <input type="text" placeholder="Buscar pedido ou cliente..."
             oninput="dashFiltrarPedidos(this.value)"
-            style="padding:6px 12px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:13px;
-                   font-family:Inter,sans-serif;outline:none;width:240px;transition:border-color .15s;"
-            onfocus="this.style.borderColor='#1a56db'" onblur="this.style.borderColor='#e5e7eb'">
+            style="border:none;background:none;outline:none;font-family:Inter,sans-serif;font-size:12px;color:#111;width:100%;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
         </div>
       </div>
 

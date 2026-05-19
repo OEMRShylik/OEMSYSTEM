@@ -326,6 +326,23 @@ body::before {
 
 .pedido-card:hover { box-shadow: var(--shadow-md); border-color: #c5d0e0; }
 .pedido-card.processing { border-color: #f59e0b; }
+.pedido-card.finalizado { background: #f0fdf4; border-color: #bbf7d0; }
+
+/* ── PDF.js text layer (habilita Ctrl+F no visualizador) ── */
+.ipdf-text-layer span,
+.ipdf-text-layer br {
+  color: transparent;
+  position: absolute;
+  white-space: pre;
+  cursor: text;
+  transform-origin: 0% 0%;
+  user-select: text;
+  pointer-events: all;
+}
+.ipdf-text-layer ::selection {
+  background: rgba(0, 100, 255, 0.22);
+  color: transparent;
+}
 .pedido-card.dragging { opacity: .45; transform: scale(.97); cursor: grabbing; }
 .pedido-card[draggable="true"] { cursor: grab; }
 .kanban-col.drop-target { background: var(--blue-light); border-radius: var(--radius); outline: 2px dashed var(--blue); }

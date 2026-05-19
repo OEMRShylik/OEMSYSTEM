@@ -1,3 +1,166 @@
 {
-  "pedidos": {}
+  "pedidos": {
+    "000005": [
+      {
+        "componente": "HCP104",
+        "descricao": "CAPA PRENS. 00110 (1TRAMA) 1/4",
+        "quantidade": 180,
+        "unidade": "PC"
+      },
+      {
+        "componente": "HCP204",
+        "descricao": "CAPA PRENS. 03310 (1 E 2TRAMAS) 1/4",
+        "quantidade": 24,
+        "unidade": "PC"
+      },
+      {
+        "componente": "HFJ0604",
+        "descricao": "F.GIR. 9/16 UNF JIC 37 X 1/4",
+        "quantidade": 10,
+        "unidade": "PC"
+      },
+      {
+        "componente": "HFJ900604",
+        "descricao": "F.GIR. 90 9/16 UNF JIC 37 X 1/4",
+        "quantidade": 194,
+        "unidade": "PC"
+      },
+      {
+        "componente": "HR104",
+        "descricao": "MANG. HID. SAE 100 R1 1/4 - HYLIK",
+        "quantidade": 100,
+        "unidade": "MT"
+      },
+      {
+        "componente": "HR204",
+        "descricao": "MANG. HID. SAE 100 R2 1/4 - HYLIK",
+        "quantidade": 9.600000000000001,
+        "unidade": "MT"
+      }
+    ],
+    "000024": [
+      {
+        "componente": "HA90MJ06FJ06",
+        "descricao": "ADAPT. 90 M/FG - 9/16 UNF JIC 37 X 9/16 UNF JIC 37",
+        "quantidade": 2,
+        "unidade": "PC"
+      },
+      {
+        "componente": "HAMJ06MJ06FJ06",
+        "descricao": "ADAPT. TEE LATERAL FEMEA M/M/FG - 9/16 UNF JIC 37",
+        "quantidade": 2,
+        "unidade": "PC"
+      },
+      {
+        "componente": "HAMN06MJ06",
+        "descricao": "ADAPT. RETO M/M - 3/8 NPTF 30 X 9/16 UNF JIC 37",
+        "quantidade": 4,
+        "unidade": "PC"
+      },
+      {
+        "componente": "HAMO05MJ06",
+        "descricao": "ADAPT. M/M - 1/2 UNF O'RING BOSS X 9/16 UNF JIC 37",
+        "quantidade": 2,
+        "unidade": "PC"
+      },
+      {
+        "componente": "HAMO06MJ06",
+        "descricao": "ADAPT. M/M - 9/16 UNF O'RING BOSS X 9/16 UNF JIC 37",
+        "quantidade": 4,
+        "unidade": "PC"
+      },
+      {
+        "componente": "HAMO08MJ08",
+        "descricao": "ADAPT. M/M - 3/4 UNF O'RING BOSS X 3/4 UNF JIC 37",
+        "quantidade": 4,
+        "unidade": "PC"
+      },
+      {
+        "componente": "HCP204",
+        "descricao": "CAPA PRENS. 03310 (1 E 2TRAMAS) 1/4",
+        "quantidade": 8,
+        "unidade": "PC"
+      },
+      {
+        "componente": "HCP206",
+        "descricao": "CAPA PRENS. 03310 (1 E 2TRAMAS) 3/8",
+        "quantidade": 16,
+        "unidade": "PC"
+      },
+      {
+        "componente": "HEA08M",
+        "descricao": "ENGATE HIDRAULICO AGRICOLA PUSH-PULL - 1/2 NPTF - MACHO",
+        "quantidade": 6,
+        "unidade": "PC"
+      },
+      {
+        "componente": "HFJ0604",
+        "descricao": "F.GIR. 9/16 UNF JIC 37 X 1/4",
+        "quantidade": 4,
+        "unidade": "PC"
+      },
+      {
+        "componente": "HFJ0606",
+        "descricao": "F.GIR. 9/16 UNF JIC 37 X 3/8",
+        "quantidade": 2,
+        "unidade": "PC"
+      },
+      {
+        "componente": "HFJ0806",
+        "descricao": "F.GIR. 3/4 UNF JIC 37 X 3/8",
+        "quantidade": 2,
+        "unidade": "PC"
+      },
+      {
+        "componente": "HFJ900606",
+        "descricao": "F.GIR. 90 9/16 UNF JIC 37 X 3/8",
+        "quantidade": 10,
+        "unidade": "PC"
+      },
+      {
+        "componente": "HMN0806",
+        "descricao": "M.FIXO 1/2 NPTF 30 X 3/8",
+        "quantidade": 6,
+        "unidade": "PC"
+      },
+      {
+        "componente": "HR204",
+        "descricao": "MANG. HID. SAE 100 R2 1/4 - HYLIK",
+        "quantidade": 8,
+        "unidade": "MT"
+      },
+      {
+        "componente": "HR206",
+        "descricao": "MANG. HID. SAE 100 R2 3/8 - HYLIK",
+        "quantidade": 42.4,
+        "unidade": "MT"
+      }
+    ],
+    "000047": [
+      {
+        "componente": "HCP206",
+        "descricao": "CAPA PRENS. 03310 (1 E 2TRAMAS) 3/8",
+        "quantidade": 8000,
+        "unidade": "PC"
+      },
+      {
+        "componente": "HCP4R16",
+        "descricao": "CAPA PRENS. 00402 (4ESPIRAIS RAIADA) 1",
+        "quantidade": 80,
+        "unidade": "PC"
+      },
+      {
+        "componente": "HFL21616",
+        "descricao": "FLANGE 1 (47,62MM) COD. 62 X 1",
+        "quantidade": 80,
+        "unidade": "PC"
+      },
+      {
+        "componente": "HPAS12M1806",
+        "descricao": "F.GIR. TB.12 (M18X1,5) DIN 24 X 3/8 - SERIE LEVE",
+        "quantidade": 8000,
+        "unidade": "PC"
+      }
+    ]
+  }
 }

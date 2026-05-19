@@ -220,18 +220,6 @@
       <button onclick="doLogout()" style="display:flex;align-items:center;gap:5px;padding:5px 11px;background:none;border:1px solid #e5e7eb;border-radius:6px;font-size:12px;font-weight:600;color:#6b7280;cursor:pointer;font-family:Inter,sans-serif;transition:all .15s;white-space:nowrap;" onmouseenter="this.style.background='#fef2f2';this.style.color='#dc2626';this.style.borderColor='#fca5a5'" onmouseleave="this.style.background='none';this.style.color='#6b7280';this.style.borderColor='#e5e7eb'">
         <span style="font-size:13px;line-height:1;">✕</span> Sair
       </button>
-      <button id="btn-novo-pedido-top" class="btn-novo"
-        style="padding:6px 16px;font-size:12px;border-radius:8px;"
-        onclick="document.getElementById('upload-pdf-novo').click()">+ Novo Pedido</button>
-      <button id="btn-limpar-dados" title="Limpar todos os pedidos e dados"
-        onclick="_confirmarLimpeza()"
-        style="display:none;padding:5px 12px;font-size:12px;font-weight:600;
-               background:#fff;color:#dc2626;border:1.5px solid #ef4444;
-               border-radius:8px;cursor:pointer;font-family:Inter,sans-serif;
-               transition:all .15s;white-space:nowrap;"
-        onmouseenter="this.style.background='#fef2f2'" onmouseleave="this.style.background='#fff'">
-        Limpar Dados
-      </button>
       <input type="file" id="upload-pdf-novo" accept=".pdf" style="display:none" onchange="handleNovoPedidoPDF(event)">
     </div>
   </div>
@@ -256,6 +244,18 @@
         Falta de Estoque
       </button>
       <div style="flex:1;"></div>
+      <button id="btn-novo-pedido-top" class="btn-novo"
+        style="padding:6px 16px;font-size:12px;border-radius:8px;flex-shrink:0;"
+        onclick="document.getElementById('upload-pdf-novo').click()">+ Novo Pedido</button>
+      <button id="btn-limpar-dados" title="Limpar todos os pedidos e dados"
+        onclick="_confirmarLimpeza()"
+        style="display:none;padding:5px 12px;font-size:12px;font-weight:600;
+               background:#fff;color:#dc2626;border:1.5px solid #ef4444;
+               border-radius:8px;cursor:pointer;font-family:Inter,sans-serif;
+               transition:all .15s;white-space:nowrap;flex-shrink:0;"
+        onmouseenter="this.style.background='#fef2f2'" onmouseleave="this.style.background='#fff'">
+        Limpar Dados
+      </button>
       <div style="display:flex;align-items:center;gap:6px;background:#f8fafc;border:1px solid var(--border);border-radius:8px;padding:5px 12px;min-width:160px;max-width:260px;">
         <input type="text" id="search-input" placeholder="Pesquisar" oninput="searchPedidos()"
           style="border:none;background:none;outline:none;font-family:Inter,sans-serif;font-size:12px;color:var(--text);width:100%;">
@@ -270,7 +270,7 @@
   <div class="screen" id="screen-calendario">
     <!-- Header -->
     <div style="display:flex;align-items:center;gap:12px;padding:10px 16px;background:var(--white);border-bottom:1px solid var(--border);flex-shrink:0;">
-      <button onclick="voltarDeCalendario()" style="background:none;border:none;cursor:pointer;color:var(--text2);font-size:20px;padding:2px 8px;border-radius:5px;line-height:1;" title="Voltar">←</button>
+      <button onclick="voltarDeCalendario()" title="Voltar" style="width:32px;height:32px;border-radius:50%;background:#0891b2;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background .15s;" onmouseenter="this.style.background='#0e7490'" onmouseleave="this.style.background='#0891b2'"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><polyline points="12 19 5 12 12 5"/></svg></button>
       <div style="flex:1;">
         <div style="font-size:14px;font-weight:800;color:var(--text);font-family:Inter,sans-serif;">Calendário de Entregas</div>
         <div style="font-size:11px;color:var(--text2);font-family:Inter,sans-serif;">Todos os pedidos por data de entrega</div>
@@ -304,19 +304,16 @@
   <div class="screen" id="screen-arquivo" style="flex-direction:column;overflow:hidden;">
     <div style="display:flex;align-items:center;gap:12px;padding:10px 16px;background:var(--white);border-bottom:1px solid var(--border);flex-shrink:0;">
       <button onclick="navTo('pedidos', document.querySelector('.nav-item[data-screen=pedidos]') || document.querySelector('.nav-item[onclick*=pedidos]'))"
-        style="display:flex;align-items:center;gap:5px;padding:6px 12px;background:#f3f4f6;border:1px solid #e5e7eb;border-radius:8px;font-size:13px;font-weight:700;color:#374151;cursor:pointer;font-family:Inter,sans-serif;flex-shrink:0;transition:background .15s;"
-        onmouseover="this.style.background='#e5e7eb'" onmouseout="this.style.background='#f3f4f6'">
-        ← Voltar
-      </button>
+        title="Voltar" style="width:32px;height:32px;border-radius:50%;background:#0891b2;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background .15s;" onmouseenter="this.style.background='#0e7490'" onmouseleave="this.style.background='#0891b2'"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><polyline points="12 19 5 12 12 5"/></svg></button>
       <div style="flex:1;min-width:0;">
         <div style="font-size:14px;font-weight:800;color:var(--text);font-family:Inter,sans-serif;">Arquivo de Pedidos</div>
         <div id="arquivo-total" style="font-size:11px;color:var(--text2);font-family:Inter,sans-serif;">—</div>
       </div>
-      <div style="display:flex;align-items:center;gap:7px;background:var(--bg);border:1px solid var(--border);border-radius:20px;padding:5px 14px;max-width:260px;">
-        <span style="color:var(--text3);font-size:13px;">&#x1F50D;</span>
+      <div style="display:flex;align-items:center;gap:6px;background:#f8fafc;border:1px solid var(--border);border-radius:8px;padding:5px 12px;min-width:160px;max-width:280px;">
         <input type="text" id="arquivo-search" placeholder="Buscar por número, cliente..."
           oninput="_renderArquivo(this.value)"
-          style="border:none;background:none;outline:none;font-family:Inter,sans-serif;font-size:13px;color:var(--text);width:100%;">
+          style="border:none;background:none;outline:none;font-family:Inter,sans-serif;font-size:12px;color:var(--text);width:100%;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
       </div>
     </div>
     <div id="arquivo-root" style="flex:1;overflow-y:auto;background:var(--bg,#f9fafb);"></div>
@@ -326,16 +323,16 @@
   <div class="screen" id="screen-estoque">
     <!-- Header -->
     <div style="display:flex;align-items:center;gap:12px;padding:10px 16px;background:var(--white);border-bottom:1px solid var(--border);flex-shrink:0;">
-      <button onclick="voltarDeEstoque()" style="background:none;border:none;cursor:pointer;color:var(--text2);font-size:20px;padding:2px 8px;border-radius:5px;line-height:1;" title="Voltar">←</button>
+      <button onclick="voltarDeEstoque()" title="Voltar" style="width:32px;height:32px;border-radius:50%;background:#0891b2;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background .15s;" onmouseenter="this.style.background='#0e7490'" onmouseleave="this.style.background='#0891b2'"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><polyline points="12 19 5 12 12 5"/></svg></button>
       <div style="flex:1;">
         <div style="font-size:14px;font-weight:800;color:var(--text);font-family:Inter,sans-serif;">Falta de Estoque</div>
         <div style="font-size:11px;color:var(--text2);font-family:Inter,sans-serif;">Todos os pedidos com componentes pendentes</div>
       </div>
-      <div style="display:flex;align-items:center;gap:8px;background:var(--bg);border:1px solid var(--border);border-radius:20px;padding:5px 14px;">
-        <span style="color:var(--text3);font-size:13px;">&#x1F50D;</span>
+      <div style="display:flex;align-items:center;gap:6px;background:#f8fafc;border:1px solid var(--border);border-radius:8px;padding:5px 12px;min-width:160px;max-width:280px;">
         <input type="text" id="estoque-search" placeholder="Buscar pedido, item, cliente..."
           oninput="renderEstoque(this.value)"
-          style="border:none;background:none;outline:none;font-family:Inter,sans-serif;font-size:13px;color:var(--text);width:220px;">
+          style="border:none;background:none;outline:none;font-family:Inter,sans-serif;font-size:12px;color:var(--text);width:100%;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
       </div>
     </div>
     <div id="estoque-root" style="flex:1;overflow-y:auto;background:var(--bg,#f9fafb);"></div>
@@ -346,12 +343,16 @@
 
     <!-- Header -->
     <div style="display:flex;align-items:center;gap:10px;padding:8px 14px;background:var(--white);border-bottom:1px solid var(--border);flex-shrink:0;">
-      <button onclick="voltarPedidos()" style="background:none;border:none;cursor:pointer;color:var(--text2);font-size:20px;padding:2px 8px;border-radius:5px;line-height:1;" title="Voltar">←</button>
+      <button onclick="voltarPedidos()" title="Voltar" style="width:32px;height:32px;border-radius:50%;background:#0891b2;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background .15s;" onmouseenter="this.style.background='#0e7490'" onmouseleave="this.style.background='#0891b2'"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><polyline points="12 19 5 12 12 5"/></svg></button>
       <div style="flex:1;min-width:0;">
         <div id="detalhe-title" style="font-size:14px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></div>
         <div id="detalhe-date" style="font-size:11px;color:var(--text2);"></div>
       </div>
       <div id="detalhe-status-badge" style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;background:#f3f4f6;color:#374151;white-space:nowrap;"></div>
+      <button id="btn-limpar-pedido" onclick="_abrirModalLimparPedido()" title="Excluir pedido"
+        style="display:none;padding:5px 11px;background:#fee2e2;color:#dc2626;border:1.5px solid #fecaca;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif;white-space:nowrap;flex-shrink:0;">
+        Excluir
+      </button>
     </div>
 
     <!-- Botões de ação -->
@@ -367,7 +368,7 @@
       </button>
       <button id="btn-separacao" onclick="_btnSair('sep')"
         style="background:#fff;color:#374151;">
-        &#x1F4E4; Separação
+        🛒 Separação
       </button>
       <button id="btn-etiq-pedido" onclick="_btnSair('etiq')"
         style="background:#fff;color:#374151;">
@@ -643,7 +644,7 @@
       <div class="mc-field">
         <label>Terminal A</label>
         <div class="mc-ac-wrap" id="mc-wrap-a">
-          <input class="mc-ac-input" id="mc-input-a" placeholder="Digite o código do terminal..."
+          <input class="mc-ac-input" id="mc-input-a" placeholder="Digite código do terminal"
             autocomplete="off" spellcheck="false"
             oninput="mcAcInput('a')" onfocus="mcAcOpen('a')"
             onkeydown="mcAcKey(event,'a')">
@@ -655,7 +656,7 @@
       <div class="mc-field">
         <label>Terminal B</label>
         <div class="mc-ac-wrap" id="mc-wrap-b">
-          <input class="mc-ac-input" id="mc-input-b" placeholder="Digite o código do terminal..."
+          <input class="mc-ac-input" id="mc-input-b" placeholder="Aguardando Terminal A"
             autocomplete="off" spellcheck="false"
             oninput="mcAcInput('b')" onfocus="mcAcOpen('b')"
             onkeydown="mcAcKey(event,'b')">
@@ -695,7 +696,8 @@
 <script src="js/dashboard_componentes.js?v=12"></script>
 <script src="js/dashboard_faturamento.js?v=12"></script>
 <script src="js/pedidos.js?v=45"></script>
-<script src="js/aguardando.js?v=18"></script>
+<script src="js/aguardando.js?v=19"></script>
+<script src="js/qr_confirm.js?v=1"></script>
 <script src="js/novo_pedido.js?v=12"></script>
 <script src="js/laudos.js?v=1"></script>
 <script src="js/medidas.js"></script>

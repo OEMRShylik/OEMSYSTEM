@@ -88,7 +88,7 @@ function mcAcSelect(lado, cod) {
       inpB.style.opacity = '1';
       inpB.style.cursor = 'text';
       inpB.style.background = '';
-      inpB.placeholder = 'Digite o código do terminal...';
+      inpB.placeholder = 'Digite código do terminal';
       inpB.value = '';
       inpB.classList.remove('selected');
       _mcState.b = null;
@@ -218,7 +218,7 @@ function resetMedidaCorte() {
     inpB.style.opacity = '0.45';
     inpB.style.cursor = 'not-allowed';
     inpB.style.pointerEvents = 'none';
-    inpB.placeholder = 'Selecione Terminal A primeiro...';
+    inpB.placeholder = 'Aguardando Terminal A';
     // Quando Terminal A for selecionado, mcAcSelect('a',...) remove essas propriedades
   }
   if (document.readyState === 'loading') {

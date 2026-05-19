@@ -241,7 +241,7 @@ function _htmlPainel(p, idx) {
   const abertas     = pendencias.filter(d => !d.resolvido);
   const resolvidas  = pendencias.filter(d => d.resolvido);
   const aguardando  = abertas.length > 0;
-  const bloqueado   = p.etapa === 'finalizado';
+  const bloqueado   = p.etapa === 'finalizado' || p.etapa === 'corte' || p.etapa === 'prensagem';
 
   const bg     = aguardando ? '#fef9c3' : '#f0fdf4';
   const border = aguardando ? '#fde047' : '#bbf7d0';
@@ -276,8 +276,8 @@ function _htmlPainel(p, idx) {
             <span style="font-size:12px;font-weight:800;color:#111;background:#fef9c3;border:1px solid #fde047;padding:2px 9px;border-radius:6px;font-family:'JetBrains Mono',monospace;letter-spacing:.5px;">${d.item}</span>
             <div style="display:flex;gap:6px;margin-left:auto;align-items:center;">
               <span style="font-size:11px;font-weight:600;color:#374151;background:#f1f5f9;padding:2px 8px;border-radius:6px;">Solicitado: <strong>${d.qtd_solicitada}</strong></span>
-              ${(()=>{const emp=parseInt(d.qtd_empenhada)||0;const falt=parseInt(d.qtd_faltante)||0;const rest=Math.max(0,falt-emp);return emp>0?`<span style="font-size:11px;font-weight:700;color:#166534;background:#dcfce7;padding:2px 8px;border-radius:6px;">Empenhado: <strong>${emp}</strong></span>`:'';})()}
-              <span style="font-size:11px;font-weight:700;color:#dc2626;background:#fee2e2;padding:2px 8px;border-radius:6px;">Faltam: <strong>${Math.max(0,(parseInt(d.qtd_faltante)||0)-(parseInt(d.qtd_empenhada)||0))}</strong></span>
+              ${(()=>{const emp=parseFloat(d.qtd_empenhada)||0;const falt=parseFloat(d.qtd_faltante)||0;return emp>0?`<span style="font-size:11px;font-weight:700;color:#166534;background:#dcfce7;padding:2px 8px;border-radius:6px;">Empenhado: <strong>${emp}</strong></span>`:'';})()}
+              <span style="font-size:11px;font-weight:700;color:#dc2626;background:#fee2e2;padding:2px 8px;border-radius:6px;">Faltam: <strong>${Math.max(0,(parseFloat(d.qtd_faltante)||0)-(parseFloat(d.qtd_empenhada)||0))}</strong></span>
             </div>
           </div>
           ${d.comentario ? `<div style="font-size:12px;color:#374151;padding:5px 8px;background:#fffbeb;border-radius:6px;border-left:3px solid #fbbf24;">${d.comentario}</div>` : ''}
@@ -341,12 +341,12 @@ function _htmlPainel(p, idx) {
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
           <div>
             <label style="font-size:10px;font-weight:700;color:#6b7280;letter-spacing:.5px;text-transform:uppercase;font-family:Inter,sans-serif;">Qtd. Solicitada</label>
-            <input id="ag-qtd-sol" type="number" min="1" placeholder=""
+            <input id="ag-qtd-sol" type="number" min="0.01" step="0.01" placeholder=""
               style="width:100%;box-sizing:border-box;padding:9px 11px;margin-top:4px;font-size:14px;font-weight:700;border:1.5px solid #e5e7eb;border-radius:8px;outline:none;font-family:Inter,sans-serif;">
           </div>
           <div>
             <label style="font-size:10px;font-weight:700;color:#6b7280;letter-spacing:.5px;text-transform:uppercase;font-family:Inter,sans-serif;">Qtd. Faltante</label>
-            <input id="ag-qtd-falt" type="number" min="1" placeholder=""
+            <input id="ag-qtd-falt" type="number" min="0.01" step="0.01" placeholder=""
               style="width:100%;box-sizing:border-box;padding:9px 11px;margin-top:4px;font-size:14px;font-weight:700;border:1.5px solid #e5e7eb;border-radius:8px;outline:none;font-family:Inter,sans-serif;">
           </div>
         </div>
@@ -420,15 +420,15 @@ function salvarPendenciaAguardando() {
 
   const selEl   = document.getElementById('ag-item');
   const item    = (selEl?.value||'').trim().toUpperCase();
-  const qtdSol  = parseInt(document.getElementById('ag-qtd-sol').value)  || 0;
-  const qtdFalt = parseInt(document.getElementById('ag-qtd-falt').value) || 0;
+  const qtdSol  = parseFloat(document.getElementById('ag-qtd-sol').value)  || 0;
+  const qtdFalt = parseFloat(document.getElementById('ag-qtd-falt').value) || 0;
   const coment  = (document.getElementById('ag-comentario').value||'').trim();
 
   const err  = document.getElementById('ag-erro');
   const erro = msg => { err.textContent = msg; err.style.display = 'block'; };
   if (!item)      return erro('Informe o código do item.');
-  if (qtdSol < 1) return erro('Informe a quantidade solicitada.');
-  if (qtdFalt<1)  return erro('Informe a quantidade faltante.');
+  if (qtdSol <= 0) return erro('Informe a quantidade solicitada.');
+  if (qtdFalt <= 0) return erro('Informe a quantidade faltante.');
 
   if (!Array.isArray(p.pendencias)) p.pendencias = [];
 
@@ -595,6 +595,11 @@ function renderEstoque(filtro) {
     </button>`;
   };
 
+  const _podeRegistrar = (() => {
+    const s = typeof currentUser !== 'undefined' ? currentUser?.setor : null;
+    return s === 'Admin' || s === 'Produção' || s === 'Comercial';
+  })();
+
   root.innerHTML = `
   <div style="padding:14px 16px;display:flex;flex-direction:column;gap:12px;max-width:1400px;margin:0 auto;">
 
@@ -604,7 +609,11 @@ function renderEstoque(filtro) {
       ${_btnFiltro('Em Falta',        'Em Falta',    cntFalta,    '#dc2626')}
       ${_btnFiltro('Comprado',        'Comprado/Transferido', cntComprado, '#ca8a04')}
       ${_btnFiltro('Lançado',         'Lançado',     cntLancado,  '#ea580c')}
-      ${_btnFiltro('Empenhado',       'Empenhado',   cntEmp,      '#16a34a')}
+      ${_btnFiltro('Completo',         'Empenhado',   cntEmp,      '#16a34a')}
+      ${_podeRegistrar ? `<button onclick="_abrirModalRegistrarEstoque()"
+        style="margin-left:auto;padding:6px 16px;background:#dc2626;color:#fff;border:none;border-radius:20px;font-size:11px;font-weight:700;font-family:Inter,sans-serif;cursor:pointer;white-space:nowrap;">
+        + Registrar
+      </button>` : ''}
     </div>
 
     <div style="background:#fff;border:1px solid #e5e7eb;border-radius:12px;overflow:hidden;">
@@ -816,11 +825,13 @@ function _catalogoPedido(idx) {
   p.paginasOP.forEach(pg => {
     let fator;
     if (pg === pgIdx) {
-      fator = totalPedido;          // índice principal: aplica ao pedido inteiro
+      fator = totalPedido;                    // índice principal: aplica ao pedido inteiro
+    } else if (pg.is_index) {
+      fator = parseFloat(pg.item_qty) || 1;  // índice secundário (outro kit): usa sua própria qty
     } else if (pg.corte_mm > 0) {
       fator = parseFloat(pg.item_qty) || 1;  // página de mangueira: qtd direta
     } else {
-      fator = totalPedido;          // páginas acessórias (corte=0): aplica ao pedido inteiro
+      fator = totalPedido;                    // páginas acessórias (corte=0): aplica ao pedido inteiro
     }
 
     (pg.lista_itens || []).forEach(it => {
@@ -968,11 +979,8 @@ function _injetarPainelNoDetalhe(idx) {
     return;
   }
 
-  // Painel só visível em separação e inspeção
-  const _etapaPermite = ['separacao', 'inspecao'].includes(p.etapa);
   const antigo = document.getElementById('painel-aguardando');
   if (antigo) antigo.remove();
-  if (!_etapaPermite) return;
 
   if (!Array.isArray(window.ESTOQUE_DB) || window.ESTOQUE_DB.length === 0) {
     try {
@@ -990,6 +998,218 @@ function _injetarPainelNoDetalhe(idx) {
 // ══════════════════════════════════════════════════
 //  MODAL DE EDIÇÃO DE REGISTRO DE ESTOQUE
 // ══════════════════════════════════════════════════
+
+function _abrirModalRegistrarEstoque() {
+  document.getElementById('modal-registrar-estoque')?.remove();
+  const modal = document.createElement('div');
+  modal.id = 'modal-registrar-estoque';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9999;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(3px);';
+  modal.onclick = e => { if (e.target === modal) modal.remove(); };
+
+  const listaPedidos = (typeof pedidos !== 'undefined' ? pedidos : [])
+    .filter(p => p.etapa !== 'finalizado');
+  const pedidosOpts = listaPedidos
+    .map((p, i) => `<option value="${i}">#${p.id} — ${p.cliente}</option>`)
+    .join('');
+
+  modal.innerHTML = `
+    <div style="background:#fff;border-radius:16px;width:400px;max-width:95vw;overflow:hidden;box-shadow:0 24px 60px rgba(0,0,0,.22);animation:upcIn .18s ease;">
+      <div style="background:linear-gradient(135deg,#dc2626,#991b1b);padding:18px 18px 14px;position:relative;">
+        <button onclick="document.getElementById('modal-registrar-estoque').remove()"
+          style="position:absolute;top:10px;right:12px;background:rgba(255,255,255,.15);border:none;color:#fff;width:27px;height:27px;border-radius:50%;font-size:15px;cursor:pointer;line-height:1;">×</button>
+        <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.7);letter-spacing:1px;text-transform:uppercase;">Falta de Estoque</div>
+        <div style="font-size:17px;font-weight:800;color:#fff;margin-top:3px;">Novo Registro</div>
+      </div>
+      <div style="padding:16px;display:flex;flex-direction:column;gap:12px;max-height:75vh;overflow-y:auto;">
+
+        <div>
+          <label style="font-size:10px;font-weight:700;color:#6b7280;letter-spacing:.5px;text-transform:uppercase;font-family:Inter,sans-serif;">Pedido</label>
+          <select id="nre-pedido" onchange="_nrePedidoChange(this)"
+            style="width:100%;box-sizing:border-box;padding:9px 11px;margin-top:4px;font-size:13px;font-family:Inter,sans-serif;border:1.5px solid #e5e7eb;border-radius:8px;outline:none;cursor:pointer;">
+            <option value="">— Selecionar pedido —</option>
+            ${pedidosOpts}
+          </select>
+        </div>
+
+        <div>
+          <label style="font-size:10px;font-weight:700;color:#6b7280;letter-spacing:.5px;text-transform:uppercase;font-family:Inter,sans-serif;">Item / Componente</label>
+          <select id="nre-item-listbox" onchange="_nreItemChange(this)"
+            disabled
+            style="width:100%;box-sizing:border-box;margin-top:4px;border:1.5px solid #e5e7eb;border-radius:8px;
+                   font-family:'JetBrains Mono','Courier New',monospace;font-size:12px;font-weight:700;
+                   outline:none;background:#f8fafc;padding:9px 10px;color:#9ca3af;cursor:not-allowed;">
+            <option value="">— Selecione um pedido primeiro —</option>
+          </select>
+          <input type="hidden" id="nre-item" value="">
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+          <div>
+            <label style="font-size:10px;font-weight:700;color:#6b7280;letter-spacing:.5px;text-transform:uppercase;font-family:Inter,sans-serif;">Qtd. Solicitada</label>
+            <input id="nre-qtd-sol" type="number" min="0.01" step="0.01" placeholder="0"
+              style="width:100%;box-sizing:border-box;padding:9px 11px;margin-top:4px;font-size:14px;font-weight:700;font-family:Inter,sans-serif;border:1.5px solid #e5e7eb;border-radius:8px;outline:none;">
+          </div>
+          <div>
+            <label style="font-size:10px;font-weight:700;color:#dc2626;letter-spacing:.5px;text-transform:uppercase;font-family:Inter,sans-serif;">Qtd. Faltante</label>
+            <input id="nre-qtd-falt" type="number" min="0.01" step="0.01" placeholder="0"
+              style="width:100%;box-sizing:border-box;padding:9px 11px;margin-top:4px;font-size:14px;font-weight:700;font-family:Inter,sans-serif;border:1.5px solid #fca5a5;border-radius:8px;outline:none;background:#fff5f5;color:#dc2626;">
+          </div>
+        </div>
+
+        <div>
+          <label style="font-size:10px;font-weight:700;color:#6b7280;letter-spacing:.5px;text-transform:uppercase;font-family:Inter,sans-serif;">Observação</label>
+          <textarea id="nre-obs" rows="2" placeholder="Informações adicionais..."
+            style="width:100%;box-sizing:border-box;padding:9px 11px;margin-top:4px;font-size:13px;border:1.5px solid #e5e7eb;border-radius:8px;outline:none;resize:none;font-family:Inter,sans-serif;"></textarea>
+        </div>
+
+        <div id="nre-erro" style="display:none;font-size:12px;color:#dc2626;font-family:Inter,sans-serif;padding:6px 10px;background:#fee2e2;border-radius:6px;"></div>
+        <button onclick="_salvarNovoRegistroEstoque()"
+          style="width:100%;padding:11px;border:none;border-radius:10px;cursor:pointer;background:linear-gradient(135deg,#dc2626,#991b1b);color:#fff;font-size:14px;font-weight:700;font-family:Inter,sans-serif;">
+          Registrar Falta
+        </button>
+      </div>
+    </div>`;
+
+  document.body.appendChild(modal);
+}
+window._abrirModalRegistrarEstoque = _abrirModalRegistrarEstoque;
+
+function _nrePedidoChange(sel) {
+  const lb       = document.getElementById('nre-item-listbox');
+  const hidItem  = document.getElementById('nre-item');
+  const qtdSolEl = document.getElementById('nre-qtd-sol');
+  if (!lb) return;
+
+  if (!sel.value) {
+    lb.innerHTML = '<option value="">— Selecione um pedido primeiro —</option>';
+    lb.disabled = true;
+    lb.style.background = '#f8fafc';
+    lb.style.color = '#9ca3af';
+    lb.style.cursor = 'not-allowed';
+    if (hidItem) hidItem.value = '';
+    if (qtdSolEl) qtdSolEl.value = '';
+    return;
+  }
+
+  // idx relativo à lista filtrada (não finalizados)
+  const listaPedidos = (typeof pedidos !== 'undefined' ? pedidos : [])
+    .filter(p => p.etapa !== 'finalizado');
+  const relIdx  = parseInt(sel.value);
+  const pedido  = listaPedidos[relIdx];
+  // índice real no array global pedidos
+  const realIdx = (typeof pedidos !== 'undefined') ? pedidos.indexOf(pedido) : -1;
+
+  lb.innerHTML = '<option value="" disabled selected style="color:#9ca3af;">— selecione um componente —</option>';
+  if (realIdx >= 0 && typeof _catalogoPedido === 'function') {
+    const catalogo = _catalogoPedido(realIdx);
+    catalogo.forEach(it => {
+      const opt = document.createElement('option');
+      opt.value = it.cod;
+      opt.dataset.qtd = it.quantidade != null ? it.quantidade : '';
+      const qtdStr  = it.quantidade ? ' (' + Math.round(it.quantidade) + ')' : '';
+      const descStr = it.desc ? ' — ' + it.desc.substring(0, 35) : '';
+      opt.textContent = it.cod + descStr + qtdStr;
+      lb.appendChild(opt);
+    });
+  }
+  lb.disabled = false;
+  lb.style.background = '#fafafa';
+  lb.style.color = '#111';
+  lb.style.cursor = 'pointer';
+  lb.selectedIndex = 0;
+  if (hidItem) hidItem.value = '';
+  if (qtdSolEl) qtdSolEl.value = '';
+}
+window._nrePedidoChange = _nrePedidoChange;
+
+function _nreItemChange(sel) {
+  const opt = sel.options[sel.selectedIndex];
+  const hidItem  = document.getElementById('nre-item');
+  const qtdSolEl = document.getElementById('nre-qtd-sol');
+  if (!opt || !opt.value) return;
+  if (hidItem) hidItem.value = opt.value;
+  if (qtdSolEl) {
+    const qtd = parseFloat(opt.dataset.qtd);
+    qtdSolEl.value = (isNaN(qtd) || qtd <= 0) ? '' : Math.round(qtd);
+  }
+}
+window._nreItemChange = _nreItemChange;
+
+function _salvarNovoRegistroEstoque() {
+  const erroEl = document.getElementById('nre-erro');
+  const mostrarErro = msg => { if (erroEl) { erroEl.textContent = msg; erroEl.style.display = ''; } };
+
+  const selPedidoVal = document.getElementById('nre-pedido')?.value || '';
+  let pedidoNum, cliente, entrega;
+
+  if (selPedidoVal !== '') {
+    const listaPedidos = (typeof pedidos !== 'undefined' ? pedidos : [])
+      .filter(p => p.etapa !== 'finalizado');
+    const p = listaPedidos[parseInt(selPedidoVal)];
+    if (p) { pedidoNum = p.id; cliente = p.cliente; entrega = p.entrega || ''; }
+  }
+
+  if (!pedidoNum) return mostrarErro('Selecione ou informe o pedido.');
+  if (!cliente)   return mostrarErro('Informe o cliente.');
+
+  const item     = (document.getElementById('nre-item')?.value || '').trim();
+  const qtdSol   = parseFloat(document.getElementById('nre-qtd-sol')?.value)  || 0;
+  const qtdFalt  = parseFloat(document.getElementById('nre-qtd-falt')?.value) || 0;
+  const obs      = (document.getElementById('nre-obs')?.value || '').trim();
+
+  if (!item)       return mostrarErro('Informe o componente/item.');
+  if (qtdSol <= 0) return mostrarErro('Informe a quantidade solicitada.');
+  if (qtdFalt <= 0)return mostrarErro('Informe a quantidade faltante.');
+
+  const agora    = new Date().toLocaleDateString('pt-BR') + ' ' + new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+  const usuario  = (typeof currentUser !== 'undefined' && currentUser?.nome) ? currentUser.nome : '—';
+  const estoqueId = 'EST_' + Date.now() + '_' + Math.random().toString(36).slice(2,6).toUpperCase();
+
+  if (!Array.isArray(window.ESTOQUE_DB)) window.ESTOQUE_DB = [];
+  window.ESTOQUE_DB.push({
+    id:             estoqueId,
+    pedido:         pedidoNum,
+    cliente:        cliente,
+    entrega:        entrega,
+    item:           item,
+    qtd_solicitada: qtdSol,
+    qtd_faltante:   qtdFalt,
+    observacao:     obs,
+    status:         'Em Falta',
+    registrado_por: usuario,
+    data_registro:  agora,
+    concluido_por:  null,
+    data_conclusao: null,
+  });
+
+  // Sincronizar com p.pendencias para que o painel do pedido exiba o registro
+  if (typeof pedidos !== 'undefined') {
+    const pedidoObj = pedidos.find(x => x.id === pedidoNum);
+    if (pedidoObj) {
+      if (!Array.isArray(pedidoObj.pendencias)) pedidoObj.pendencias = [];
+      pedidoObj.pendencias.push({
+        _estoqueId:     estoqueId,
+        item:           item,
+        qtd_solicitada: qtdSol,
+        qtd_faltante:   qtdFalt,
+        qtd_empenhada:  0,
+        comentario:     obs,
+        status:         'Em Falta',
+        resolvido:      false,
+        registrado_por: usuario,
+        data:           agora,
+      });
+    }
+  }
+
+  _salvarEstoque();
+  if (typeof salvarEstado === 'function') salvarEstado();
+  if (typeof renderKanban === 'function') renderKanban();
+  document.getElementById('modal-registrar-estoque')?.remove();
+  renderEstoque('');
+  if (typeof _mostrarToast === 'function') _mostrarToast('Falta de estoque registrada', '#dc2626');
+}
+window._salvarNovoRegistroEstoque = _salvarNovoRegistroEstoque;
 
 function abrirModalEditarEstoque(estoqueId) {
   const reg = (window.ESTOQUE_DB||[]).find(r => r.id === estoqueId);
@@ -1048,7 +1268,7 @@ function abrirModalEditarEstoque(estoqueId) {
         <!-- Quantidade Empenhada: editável, max = qtd_faltante -->
         <div>
           <label style="font-size:10px;font-weight:700;color:#166534;letter-spacing:.5px;text-transform:uppercase;font-family:Inter,sans-serif;">Quantidade Empenhada</label>
-          <input id="eed-qtd-emp" type="number" min="0" max="${_qtdFalt}" placeholder="0"
+          <input id="eed-qtd-emp" type="number" min="0" step="0.01" max="${_qtdFalt}" placeholder="0"
             oninput="_eedRecalcularFaltando(${_qtdFalt})"
             style="width:100%;box-sizing:border-box;padding:9px 11px;margin-top:4px;font-size:14px;font-weight:700;border:1.5px solid #86efac;border-radius:8px;outline:none;font-family:Inter,sans-serif;background:#f0fdf4;color:#166534;">
           <div id="eed-hint" style="font-size:10px;color:#6b7280;margin-top:3px;font-family:Inter,sans-serif;">
@@ -1078,10 +1298,10 @@ function _eedRecalcularFaltando(qtdFalt) {
   const faltDisp  = document.getElementById('eed-qtd-falt-display');
   const hint      = document.getElementById('eed-hint');
   if (!empInput) return;
-  let emp = parseInt(empInput.value) || 0;
+  let emp = parseFloat(empInput.value) || 0;
   if (emp < 0)       { emp = 0; empInput.value = ''; }
   if (emp > qtdFalt) { emp = qtdFalt; empInput.value = qtdFalt; }
-  const faltando = qtdFalt - emp;
+  const faltando = Math.round((qtdFalt - emp) * 1000) / 1000;
   const completo = faltando === 0 && emp > 0;
   if (faltDisp) {
     faltDisp.textContent = faltando;
@@ -1123,8 +1343,8 @@ function _salvarEdicaoEstoque(estoqueId) {
   const usuario    = _usuarioAtual();
   const agora      = _agora();
 
-  const qtdFalt    = parseInt(reg.qtd_faltante) || 0;
-  const qtdEmp     = Math.min(Math.max(parseInt(document.getElementById('eed-qtd-emp')?.value) || 0, 0), qtdFalt);
+  const qtdFalt    = parseFloat(reg.qtd_faltante) || 0;
+  const qtdEmp     = Math.min(Math.max(parseFloat(document.getElementById('eed-qtd-emp')?.value) || 0, 0), qtdFalt);
   const autoEmpenh = qtdEmp >= qtdFalt && qtdFalt > 0;
   const novoStatus = autoEmpenh ? 'Empenhado' : document.getElementById('eed-status').value;
   const novaFalt   = qtdFalt - qtdEmp;
@@ -1260,12 +1480,28 @@ function _btnIniciar() {
     return;
   }
 
+  // Pede confirmação via QR antes de iniciar
+  if (typeof mostrarConfirmacaoQR === 'function') {
+    mostrarConfirmacaoQR(function (operador) {
+      // Registra operador responsável por esta etapa
+      if (!p._operadores_etapa) p._operadores_etapa = {};
+      const etapaKey = window._etapaVizualizacao || p.etapa;
+      p._operadores_etapa[etapaKey] = operador ? operador.nome : (typeof currentUser !== 'undefined' ? currentUser?.nome : '—');
+
+      _executarIniciarPedido(idx, p);
+    });
+  } else {
+    _executarIniciarPedido(idx, p);
+  }
+}
+
+function _executarIniciarPedido(idx, p) {
   const _emModoFantasma = window._etapaVizualizacao && window._etapaVizualizacao !== p.etapa;
 
   // Ao iniciar pela primeira vez (Separação), mover para INSPEÇÃO — mas não em modo fantasma
   if (!_emModoFantasma && p.etapa === 'separacao') {
     p.etapa = 'inspecao';
-    window._etapaVizualizacao = 'inspecao'; // mantém em sincronia para _renderAmostragens
+    window._etapaVizualizacao = 'inspecao';
     if (typeof salvarEstado === 'function') salvarEstado();
     if (typeof renderKanban  === 'function') renderKanban();
   }
@@ -1392,7 +1628,9 @@ function _setModoAndamento(emAndamento, idx) {
     if (btnIniciar && p) {
       btnIniciar.style.display = '';
       btnIniciar.innerHTML = _labelIniciar(p);
-      btnIniciar.style.background = p._iniciado ? '#059669' : '#1a56db';
+      btnIniciar.style.background = p._iniciado ? '#f59e0b' : '#1a56db';
+      btnIniciar.style.color      = p._iniciado ? '#1c1917'  : '#fff';
+      btnIniciar.style.borderColor= p._iniciado ? '#f59e0b' : '#1a56db';
     }
   }
 }
@@ -1413,7 +1651,9 @@ function _setModoAndamento(emAndamento, idx) {
         const btnIniciar = document.getElementById('btn-iniciar-pedido');
         if (btnIniciar && p) {
           btnIniciar.innerHTML = _labelIniciar(p);
-          btnIniciar.style.background = p._iniciado ? '#059669' : '#1a56db';
+          btnIniciar.style.background = p._iniciado ? '#f59e0b' : '#1a56db';
+      btnIniciar.style.color      = p._iniciado ? '#1c1917'  : '#fff';
+      btnIniciar.style.borderColor= p._iniciado ? '#f59e0b' : '#1a56db';
         }
       }, 50);
     };

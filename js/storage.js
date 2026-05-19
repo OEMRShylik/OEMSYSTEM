@@ -16,47 +16,50 @@ const _PDF_CACHE  = {};         // cache em memória: filename → base64
 //  API DE PDFs (servidor)
 // ──────────────────────────────────────────────────
 
-async function _salvarPdfFisico(filename, b64) {
+async function _salvarPdfFisico(filename, b64, pedidoId) {
   if (!filename || !b64) return false;
+  const fullPath = pedidoId ? (pedidoId + '/' + filename) : filename;
   try {
     const r = await fetch('/salvar_pdf', {
       method:  'POST',
       headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify({ filename, data: b64 }),
+      body:    JSON.stringify({ filename: fullPath, data: b64 }),
     });
-    if (r.ok) { _PDF_CACHE[filename] = b64; return true; }
-  } catch (e) { console.warn('[pdf] salvar', filename, e); }
+    if (r.ok) { _PDF_CACHE[fullPath] = b64; return true; }
+  } catch (e) { console.warn('[pdf] salvar', fullPath, e); }
   return false;
 }
 
-async function carregarPdf(filename) {
-  if (!filename)             return null;
-  if (_PDF_CACHE[filename])  return _PDF_CACHE[filename];
+async function carregarPdf(filename, pedidoId) {
+  if (!filename) return null;
+  const fullPath = pedidoId ? (pedidoId + '/' + filename) : filename;
+  if (_PDF_CACHE[fullPath]) return _PDF_CACHE[fullPath];
+  if (_PDF_CACHE[filename]) return _PDF_CACHE[filename];
   try {
-    const r = await fetch('/pdf/' + encodeURIComponent(filename));
+    const r = await fetch('/pdf/' + fullPath.split('/').map(encodeURIComponent).join('/'));
     if (r.ok) {
       const j = await r.json();
-      if (j.data) { _PDF_CACHE[filename] = j.data; return j.data; }
+      if (j.data) { _PDF_CACHE[fullPath] = j.data; return j.data; }
     }
-  } catch (e) { console.warn('[pdf] carregar', filename, e); }
+  } catch (e) { console.warn('[pdf] carregar', fullPath, e); }
   return null;
 }
 
 // Acesso lazy ao PDF de um pedido
 async function getPdfB64(p) {
-  if (p.pdfB64)       return p.pdfB64;
+  if (p.pdfB64)        return p.pdfB64;
   if (!p._pdfFilename) return null;
-  const b64 = await carregarPdf(p._pdfFilename);
+  const b64 = await carregarPdf(p._pdfFilename, p.id);
   if (b64) p.pdfB64 = b64;
   return b64;
 }
 
 // Acesso lazy a qualquer anexo
-async function getAnexoData(anexo) {
+async function getAnexoData(anexo, pedidoId) {
   if (!anexo)          return null;
   if (anexo.data)      return anexo.data;
   if (!anexo.filename) return null;
-  const b64 = await carregarPdf(anexo.filename);
+  const b64 = await carregarPdf(anexo.filename, pedidoId);
   if (b64) anexo.data = b64;
   return b64;
 }
@@ -170,12 +173,13 @@ function _parseBR(str) {
 // ──────────────────────────────────────────────────
 
 async function salvarEstado() {
-  // 1. Persiste PDFs novos como arquivos fisicos
+  // 1. Persiste PDFs novos como arquivos fisicos em data/{p.id}/
   await Promise.all(pedidos.map(async p => {
+    const pid = p.id;
     // PDF original
     if (p.pdfB64 && !p._pdfSalvo) {
       const fn = p.id + '.pdf';
-      if (await _salvarPdfFisico(fn, p.pdfB64)) {
+      if (await _salvarPdfFisico(fn, p.pdfB64, pid)) {
         p._pdfFilename = fn;
         p._pdfSalvo    = true;
       }
@@ -183,32 +187,32 @@ async function salvarEstado() {
     // OP reorganizada
     const op = p.anexos?.op;
     if (op?.data && !op._salvo)
-      if (await _salvarPdfFisico(op.filename, op.data)) op._salvo = true;
+      if (await _salvarPdfFisico(op.filename, op.data, pid)) op._salvo = true;
 
     // Kits
     for (const k of (p.anexos?.kits || []))
       if (k.data && !k._salvo)
-        if (await _salvarPdfFisico(k.filename, k.data)) k._salvo = true;
+        if (await _salvarPdfFisico(k.filename, k.data, pid)) k._salvo = true;
 
     // Embalagem
     const emb = p.anexos?.embalagem;
     if (emb?.data && !emb._salvo)
-      if (await _salvarPdfFisico(emb.filename, emb.data)) emb._salvo = true;
+      if (await _salvarPdfFisico(emb.filename, emb.data, pid)) emb._salvo = true;
 
     // Corte
     const crt = p.anexos?.corte;
     if (crt?.data && !crt._salvo)
-      if (await _salvarPdfFisico(crt.filename, crt.data)) crt._salvo = true;
+      if (await _salvarPdfFisico(crt.filename, crt.data, pid)) crt._salvo = true;
 
     // Laudos de Teste
     for (const l of (p.laudos || []))
       if (l.data && !l._salvo)
-        if (await _salvarPdfFisico(l.filename, l.data)) l._salvo = true;
+        if (await _salvarPdfFisico(l.filename, l.data, pid)) l._salvo = true;
 
     // Separacao
     if (p.pdfSepData && !p._sepSalvo) {
       const fn = p.id + '_sep.pdf';
-      if (await _salvarPdfFisico(fn, p.pdfSepData)) {
+      if (await _salvarPdfFisico(fn, p.pdfSepData, pid)) {
         p._sepFilename = fn;
         p._sepSalvo    = true;
       }

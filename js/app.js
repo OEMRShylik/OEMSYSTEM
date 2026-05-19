@@ -301,7 +301,7 @@ function renderCard(p, etapaIdx) {
     ? `<div class="status-badge" style="background:#fef3c7;color:#92400e;border:1px solid #fbbf24;font-size:9px;padding:2px 7px;margin-top:5px;text-align:center;border-radius:6px;">🔒 APROVAÇÃO</div>`
     : '';
 
-  return `<div class="pedido-card ${p.processing?'processing':''}"
+  return `<div class="pedido-card ${p.processing?'processing':''} ${p.etapa==='finalizado'?'finalizado':''}"
     draggable="${draggable}"
     data-pedido-id="${p.id}"
     data-etapa-idx="${etapaIdx}"
@@ -501,18 +501,38 @@ async function _executarLimpeza() {
   if (typeof _mostrarToast === 'function') _mostrarToast('✅ Dados limpos com sucesso', '#059669');
 }
 
-// ── Auto-refresh do kanban a cada 10 minutos ─────────────────────────────────
+// ── Atualização em tempo real via SSE ────────────────────────────────────────
+// O servidor dispara o evento "update" toda vez que o estado é salvo
+// (novo pedido autorizado, card movido, etc.). Sem polling por tempo.
 (function _iniciarAutoRefresh() {
-  const INTERVALO_MS = 10 * 60 * 1000;
-  setInterval(async () => {
-    // Só atualiza se estiver na tela de pedidos (kanban), não dentro de uma OP
-    const detalhe = document.getElementById('screen-detalhe');
-    if (detalhe && detalhe.classList.contains('active')) return;
-    try {
-      await carregarEstado();
-      renderKanban();
-    } catch(e) { console.warn('[auto-refresh] falha:', e); }
-  }, INTERVALO_MS);
+  let _debounce = null;
+
+  function _conectar() {
+    const es = new EventSource('/eventos');
+
+    es.onmessage = async (e) => {
+      if (e.data !== 'update') return;
+      // Não interfere enquanto o usuário estiver dentro de um pedido
+      const detalhe = document.getElementById('screen-detalhe');
+      if (detalhe?.classList.contains('active')) return;
+      // Debounce: evita múltiplos recarregamentos em rajada (ex: vários saves seguidos)
+      clearTimeout(_debounce);
+      _debounce = setTimeout(async () => {
+        try {
+          await carregarEstado();
+          renderKanban();
+        } catch(err) { console.warn('[sse] falha ao atualizar:', err); }
+      }, 800);
+    };
+
+    es.onerror = () => {
+      es.close();
+      // Reconecta após 5s em caso de queda de conexão
+      setTimeout(_conectar, 5000);
+    };
+  }
+
+  _conectar();
 })();
 
 // Habilitar botão ao digitar LIMPAR (oninput do HTML chama isso)

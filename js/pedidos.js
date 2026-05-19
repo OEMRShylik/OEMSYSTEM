@@ -74,6 +74,14 @@ async function abrirPedido(idx) {
     badge.style.cssText = `font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;white-space:nowrap;${colorMap[p.etapa]||'background:#f3f4f6;color:#374151'}`;
   }
 
+  // Botão Limpar Pedido — apenas Admin
+  {
+    const _isAdminLimpar = typeof currentUser !== 'undefined' &&
+      (currentUser?.setor === 'Admin' || currentUser?.permissoes?.all === true);
+    const _btnLimpar = document.getElementById('btn-limpar-pedido');
+    if (_btnLimpar) _btnLimpar.style.display = _isAdminLimpar ? '' : 'none';
+  }
+
   _adminOpAtivo = {}; // reset ao trocar de pedido
   _paginasOP   = _filtrarPaginasParaEtapa(p.paginasOP, _etapaEfetiva);
   _paginaAtual = 0;
@@ -514,6 +522,19 @@ function _checklistChange(idx, valor) {
   if (typeof salvarEstado === 'function') salvarEstado();
 }
 
+function _fmtDtLocal(iso) {
+  if (!iso) return '';
+  const d = new Date(iso);
+  const pad = n => String(n).padStart(2,'0');
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+function _fmtDtDisplay(iso) {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  const pad = n => String(n).padStart(2,'0');
+  return `${pad(d.getDate())}/${pad(d.getMonth()+1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
 function _renderChecklist() {
   const p = pedidos[currentPedidoIdx];
   if (!p) return '';
@@ -524,9 +545,11 @@ function _renderChecklist() {
   if (!cl.operadores) cl.operadores = {};
   const nomeOp = cl.usuario || ((typeof currentUser !== 'undefined' && currentUser) ? currentUser.nome : '');
 
-  const usersProducao = (typeof USUARIOS !== 'undefined')
-    ? USUARIOS.filter(u => u.setor === 'Produção' || u.setor === 'Admin')
-    : [];
+  const _isAdminCk = typeof currentUser !== 'undefined' && (currentUser?.setor === 'Admin' || currentUser?.permissoes?.all === true);
+  const _allUsersCk = typeof _getUsuariosRuntime === 'function' ? _getUsuariosRuntime() : (typeof USUARIOS !== 'undefined' ? USUARIOS : []);
+  const usersProducao = _allUsersCk.filter(u =>
+    u.setor === 'Produção' || u.setor === 'Admin' || (_isAdminCk && u.setor === 'Gestão')
+  );
 
   let flatIdx = 0;
   let tbody = '';
@@ -579,6 +602,27 @@ function _renderChecklist() {
     ? `<div style="margin-top:6px;text-align:center;font-size:11px;font-weight:700;color:#059669;font-family:Inter,sans-serif;">${nomeOp}</div>`
     : '';
 
+  const tsBlock = _isAdminCk
+    ? `<div style="display:flex;gap:12px;margin-top:10px;justify-content:center;flex-wrap:wrap;font-family:Inter,sans-serif;">
+        <div style="display:flex;flex-direction:column;align-items:center;gap:3px;">
+          <span style="font-size:9px;font-weight:700;color:#6b7280;letter-spacing:.5px;">INÍCIO DA INSPEÇÃO</span>
+          <input type="datetime-local" value="${_fmtDtLocal(cl.ts_inicio)}"
+            onchange="_adminSetChecklistTs('ts_inicio',this.value)"
+            style="font-size:11px;border:1px solid #d1d5db;border-radius:6px;padding:3px 7px;font-family:Inter,sans-serif;color:#374151;cursor:pointer;">
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:3px;">
+          <span style="font-size:9px;font-weight:700;color:#6b7280;letter-spacing:.5px;">FIM DA INSPEÇÃO</span>
+          <input type="datetime-local" value="${_fmtDtLocal(cl.ts_fim)}"
+            onchange="_adminSetChecklistTs('ts_fim',this.value)"
+            style="font-size:11px;border:1px solid #d1d5db;border-radius:6px;padding:3px 7px;font-family:Inter,sans-serif;color:#374151;cursor:pointer;">
+        </div>
+      </div>`
+    : (cl.ts_inicio
+        ? `<div style="margin-top:6px;text-align:center;font-size:10px;color:#9ca3af;font-family:Inter,sans-serif;">
+            Início: ${_fmtDtDisplay(cl.ts_inicio)}${cl.ts_fim ? ' · Fim: ' + _fmtDtDisplay(cl.ts_fim) : ''}
+           </div>`
+        : '');
+
   return `<div style="background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:10px;margin-top:0;">
     <div style="font-size:12px;font-weight:700;color:#374151;font-family:Inter,sans-serif;margin-bottom:6px;text-align:center;">Checklist de Inspeção</div>
     <div style="overflow-x:auto;">
@@ -596,9 +640,30 @@ function _renderChecklist() {
         <tbody>${tbody}</tbody>
       </table>
     </div>
-    ${rodape}
+    ${rodape}${tsBlock}
   </div>`;
 }
+
+function _adminSetChecklistTs(campo, valor) {
+  const p = pedidos[currentPedidoIdx];
+  if (!p?.checklist_inspecao) return;
+  p.checklist_inspecao[campo] = valor ? new Date(valor).toISOString() : null;
+  if (!p._ts_etapas) p._ts_etapas = {};
+  if (campo === 'ts_inicio') p._ts_etapas['inspecao_inicio'] = p.checklist_inspecao[campo];
+  if (campo === 'ts_fim')    p._ts_etapas['inspecao_fim']    = p.checklist_inspecao[campo];
+  salvarEstado();
+}
+
+function _adminSetEtapaTs(etapaKey, campo, valor) {
+  const p = pedidos[currentPedidoIdx];
+  if (!p) return;
+  if (!p._ts_etapas) p._ts_etapas = {};
+  // Se valor em branco, mantém o que havia (não sobrescreve com now)
+  if (!valor) return;
+  p._ts_etapas[etapaKey + '_' + campo] = new Date(valor).toISOString();
+  salvarEstado();
+}
+window._adminSetEtapaTs = _adminSetEtapaTs;
 
 // ══════════════════════════════════════════════════
 //  SUBSTITUIÇÃO DE MANGUEIRA (etapa Corte)
@@ -896,13 +961,19 @@ function _renderAmostragens(pageIdx, pg) {
         return `<td style="padding:3px 4px;text-align:center;">
           <div style="display:flex;align-items:center;gap:2px;justify-content:center;">
             <button onclick="_amostraAdj(${pageIdx},${ri},'${campo}',-0.001)"
-              style="width:22px;height:24px;background:#e5e7eb;border:none;border-radius:4px;cursor:pointer;font-size:13px;font-weight:900;color:#374151;padding:0;line-height:1;">−</button>
+              style="width:26px;height:26px;border-radius:50%;background:#0891b2;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background .15s;padding:0;"
+              onmouseenter="this.style.background='#0e7490'" onmouseleave="this.style.background='#0891b2'">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.8" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            </button>
             <input id="am_${pageIdx}_${ri}_${campo}" type="text" value="${val}"
               onchange="_amostraChange(${pageIdx},${ri},'${campo}',this.value)"
               onfocus="this.select()"
               style="width:58px;text-align:center;border:1.5px solid #1a56db;border-radius:4px;padding:2px 3px;font-size:12px;font-weight:700;font-family:'Courier New',monospace;outline:none;background:#fff;">
             <button onclick="_amostraAdj(${pageIdx},${ri},'${campo}',0.001)"
-              style="width:22px;height:24px;background:#e5e7eb;border:none;border-radius:4px;cursor:pointer;font-size:13px;font-weight:900;color:#374151;padding:0;line-height:1;">+</button>
+              style="width:26px;height:26px;border-radius:50%;background:#0891b2;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background .15s;padding:0;"
+              onmouseenter="this.style.background='#0e7490'" onmouseleave="this.style.background='#0891b2'">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.8" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            </button>
           </div>
         </td>`;
       } else {
@@ -931,11 +1002,11 @@ function _renderAmostragens(pageIdx, pg) {
     conferencia:db.operador_conferencia || (colunaAtiva === 'conferencia' ? opAtual : ''),
   };
 
-  // Opções de usuário para dropdown admin (Produção + Giovane)
-  const _optsAdmin = typeof USUARIOS !== 'undefined'
-    ? USUARIOS.filter(u => u.setor === 'Produção' || u.nome === 'Giovane')
-        .map(u => u.nome)
-    : [];
+  // Opções de usuário para dropdown admin — inclui inativos
+  const _allUsersAm = typeof _getUsuariosRuntime === 'function' ? _getUsuariosRuntime() : (typeof USUARIOS !== 'undefined' ? USUARIOS : []);
+  const _optsAdmin = _allUsersAm
+    .filter(u => u.setor === 'Produção' || u.setor === 'Admin')
+    .map(u => u.nome);
 
   const _campoOp = { corte: 'operador_corte', prensagem: 'operador_prensagem', conferencia: 'operador_conferencia' };
 
@@ -963,6 +1034,32 @@ function _renderAmostragens(pageIdx, pg) {
     }).join('')}
   </tr>`;
 
+  // Bloco de timestamps por etapa (editável para Admin)
+  const p = pedidos[currentPedidoIdx];
+  const _tsEtapas = p?._ts_etapas || {};
+  // mapeamento coluna → chave em _ts_etapas
+  const _colunaParaEtapa = { corte:'corte', prensagem:'prensagem', conferencia:'embalagem' };
+
+  const tsBlock = (_isAdmin && colunaAtiva) ? (() => {
+    const etapaKey = _colunaParaEtapa[colunaAtiva];
+    const ini = _tsEtapas[etapaKey + '_inicio'] || null;
+    const fim = _tsEtapas[etapaKey + '_fim']    || null;
+    return `<div style="display:flex;gap:16px;margin-top:12px;justify-content:center;flex-wrap:wrap;padding-top:10px;border-top:1px solid #f3f4f6;">
+      <div style="display:flex;flex-direction:column;align-items:center;gap:3px;">
+        <span style="font-size:8px;font-weight:600;color:#9ca3af;letter-spacing:.4px;font-family:Inter,sans-serif;">INÍCIO</span>
+        <input type="datetime-local" value="${_fmtDtLocal(ini)}"
+          onchange="_adminSetEtapaTs('${etapaKey}','inicio',this.value)"
+          style="font-size:11px;border:1px solid #d1d5db;border-radius:6px;padding:3px 7px;font-family:Inter,sans-serif;color:#374151;cursor:pointer;">
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:3px;">
+        <span style="font-size:8px;font-weight:600;color:#9ca3af;letter-spacing:.4px;font-family:Inter,sans-serif;">FIM</span>
+        <input type="datetime-local" value="${_fmtDtLocal(fim)}"
+          onchange="_adminSetEtapaTs('${etapaKey}','fim',this.value)"
+          style="font-size:11px;border:1px solid #d1d5db;border-radius:6px;padding:3px 7px;font-family:Inter,sans-serif;color:#374151;cursor:pointer;">
+      </div>
+    </div>`;
+  })() : '';
+
   return `<div style="background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:10px;margin-top:0;">
     <div style="font-size:12px;font-weight:700;color:#374151;font-family:Inter,sans-serif;margin-bottom:6px;text-align:center;">Amostragens</div>
     <div style="overflow-x:auto;">
@@ -971,6 +1068,7 @@ function _renderAmostragens(pageIdx, pg) {
         <tbody>${rows}${rodapeRow}</tbody>
       </table>
     </div>
+    ${tsBlock}
   </div>`;
 }
 
@@ -1040,7 +1138,7 @@ function _mostrarPaginaOP() {
   // id_extra: ignorar se capturou erroneamente "OBS" ou "OBS :" do PDF
   const _idExtraLimpo = /^OBS\s*:?\s*$/i.test(pg.id_extra || '') ? null : (pg.id_extra || null);
   // angulo: ignorar se PDF capturou erroneamente texto de outro campo (ex: "Embalagem Individual...")
-  const _anguloLimpo = /embalagem individual/i.test(pg.angulo || '') ? null : (pg.angulo || null);
+  const _anguloLimpo = (/embalagem individual/i.test(pg.angulo || '') || /^reto$/i.test((pg.angulo || '').trim())) ? null : (pg.angulo || null);
 
   const infoRows = [
     ['Tipo de Corte',         pg.tipo_corte],
@@ -1201,12 +1299,15 @@ function _mostrarPaginaOP() {
             _rightBtn = '';
           } else if (_etapaEfetiva2 === 'embalagem') {
             const _nFotos = (_pEmb.fotosEmbalagem || []).length;
+            const _isAdminEmb = typeof currentUser !== 'undefined' &&
+              (currentUser?.setor === 'Admin' || currentUser?.permissoes?.all === true);
+            const _podeConcluirEmb = _nFotos > 0 || _isAdminEmb;
             _rightBtn = `<div style="display:flex;gap:8px;align-items:center;">
               ${_nFotos < 3 ? `<button onclick="_abrirCameraEmbalagem()"
                 style="padding:9px 16px;background:#d97706;color:#fff;border:none;border-radius:7px;font-size:13px;font-weight:700;font-family:Inter,sans-serif;cursor:pointer;">
                 Foto (${_nFotos}/3)
               </button>` : ''}
-              ${_nFotos > 0 ? `<button onclick="_concluirPedido()"
+              ${_podeConcluirEmb ? `<button onclick="_concluirPedido()"
                 style="padding:9px 16px;background:#059669;color:#fff;border:none;border-radius:7px;font-size:13px;font-weight:700;font-family:Inter,sans-serif;cursor:pointer;">
                 ✓ Concluir
               </button>` : ''}
@@ -1444,7 +1545,7 @@ function _aplicarMarcasAuto() {
     .replace(/Aten[çc][aã]o[!.]*/gi, '')
     .trim() || null;
 
-  const _anguloLimpo2 = /embalagem individual/i.test(pg.angulo || '') ? null : (pg.angulo || null);
+  const _anguloLimpo2 = (/embalagem individual/i.test(pg.angulo || '') || /^reto$/i.test((pg.angulo || '').trim())) ? null : (pg.angulo || null);
   const infoRows = [
     ['Tipo de Corte',        pg.tipo_corte],
     ['Angulo de Montagem',   _anguloLimpo2],
@@ -1923,15 +2024,19 @@ function _concluirPedido(_forcar) {
     : (_PROXIMA_ETAPA[etapaAtual] || 'finalizado');
   const proximaLabel = _ETAPA_LABEL[proximaEtapa]  || proximaEtapa.toUpperCase();
 
-  // Salvar timestamp final da inspeção ao concluir
+  // Salvar timestamp final da inspeção ao concluir (só se Admin não tiver editado)
   if (etapaAtual === 'inspecao' && p.checklist_inspecao) {
-    p.checklist_inspecao.ts_fim = new Date().toISOString();
+    if (!p.checklist_inspecao.ts_fim) {
+      p.checklist_inspecao.ts_fim = new Date().toISOString();
+    }
   }
 
-  // Registrar timestamp de fim de cada etapa
+  // Registrar timestamp de fim de cada etapa (só se Admin não tiver editado)
   if (!['separacao', 'finalizado'].includes(etapaAtual)) {
     if (!p._ts_etapas) p._ts_etapas = {};
-    p._ts_etapas[etapaAtual + '_fim'] = new Date().toISOString();
+    if (!p._ts_etapas[etapaAtual + '_fim']) {
+      p._ts_etapas[etapaAtual + '_fim'] = new Date().toISOString();
+    }
     // Garantir que o início também foi registrado (caso de migração de dados antigos)
     if (!p._ts_etapas[etapaAtual + '_inicio']) {
       p._ts_etapas[etapaAtual + '_inicio'] = p._ts_etapas[etapaAtual + '_fim'];
@@ -1998,7 +2103,7 @@ async function _gerarRelatorio() {
     // Carrega dados de laudos de teste (lazy)
     const laudosPayload = [];
     for (const l of (p.laudos || [])) {
-      const data = typeof getAnexoData === 'function' ? await getAnexoData(l) : null;
+      const data = typeof getAnexoData === 'function' ? await getAnexoData(l, p.id) : null;
       if (data) laudosPayload.push({ filename: l.filename || '', data });
     }
 
@@ -2092,7 +2197,7 @@ async function abrirEtiqPedido() {
   // Um único kit: abre direto
   if (kits.length === 1) {
     _mostrarConteudo(_msgAguardando('Etiquetas do Pedido','Carregando...'));
-    const data = await getAnexoData(kits[0]);
+    const data = await getAnexoData(kits[0], p.id);
     if (!data) { _mostrarConteudo(_msgAguardando('Etiquetas do Pedido','PDF não encontrado no servidor.')); return; }
     _mostrarConteudo('');
     abrirPdfViewer(kits[0].filename, data);
@@ -2131,7 +2236,7 @@ async function _abrirEtiqKit(kitIdx) {
   const kit = p.anexos?.kits?.[kitIdx];
   if (!kit) return;
   _mostrarConteudo(_msgAguardando('Etiquetas do Pedido','Carregando...'));
-  const data = await getAnexoData(kit);
+  const data = await getAnexoData(kit, p.id);
   if (!data) { _mostrarConteudo(_msgAguardando('Etiquetas do Pedido','PDF não encontrado no servidor.')); return; }
   _mostrarConteudo('');
   abrirPdfViewer(kit.filename, data);
@@ -2148,7 +2253,7 @@ async function abrirEtiqEmbalagem() {
   if (p.processing) { _mostrarConteudo(_msgAguardando('Etiqueta de Embalagem','Processando PDF...')); return; }
   if (!emb)         { _mostrarConteudo(_msgAguardando('Etiqueta de Embalagem','Nenhuma etiqueta gerada.')); return; }
   _mostrarConteudo(_msgAguardando('Etiqueta de Embalagem','Carregando...'));
-  const data = await getAnexoData(emb);
+  const data = await getAnexoData(emb, p.id);
   if (!data) { _mostrarConteudo(_msgAguardando('Etiqueta de Embalagem','PDF não encontrado no servidor.')); return; }
   _mostrarConteudo('');
   abrirPdfViewer(emb.filename, data);
@@ -2161,7 +2266,7 @@ async function _baixarOP() {
   if (!p) return;
   const filename = p.anexos?.op?.filename || (p.id + '.pdf');
   let b64 = _getPdfOp(p);
-  if (!b64 && p.anexos?.op) b64 = await getAnexoData(p.anexos.op);
+  if (!b64 && p.anexos?.op) b64 = await getAnexoData(p.anexos.op, p.id);
   if (!b64 && p._pdfFilename) b64 = await getPdfB64(p);
   if (!b64) { alert('PDF da OP não encontrado.'); return; }
   _dlB64(filename, b64);
@@ -2255,7 +2360,7 @@ async function abrirLaudoIdx(i) {
   const p   = typeof pedidos !== 'undefined' ? pedidos[idx] : null;
   if (!p?.laudos?.[i]) return;
   _mostrarConteudo(_msgAguardando('Laudo de Teste','Carregando PDF...'));
-  const data = p.laudos[i].data || await getAnexoData(p.laudos[i]);
+  const data = p.laudos[i].data || await getAnexoData(p.laudos[i], p.id);
   _mostrarConteudo('');
   if (!data) { _mostrarConteudo(_msgAguardando('Laudo de Teste','PDF não encontrado.')); return; }
   abrirPdfViewer(p.laudos[i].filename, data);
@@ -2309,7 +2414,7 @@ async function abrirOP() {
   _mostrarConteudo(_msgAguardando('Ordem de Produção','Carregando PDF...'));
   let pdfB64 = _getPdfOp(p);
   if (!pdfB64 && p.anexos?.op) {
-    pdfB64 = await getAnexoData(p.anexos.op);
+    pdfB64 = await getAnexoData(p.anexos.op, p.id);
   }
   if (!pdfB64 && p._pdfFilename) {
     pdfB64 = await getPdfB64(p);
@@ -2401,34 +2506,52 @@ async function abrirPdfViewer(filename, b64) {
     const frag = document.createDocumentFragment();
 
     for (let pg = 1; pg <= total; pg++) {
-      const page    = await _pdfDoc.getPage(pg);
-      const vp0     = page.getViewport({ scale: 1 });
-      const scale   = Math.min(maxW / vp0.width, 2.0);
-      const vp      = page.getViewport({ scale });
+      const page   = await _pdfDoc.getPage(pg);
+      const vp0    = page.getViewport({ scale: 1 });
+      const scale  = Math.min(maxW / vp0.width, 2.0);
+      const vp     = page.getViewport({ scale });
+
       const canvas  = document.createElement('canvas');
       canvas.width  = vp.width;
       canvas.height = vp.height;
-      canvas.style.cssText = 'max-width:100%;display:block;border-radius:4px;box-shadow:0 4px 16px rgba(0,0,0,.5);';
+      canvas.style.cssText = 'display:block;border-radius:4px;';
 
-      // Contador por página
-      const wrap = document.createElement('div');
-      wrap.style.cssText = 'position:relative;width:100%;display:flex;justify-content:center;';
+      // Container com dimensões fixas: canvas + text layer alinhados pixel-a-pixel
+      const pageBox = document.createElement('div');
+      pageBox.style.cssText = `position:relative;width:${vp.width}px;height:${vp.height}px;`
+        + 'border-radius:4px;box-shadow:0 4px 16px rgba(0,0,0,.5);overflow:hidden;flex-shrink:0;';
+      pageBox.appendChild(canvas);
+
+      // Text layer nativo do PDF.js — posiciona cada span exatamente sobre o texto do canvas
+      const textLayerDiv = document.createElement('div');
+      textLayerDiv.className = 'ipdf-text-layer';
+      textLayerDiv.style.cssText = `position:absolute;inset:0;width:${vp.width}px;height:${vp.height}px;overflow:hidden;`;
+      pageBox.appendChild(textLayerDiv);
+
+      // Rótulo de página
       const lbl = document.createElement('div');
-      lbl.style.cssText = 'position:absolute;top:6px;right:6px;background:rgba(0,0,0,.55);color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:8px;font-family:Inter,sans-serif;';
+      lbl.style.cssText = 'position:absolute;top:6px;right:6px;background:rgba(0,0,0,.55);color:#fff;'
+        + 'font-size:10px;font-weight:700;padding:2px 8px;border-radius:8px;font-family:Inter,sans-serif;z-index:3;pointer-events:none;';
       lbl.textContent = `${pg} / ${total}`;
-      wrap.appendChild(canvas);
-      wrap.appendChild(lbl);
+      pageBox.appendChild(lbl);
+
+      const wrap = document.createElement('div');
+      wrap.style.cssText = 'width:100%;display:flex;justify-content:center;';
+      wrap.appendChild(pageBox);
       frag.appendChild(wrap);
 
+      // Renderizar canvas
       await page.render({ canvasContext: canvas.getContext('2d'), viewport: vp }).promise;
 
-      // Camada de texto transparente para Ctrl+F funcionar
+      // Renderizar text layer (habilita Ctrl+F via find-in-page do navegador)
       try {
         const textContent = await page.getTextContent();
-        const textLayer = document.createElement('div');
-        textLayer.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;overflow:hidden;pointer-events:none;user-select:text;color:transparent;font-size:1px;line-height:1;';
-        textLayer.textContent = textContent.items.map(i => i.str).join(' ');
-        wrap.appendChild(textLayer);
+        pdfjsLib.renderTextLayer({
+          textContent,
+          container: textLayerDiv,
+          viewport:  vp,
+          textDivs:  [],
+        });
       } catch (_) {}
     }
     pagesEl.appendChild(frag);
@@ -2612,6 +2735,113 @@ function voltarPedidos() {
   currentPedidoIdx = null;
 }
 
+// ══════════════════════════════════════════════════
+//  LIMPAR PEDIDO (Admin only)
+// ══════════════════════════════════════════════════
+
+function _abrirModalLimparPedido() {
+  const p = (typeof pedidos !== 'undefined') ? pedidos[currentPedidoIdx] : null;
+  if (!p) return;
+
+  document.getElementById('modal-limpar-pedido')?.remove();
+  const modal = document.createElement('div');
+  modal.id = 'modal-limpar-pedido';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:99999;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);';
+  modal.onclick = e => { if (e.target === modal) modal.remove(); };
+  modal.innerHTML = `
+    <div style="background:#fff;border-radius:16px;width:370px;max-width:94vw;overflow:hidden;
+                box-shadow:0 24px 60px rgba(0,0,0,.3);animation:upcIn .18s ease;font-family:Inter,sans-serif;">
+      <div style="background:linear-gradient(135deg,#dc2626,#991b1b);padding:20px 18px 16px;position:relative;">
+        <button onclick="document.getElementById('modal-limpar-pedido').remove()"
+          style="position:absolute;top:10px;right:12px;background:rgba(255,255,255,.15);border:none;
+                 color:#fff;width:27px;height:27px;border-radius:50%;font-size:15px;cursor:pointer;line-height:1;">×</button>
+        <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.75);letter-spacing:1px;text-transform:uppercase;">Atenção — ação irreversível</div>
+        <div style="font-size:18px;font-weight:800;color:#fff;margin-top:2px;">Excluir Pedido</div>
+      </div>
+      <div style="padding:18px;display:flex;flex-direction:column;gap:14px;">
+        <div style="background:#fee2e2;border:1.5px solid #fecaca;border-radius:10px;padding:14px 16px;">
+          <div style="font-size:13px;font-weight:700;color:#991b1b;margin-bottom:6px;">#${p.id} — ${p.cliente || '—'}</div>
+          <div style="font-size:12px;color:#374151;line-height:1.6;">
+            Isso irá <strong>excluir permanentemente</strong>:<br>
+            • O pedido e seu card do Kanban<br>
+            • Todos os PDFs em <code style="background:#fca5a522;padding:1px 5px;border-radius:4px;">data/${p.id}/</code><br>
+            • Registros de falta de estoque deste pedido<br>
+            • Dados deste pedido no Dashboard
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button onclick="document.getElementById('modal-limpar-pedido').remove()"
+            style="flex:1;padding:11px;border:1.5px solid #e5e7eb;border-radius:10px;background:#fff;
+                   color:#374151;font-size:13px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif;">
+            Cancelar
+          </button>
+          <button onclick="_confirmarLimparPedido()"
+            style="flex:1;padding:11px;border:none;border-radius:10px;
+                   background:linear-gradient(135deg,#dc2626,#991b1b);color:#fff;
+                   font-size:13px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif;">
+            Sim, excluir tudo
+          </button>
+        </div>
+      </div>
+    </div>`;
+  document.body.appendChild(modal);
+}
+
+async function _confirmarLimparPedido() {
+  document.getElementById('modal-limpar-pedido')?.remove();
+  const idx = currentPedidoIdx;
+  const p   = (typeof pedidos !== 'undefined') ? pedidos[idx] : null;
+  if (!p) return;
+
+  if (typeof _mostrarToast === 'function') _mostrarToast('Excluindo pedido…', '#dc2626');
+
+  // 1. Remover PDFs físicos do servidor
+  try {
+    await fetch('/limpar_pdfs', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pedido_id: p.id }),
+    });
+  } catch (e) {
+    console.warn('[excluir pedido] erro ao remover PDFs:', e);
+  }
+
+  // 2. Remover do report.json (dashboard)
+  try {
+    await fetch('/excluir_pedido_report', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pedido_id: p.id }),
+    });
+    // Sincronizar DASH_PEDIDOS em memória
+    if (Array.isArray(window.DASH_PEDIDOS)) {
+      window.DASH_PEDIDOS = window.DASH_PEDIDOS.filter(d => d.pedido !== p.id);
+    }
+  } catch (e) {
+    console.warn('[excluir pedido] erro ao remover do report:', e);
+  }
+
+  // 3. Remover registros de falta de estoque deste pedido
+  if (Array.isArray(window.ESTOQUE_DB)) {
+    window.ESTOQUE_DB = window.ESTOQUE_DB.filter(r => r.pedido !== p.id);
+    if (typeof _salvarEstoque === 'function') _salvarEstoque();
+  }
+
+  // 4. Remover pedido do array global
+  if (typeof pedidos !== 'undefined') pedidos.splice(idx, 1);
+  currentPedidoIdx = null;
+
+  // 5. Persistir estado (sem o pedido removido)
+  if (typeof salvarEstado === 'function') salvarEstado();
+
+  // 6. Voltar ao Kanban
+  if (typeof _mostrarToast === 'function') _mostrarToast('Pedido excluído.', '#059669');
+  voltarPedidos();
+}
+
+window._abrirModalLimparPedido = _abrirModalLimparPedido;
+window._confirmarLimparPedido  = _confirmarLimparPedido;
+
 // ── Stubs ──
 function iniciarAmostras()           {}
 function renderAmostras(idx)         {}
@@ -2680,6 +2910,20 @@ function _mostrarPainelAprovacao(idx) {
           <div>
             <label style="font-size:10px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.4px;">Data de Entrega</label>
             <input id="aprov-entrega" value="${p.entrega || ''}" placeholder="DD/MM/AAAA"
+              style="margin-top:4px;width:100%;box-sizing:border-box;padding:9px 11px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:14px;font-weight:700;font-family:Inter,sans-serif;outline:none;">
+          </div>
+          <div>
+            <label style="font-size:10px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.4px;">Qtd. Mangueiras</label>
+            <input id="aprov-qtd" type="number" min="0" step="1"
+              value="${(() => {
+                const pgIdxMang = (p.paginasOP || []).find(pg => pg.is_index);
+                const qtdOp = (p.paginasOP || [])
+                  .filter(pg => pg !== pgIdxMang && (pg.corte_mm || 0) > 0)
+                  .reduce((acc, pg) => acc + (parseFloat(pg.item_qty) || 0), 0);
+                const dashReg = (window.DASH_PEDIDOS || []).find(d => d.pedido === p.id);
+                return dashReg?.qtd ?? (qtdOp || 0);
+              })()}"
+              placeholder="0"
               style="margin-top:4px;width:100%;box-sizing:border-box;padding:9px 11px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:14px;font-weight:700;font-family:Inter,sans-serif;outline:none;">
           </div>
           <div style="grid-column:1/-1;">
@@ -2887,6 +3131,7 @@ function _aprovarPedido(idx) {
   const entrega = (document.getElementById('aprov-entrega')?.value || '').trim();
   const tipoEl  = document.querySelector('[name="aprov-tipo"]:checked');
   const tipo    = tipoEl?.value || 'mangueira-avulso';
+  const qtdMang = parseInt(document.getElementById('aprov-qtd')?.value || '0') || 0;
 
   if (!num)     { if (typeof _mostrarToast === 'function') _mostrarToast('Informe o número do pedido', '#dc2626'); return; }
   if (!cliente) { if (typeof _mostrarToast === 'function') _mostrarToast('Informe o cliente', '#dc2626'); return; }
@@ -2909,6 +3154,21 @@ function _aprovarPedido(idx) {
   delete p.subEtapa;
   salvarEstado();
   if (typeof renderKanban === 'function') renderKanban();
+
+  // Atualizar qtd de mangueiras no report.json
+  if (qtdMang >= 0) {
+    fetch('/atualizar_qtd_report', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pedido: num, qtd: qtdMang }),
+    }).then(r => r.json()).then(res => {
+      if (res.ok) {
+        // Sincronizar DASH_PEDIDOS em memória
+        const dashReg = (window.DASH_PEDIDOS || []).find(d => d.pedido === num);
+        if (dashReg) dashReg.qtd = qtdMang;
+      }
+    }).catch(e => console.warn('[report] erro ao atualizar qtd:', e));
+  }
 
   const newIdx = pedidos.indexOf(p);
   if (newIdx >= 0) abrirPedido(newIdx);

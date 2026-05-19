@@ -356,12 +356,19 @@ function _extrairComponentesDaOP(paginasOP) {
   //    Pula apenas a página de índice/resumo (pgIdx); demais páginas com corte=0
   //    são acessórios válidos (ex: adaptadores HEA08M) e devem ser contabilizados.
   paginasOP.forEach(pg => {
-    if (pg === pgIdx) return;                 // pula só o resumo/índice
+    if (pg === pgIdx) return;                 // pula só o índice principal
     if (!pg.lista_itens?.length) return;
 
-    const codMang    = (pg.item_codigo || '').trim();
-    const qtdPorKit  = qtdNoKit[codMang] ?? (parseFloat(pg.item_qty) || 1);
-    const qtdTotalMang = qtdPorKit * qtdKits; // ex: 4 × 18 = 72
+    let qtdTotalMang;
+    if (pg.is_index) {
+      // Índice secundário (outro tipo de kit no mesmo pedido):
+      // usa a própria item_qty sem multiplicar por qtdKits
+      qtdTotalMang = parseFloat(pg.item_qty) || 1;
+    } else {
+      const codMang   = (pg.item_codigo || '').trim();
+      const qtdPorKit = qtdNoKit[codMang] ?? (parseFloat(pg.item_qty) || 1);
+      qtdTotalMang    = qtdPorKit * qtdKits; // ex: 4 × 18 = 72
+    }
 
     pg.lista_itens.forEach(it => {
       const cod = (it.codigo || '').trim();

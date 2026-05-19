@@ -178,6 +178,10 @@
 let _fatPedidoAtual = null;
 
 function abrirModalFaturamento(numPedido, cliente, fatAtual) {
+  const _isAdmin = typeof currentUser !== 'undefined' &&
+    (currentUser?.setor === 'Admin' || currentUser?.permissoes?.all === true);
+  if (!_isAdmin) return;
+
   _fatPedidoAtual = numPedido;
 
   const sub   = document.getElementById('modal-fat-sub');

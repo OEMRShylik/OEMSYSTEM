@@ -7,7 +7,18 @@ const _SETORES = ['Admin', 'Gestão', 'Produção', 'Comercial', 'Expedição'];
 function _renderUsuarios() {
   const root = document.getElementById('usuarios-root');
   if (!root) return;
-  const lista = _getUsuariosRuntime();
+  const _ordemSetor = ['Admin','Gestão','Produção','Comercial','Expedição'];
+  const lista = _getUsuariosRuntime().slice().sort((a, b) => {
+    const aInativo = a.status === 'inativo';
+    const bInativo = b.status === 'inativo';
+    if (aInativo !== bInativo) return aInativo ? 1 : -1;
+    const ai = _ordemSetor.indexOf(a.setor);
+    const bi = _ordemSetor.indexOf(b.setor);
+    const ao = ai === -1 ? 99 : ai;
+    const bo = bi === -1 ? 99 : bi;
+    if (ao !== bo) return ao - bo;
+    return (a.nome || '').localeCompare(b.nome || '', 'pt-BR');
+  });
   const extras = JSON.parse(localStorage.getItem('oem_users_extras') || '[]');
 
   root.innerHTML = `
